@@ -62,6 +62,8 @@ fun PrestamoEntity.toPrestamo() = Prestamo(
         "MENSUAL" -> FrecuenciaPago.MENSUAL
         else -> FrecuenciaPago.MENSUAL
     },
+    numeroCuotas = numeroCuotas,
+    cuotasPagadas = cuotasPagadas,
     garantiaId = garantiaId,
     fechaInicio = fechaInicio,
     ultimaFechaPago = ultimaFechaPago,
@@ -86,6 +88,8 @@ fun Prestamo.toEntity() = PrestamoEntity(
     capitalPendiente = capitalPendiente,
     tasaInteresPorPeriodo = tasaInteresPorPeriodo,
     frecuenciaPago = frecuenciaPago.name,
+    numeroCuotas = numeroCuotas,
+    cuotasPagadas = cuotasPagadas,
     garantiaId = garantiaId,
     fechaInicio = fechaInicio,
     ultimaFechaPago = ultimaFechaPago,
@@ -100,6 +104,8 @@ fun Prestamo.toEntity() = PrestamoEntity(
 fun PagoEntity.toPago() = Pago(
     id = id,
     prestamoId = prestamoId,
+    cuotaId = cuotaId,
+    numeroCuota = numeroCuota,
     clienteId = clienteId,
     clienteNombre = clienteNombre,
     montoPagado = montoPagado,
@@ -126,6 +132,8 @@ fun PagoEntity.toPago() = Pago(
 fun Pago.toEntity() = PagoEntity(
     id = id,
     prestamoId = prestamoId,
+    cuotaId = cuotaId,
+    numeroCuota = numeroCuota,
     clienteId = clienteId,
     clienteNombre = clienteNombre,
     montoPagado = montoPagado,
@@ -141,6 +149,45 @@ fun Pago.toEntity() = PagoEntity(
     recibidoPor = recibidoPor,
     notas = notas,
     reciboUrl = reciboUrl
+)
+
+// Cuota Mappers
+fun CuotaEntity.toCuota() = Cuota(
+    id = id,
+    prestamoId = prestamoId,
+    numeroCuota = numeroCuota,
+    fechaVencimiento = fechaVencimiento,
+    montoCuotaMinimo = montoCuotaMinimo,
+    capitalPendienteAlInicio = capitalPendienteAlInicio,
+    montoPagado = montoPagado,
+    montoAInteres = montoAInteres,
+    montoACapital = montoACapital,
+    montoMora = montoMora,
+    fechaPago = fechaPago,
+    estado = when (estado) {
+        "PENDIENTE" -> EstadoCuota.PENDIENTE
+        "PAGADA" -> EstadoCuota.PAGADA
+        "PARCIAL" -> EstadoCuota.PARCIAL
+        "VENCIDA" -> EstadoCuota.VENCIDA
+        else -> EstadoCuota.PENDIENTE
+    },
+    notas = notas
+)
+
+fun Cuota.toEntity() = CuotaEntity(
+    id = id,
+    prestamoId = prestamoId,
+    numeroCuota = numeroCuota,
+    fechaVencimiento = fechaVencimiento,
+    montoCuotaMinimo = montoCuotaMinimo,
+    capitalPendienteAlInicio = capitalPendienteAlInicio,
+    montoPagado = montoPagado,
+    montoAInteres = montoAInteres,
+    montoACapital = montoACapital,
+    montoMora = montoMora,
+    fechaPago = fechaPago,
+    estado = estado.name,
+    notas = notas
 )
 
 // Garantía Mappers

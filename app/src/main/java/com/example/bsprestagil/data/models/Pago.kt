@@ -3,6 +3,8 @@ package com.example.bsprestagil.data.models
 data class Pago(
     val id: String = "",
     val prestamoId: String = "",
+    val cuotaId: String? = null, // Vinculación a la cuota pagada
+    val numeroCuota: Int = 0, // Número de cuota para reporte
     val clienteId: String = "",
     val clienteNombre: String = "",
     val montoPagado: Double = 0.0, // Monto total que dio el cliente

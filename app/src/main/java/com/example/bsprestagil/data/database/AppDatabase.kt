@@ -14,11 +14,12 @@ import com.example.bsprestagil.data.database.entities.*
         ClienteEntity::class,
         PrestamoEntity::class,
         PagoEntity::class,
+        CuotaEntity::class,
         GarantiaEntity::class,
         UsuarioEntity::class,
         ConfiguracionEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -27,6 +28,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun clienteDao(): ClienteDao
     abstract fun prestamoDao(): PrestamoDao
     abstract fun pagoDao(): PagoDao
+    abstract fun cuotaDao(): CuotaDao
     abstract fun garantiaDao(): GarantiaDao
     abstract fun usuarioDao(): UsuarioDao
     abstract fun configuracionDao(): ConfiguracionDao

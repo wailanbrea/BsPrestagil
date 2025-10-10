@@ -10,6 +10,8 @@ import com.example.bsprestagil.data.models.EstadoPrestamo
 import com.example.bsprestagil.data.models.FrecuenciaPago
 import com.example.bsprestagil.data.models.Prestamo
 import com.example.bsprestagil.data.repository.PrestamoRepository
+import com.example.bsprestagil.data.repository.CuotaRepository
+import com.example.bsprestagil.utils.CronogramaUtils
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -17,6 +19,7 @@ class LoansViewModel(application: Application) : AndroidViewModel(application) {
     
     private val database = AppDatabase.getDatabase(application)
     private val prestamoRepository = PrestamoRepository(database.prestamoDao())
+    private val cuotaRepository = CuotaRepository(database.cuotaDao())
     
     private val _prestamos = MutableStateFlow<List<Prestamo>>(emptyList())
     val prestamos: StateFlow<List<Prestamo>> = _prestamos.asStateFlow()
@@ -69,6 +72,7 @@ class LoansViewModel(application: Application) : AndroidViewModel(application) {
         monto: Double,
         tasaInteresPorPeriodo: Double, // Ej: 20% mensual
         frecuenciaPago: FrecuenciaPago,
+        numeroCuotas: Int, // NUEVO: número de cuotas
         garantiaId: String? = null,
         notas: String = ""
     ) {
@@ -86,6 +90,8 @@ class LoansViewModel(application: Application) : AndroidViewModel(application) {
                     capitalPendiente = monto, // Al inicio, el capital pendiente es el monto completo
                     tasaInteresPorPeriodo = tasaInteresPorPeriodo,
                     frecuenciaPago = frecuenciaPago.name,
+                    numeroCuotas = numeroCuotas,
+                    cuotasPagadas = 0,
                     garantiaId = garantiaId,
                     fechaInicio = fechaInicio,
                     ultimaFechaPago = fechaInicio, // Inicia con la fecha de creación
@@ -96,7 +102,22 @@ class LoansViewModel(application: Application) : AndroidViewModel(application) {
                     notas = notas
                 )
                 
-                prestamoRepository.insertPrestamo(prestamo)
+                // Insertar préstamo y obtener el ID
+                val prestamoId = prestamoRepository.insertPrestamo(prestamo)
+                
+                // Generar cronograma de cuotas
+                val cronograma = CronogramaUtils.generarCronograma(
+                    prestamoId = prestamoId,
+                    montoOriginal = monto,
+                    tasaInteresPorPeriodo = tasaInteresPorPeriodo,
+                    frecuenciaPago = frecuenciaPago,
+                    numeroCuotas = numeroCuotas,
+                    fechaInicio = fechaInicio
+                )
+                
+                // Insertar todas las cuotas
+                cuotaRepository.insertCuotas(cronograma)
+                
                 _isLoading.value = false
             } catch (e: Exception) {
                 _isLoading.value = false

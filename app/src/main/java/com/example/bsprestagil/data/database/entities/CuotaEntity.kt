@@ -6,44 +6,32 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(
-    tableName = "pagos",
+    tableName = "cuotas",
     foreignKeys = [
         ForeignKey(
             entity = PrestamoEntity::class,
             parentColumns = ["id"],
             childColumns = ["prestamoId"],
             onDelete = ForeignKey.CASCADE
-        ),
-        ForeignKey(
-            entity = ClienteEntity::class,
-            parentColumns = ["id"],
-            childColumns = ["clienteId"],
-            onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [Index("prestamoId"), Index("clienteId")]
+    indices = [Index("prestamoId"), Index("numeroCuota")]
 )
-data class PagoEntity(
+data class CuotaEntity(
     @PrimaryKey
     val id: String,
     val prestamoId: String,
-    val cuotaId: String?,
     val numeroCuota: Int,
-    val clienteId: String,
-    val clienteNombre: String,
+    val fechaVencimiento: Long,
+    val montoCuotaMinimo: Double,
+    val capitalPendienteAlInicio: Double,
     val montoPagado: Double,
     val montoAInteres: Double,
     val montoACapital: Double,
     val montoMora: Double,
-    val fechaPago: Long,
-    val diasTranscurridos: Int,
-    val interesCalculado: Double,
-    val capitalPendienteAntes: Double,
-    val capitalPendienteDespues: Double,
-    val metodoPago: String, // EFECTIVO, TRANSFERENCIA, TARJETA, OTRO
-    val recibidoPor: String,
+    val fechaPago: Long?,
+    val estado: String, // PENDIENTE, PAGADA, PARCIAL, VENCIDA
     val notas: String,
-    val reciboUrl: String,
     
     // Campos de sincronización
     val pendingSync: Boolean = true,
