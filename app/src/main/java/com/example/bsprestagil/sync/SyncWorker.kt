@@ -5,6 +5,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.bsprestagil.data.database.AppDatabase
 import com.example.bsprestagil.data.repository.*
+import com.example.bsprestagil.firebase.FirebaseService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -19,6 +20,7 @@ class SyncWorker(
     private val pagoRepository = PagoRepository(database.pagoDao())
     private val garantiaRepository = GarantiaRepository(database.garantiaDao())
     private val configuracionRepository = ConfiguracionRepository(database.configuracionDao())
+    private val firebaseService = FirebaseService()
     
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         return@withContext try {
@@ -44,11 +46,11 @@ class SyncWorker(
     private suspend fun syncClientes() {
         try {
             val clientesPending = clienteRepository.getClientesPendingSync()
-            // TODO: Cuando Firebase esté configurado, enviar a Firestore
-            // Por ahora solo marcamos como sincronizados (simulación)
             clientesPending.forEach { cliente ->
-                // firebaseSync.syncCliente(cliente)
-                // clienteRepository.markAsSynced(cliente.id)
+                val result = firebaseService.syncCliente(cliente)
+                if (result.isSuccess) {
+                    clienteRepository.markAsSynced(cliente.id)
+                }
             }
         } catch (e: Exception) {
             // Log error pero continuar con otras entidades
@@ -58,10 +60,11 @@ class SyncWorker(
     private suspend fun syncPrestamos() {
         try {
             val prestamosPending = prestamoRepository.getPrestamosPendingSync()
-            // TODO: Cuando Firebase esté configurado, enviar a Firestore
             prestamosPending.forEach { prestamo ->
-                // firebaseSync.syncPrestamo(prestamo)
-                // prestamoRepository.markAsSynced(prestamo.id)
+                val result = firebaseService.syncPrestamo(prestamo)
+                if (result.isSuccess) {
+                    prestamoRepository.markAsSynced(prestamo.id)
+                }
             }
         } catch (e: Exception) {
             // Log error pero continuar
@@ -71,10 +74,11 @@ class SyncWorker(
     private suspend fun syncPagos() {
         try {
             val pagosPending = pagoRepository.getPagosPendingSync()
-            // TODO: Cuando Firebase esté configurado, enviar a Firestore
             pagosPending.forEach { pago ->
-                // firebaseSync.syncPago(pago)
-                // pagoRepository.markAsSynced(pago.id)
+                val result = firebaseService.syncPago(pago)
+                if (result.isSuccess) {
+                    pagoRepository.markAsSynced(pago.id)
+                }
             }
         } catch (e: Exception) {
             // Log error pero continuar
@@ -84,10 +88,11 @@ class SyncWorker(
     private suspend fun syncGarantias() {
         try {
             val garantiasPending = garantiaRepository.getGarantiasPendingSync()
-            // TODO: Cuando Firebase esté configurado, enviar a Firestore
             garantiasPending.forEach { garantia ->
-                // firebaseSync.syncGarantia(garantia)
-                // garantiaRepository.markAsSynced(garantia.id)
+                val result = firebaseService.syncGarantia(garantia)
+                if (result.isSuccess) {
+                    garantiaRepository.markAsSynced(garantia.id)
+                }
             }
         } catch (e: Exception) {
             // Log error pero continuar
@@ -96,12 +101,13 @@ class SyncWorker(
     
     private suspend fun syncConfiguracion() {
         try {
-            // TODO: Cuando Firebase esté configurado, sincronizar configuración
-            // val config = configuracionRepository.getConfiguracionSync()
-            // if (config?.pendingSync == true) {
-            //     firebaseSync.syncConfiguracion(config)
-            //     configuracionRepository.markAsSynced()
-            // }
+            val config = configuracionRepository.getConfiguracionSync()
+            if (config?.pendingSync == true) {
+                val result = firebaseService.syncConfiguracion(config)
+                if (result.isSuccess) {
+                    configuracionRepository.markAsSynced()
+                }
+            }
         } catch (e: Exception) {
             // Log error
         }
