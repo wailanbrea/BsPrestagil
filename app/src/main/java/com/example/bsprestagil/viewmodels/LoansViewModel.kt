@@ -98,6 +98,7 @@ class LoansViewModel(application: Application) : AndroidViewModel(application) {
                     capitalPendiente = monto, // Al inicio, el capital pendiente es el monto completo
                     tasaInteresPorPeriodo = tasaInteresPorPeriodo,
                     frecuenciaPago = frecuenciaPago.name,
+                    tipoAmortizacion = "FRANCES", // Por defecto Sistema Francés
                     numeroCuotas = numeroCuotas,
                     montoCuotaFija = montoCuotaFija,
                     cuotasPagadas = 0,

@@ -96,6 +96,7 @@ class FirebaseService {
                 "capitalPendiente" to prestamo.capitalPendiente,
                 "tasaInteresPorPeriodo" to prestamo.tasaInteresPorPeriodo,
                 "frecuenciaPago" to prestamo.frecuenciaPago,
+                "tipoAmortizacion" to prestamo.tipoAmortizacion,
                 "numeroCuotas" to prestamo.numeroCuotas,
                 "montoCuotaFija" to prestamo.montoCuotaFija,
                 "cuotasPagadas" to prestamo.cuotasPagadas,

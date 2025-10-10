@@ -80,6 +80,7 @@ class FirebaseToRoomSync(
                         capitalPendiente = (data["capitalPendiente"] as? Number)?.toDouble() ?: 0.0,
                         tasaInteresPorPeriodo = (data["tasaInteresPorPeriodo"] as? Number)?.toDouble() ?: 0.0,
                         frecuenciaPago = data["frecuenciaPago"] as? String ?: "MENSUAL",
+                        tipoAmortizacion = data["tipoAmortizacion"] as? String ?: "FRANCES",
                         numeroCuotas = (data["numeroCuotas"] as? Long)?.toInt() ?: 0,
                         montoCuotaFija = (data["montoCuotaFija"] as? Number)?.toDouble() ?: 0.0,
                         cuotasPagadas = (data["cuotasPagadas"] as? Long)?.toInt() ?: 0,
