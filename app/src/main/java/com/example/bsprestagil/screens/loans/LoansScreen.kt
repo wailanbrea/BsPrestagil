@@ -151,9 +151,8 @@ fun LoansScreen(
                 LoanCard(
                     clienteNombre = prestamo.clienteNombre,
                     montoOriginal = prestamo.montoOriginal,
-                    saldoPendiente = prestamo.saldoPendiente,
-                    cuotasPagadas = prestamo.cuotasPagadas,
-                    totalCuotas = prestamo.totalCuotas,
+                    capitalPendiente = prestamo.capitalPendiente,
+                    totalCapitalPagado = prestamo.totalCapitalPagado,
                     estado = estadoTexto,
                     estadoColor = estadoColor,
                     onClick = {

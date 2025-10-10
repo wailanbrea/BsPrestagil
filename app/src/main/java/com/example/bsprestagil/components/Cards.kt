@@ -182,9 +182,8 @@ fun ClientCard(
 fun LoanCard(
     clienteNombre: String,
     montoOriginal: Double,
-    saldoPendiente: Double,
-    cuotasPagadas: Int,
-    totalCuotas: Int,
+    capitalPendiente: Double,
+    totalCapitalPagado: Double,
     estado: String,
     estadoColor: Color,
     onClick: () -> Unit,
@@ -250,12 +249,12 @@ fun LoanCard(
                 }
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        text = "Saldo pendiente",
+                        text = "Capital pendiente",
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
                     Text(
-                        text = "$${String.format("%,.2f", saldoPendiente)}",
+                        text = "$${String.format("%,.2f", capitalPendiente)}",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.primary
@@ -266,17 +265,21 @@ fun LoanCard(
             Spacer(modifier = Modifier.height(12.dp))
             
             Column {
+                val progreso = if (montoOriginal > 0) {
+                    ((totalCapitalPagado / montoOriginal) * 100).toInt()
+                } else 0
+                
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "$cuotasPagadas de $totalCuotas cuotas",
+                        text = "Capital pagado: $${String.format("%,.0f", totalCapitalPagado)}",
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                     )
                     Text(
-                        text = "${(cuotasPagadas * 100) / totalCuotas}%",
+                        text = "$progreso%",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
@@ -284,7 +287,7 @@ fun LoanCard(
                 }
                 Spacer(modifier = Modifier.height(4.dp))
                 LinearProgressIndicator(
-                    progress = { cuotasPagadas.toFloat() / totalCuotas.toFloat() },
+                    progress = { progreso / 100f },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(6.dp),
