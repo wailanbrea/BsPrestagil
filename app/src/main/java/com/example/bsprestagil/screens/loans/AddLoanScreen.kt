@@ -76,7 +76,8 @@ fun AddLoanScreen(
             )
         }
     ) { paddingValues ->
-        Column(
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
@@ -412,10 +413,10 @@ fun AddLoanScreen(
             
             Spacer(modifier = Modifier.height(16.dp))
         }
-    }
-    
-    // Diálogo de confirmación
-    if (showConfirmDialog) {
+        
+        // Diálogos
+        // Diálogo de confirmación
+        if (showConfirmDialog) {
         val montoNum = monto.toDoubleOrNull() ?: 0.0
         val tasaNum = tasaInteres.toDoubleOrNull() ?: 0.0
         val interesPorPeriodo = montoNum * (tasaNum / 100)
@@ -569,6 +570,8 @@ fun AddLoanScreen(
                 }
             }
         )
-    }
-}
+        }
+        } // Box
+    } // Scaffold
+} // AddLoanScreen
 
