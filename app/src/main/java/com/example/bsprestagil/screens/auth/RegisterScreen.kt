@@ -16,13 +16,17 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.bsprestagil.components.TopAppBarComponent
+import com.example.bsprestagil.viewmodels.AuthState
+import com.example.bsprestagil.viewmodels.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(
     onRegisterSuccess: () -> Unit,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    authViewModel: AuthViewModel = viewModel()
 ) {
     var nombre by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -31,6 +35,19 @@ fun RegisterScreen(
     var confirmPassword by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
+    
+    val authState by authViewModel.authState.collectAsState()
+    
+    // Observar el estado de autenticación
+    LaunchedEffect(authState) {
+        when (authState) {
+            is AuthState.Success -> {
+                onRegisterSuccess()
+                authViewModel.resetState()
+            }
+            else -> {}
+        }
+    }
     
     Scaffold(
         topBar = {
@@ -161,9 +178,26 @@ fun RegisterScreen(
             
             Spacer(modifier = Modifier.height(32.dp))
             
+            // Mostrar error si existe
+            if (authState is AuthState.Error) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer
+                    )
+                ) {
+                    Text(
+                        text = (authState as AuthState.Error).message,
+                        modifier = Modifier.padding(12.dp),
+                        color = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+            
             // Botón de Registro
             Button(
-                onClick = onRegisterSuccess,
+                onClick = { authViewModel.register(email, password, nombre) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -171,13 +205,21 @@ fun RegisterScreen(
                          email.isNotBlank() && 
                          telefono.isNotBlank() &&
                          password.isNotBlank() && 
-                         password == confirmPassword
+                         password == confirmPassword &&
+                         authState !is AuthState.Loading
             ) {
-                Text(
-                    text = "Crear cuenta",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                if (authState is AuthState.Loading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                } else {
+                    Text(
+                        text = "Crear cuenta",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
     }

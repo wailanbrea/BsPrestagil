@@ -10,17 +10,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.bsprestagil.components.BottomNavigationBar
 import com.example.bsprestagil.components.SettingsCard
+import com.example.bsprestagil.navigation.Screen
+import com.example.bsprestagil.viewmodels.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    navController: NavController
+    navController: NavController,
+    authViewModel: AuthViewModel = viewModel()
 ) {
     var showInterestDialog by remember { mutableStateOf(false) }
     var tasaInteres by remember { mutableStateOf("10") }
+    var showLogoutDialog by remember { mutableStateOf(false) }
     
     Scaffold(
         topBar = {
@@ -186,7 +191,7 @@ fun SettingsScreen(
             item {
                 SettingsCard(
                     title = "Cerrar sesión",
-                    onClick = { /* TODO: Cerrar sesión */ },
+                    onClick = { showLogoutDialog = true },
                     showArrow = false
                 )
             }
@@ -218,6 +223,31 @@ fun SettingsScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showInterestDialog = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+    
+    // Diálogo de confirmación de logout
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false },
+            title = { Text("Cerrar sesión") },
+            text = { Text("¿Estás seguro que deseas cerrar sesión?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    authViewModel.logout()
+                    showLogoutDialog = false
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }) {
+                    Text("Cerrar sesión", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLogoutDialog = false }) {
                     Text("Cancelar")
                 }
             }
