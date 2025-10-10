@@ -126,7 +126,7 @@ fun LoansScreen(
                         onClick = { loansViewModel.setFiltroEstado(null) },
                         label = { Text("Filtrado: ${filtroEstado!!.name}") },
                         trailingIcon = {
-                            Icon(Icons.Default.Clear, contentDescription = null)
+                            Icon(Icons.Default.Cancel, contentDescription = null)
                         }
                     )
                 }
