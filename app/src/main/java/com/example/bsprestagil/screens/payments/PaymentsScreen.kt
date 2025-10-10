@@ -171,7 +171,7 @@ fun PaymentCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Cuota #${pago.numeroCuota}",
+                        text = dateFormat.format(Date(pago.fechaPago)),
                         fontSize = 13.sp,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
@@ -181,11 +181,17 @@ fun PaymentCard(
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
                     Text(
-                        text = dateFormat.format(Date(pago.fechaPago)),
+                        text = "${pago.diasTranscurridos} días",
                         fontSize = 13.sp,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
                 }
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = "→ Interés: $${String.format("%.0f", pago.montoAInteres)} • Capital: $${String.format("%.0f", pago.montoACapital)}",
+                    fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                )
                 if (pago.montoMora > 0) {
                     Spacer(modifier = Modifier.height(4.dp))
                     Surface(
@@ -193,7 +199,7 @@ fun PaymentCard(
                         color = MaterialTheme.colorScheme.error.copy(alpha = 0.1f)
                     ) {
                         Text(
-                            text = "Incluye mora: $${String.format("%.2f", pago.montoMora)}",
+                            text = "Mora: $${String.format("%.2f", pago.montoMora)}",
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                             fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.error
@@ -204,7 +210,7 @@ fun PaymentCard(
             
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    text = "$${String.format("%,.2f", pago.monto)}",
+                    text = "$${String.format("%,.2f", pago.montoPagado)}",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = SuccessColor
