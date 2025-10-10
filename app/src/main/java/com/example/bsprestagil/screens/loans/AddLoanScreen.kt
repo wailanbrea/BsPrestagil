@@ -18,6 +18,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.bsprestagil.components.TopAppBarComponent
 import com.example.bsprestagil.data.models.FrecuenciaPago
+import com.example.bsprestagil.navigation.Screen
 import com.example.bsprestagil.viewmodels.ClientsViewModel
 import com.example.bsprestagil.viewmodels.ConfiguracionViewModel
 import com.example.bsprestagil.viewmodels.LoansViewModel
