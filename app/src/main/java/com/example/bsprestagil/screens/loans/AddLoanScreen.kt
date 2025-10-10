@@ -191,7 +191,7 @@ fun AddLoanScreen(
                         FrecuenciaPago.MENSUAL -> "cada mes"
                     }
                     Text(
-                        "Se cobra por período ($periodoDescripcion)",
+                        text = "Se cobra por período ($periodoDescripcion)",
                         fontSize = 12.sp
                     )
                 }
