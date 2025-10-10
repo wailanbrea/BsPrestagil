@@ -251,14 +251,60 @@ fun AddLoanScreen(
                 color = MaterialTheme.colorScheme.primary
             )
             
-            Button(
-                onClick = { /* TODO: Abrir selector de garantía */ },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.outlinedButtonColors()
-            ) {
-                Icon(Icons.Default.Security, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Agregar garantía")
+            if (garantiaOpcional.isNotBlank()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Security,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    text = "Garantía agregada",
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
+                                )
+                                Text(
+                                    text = "ID: ${garantiaOpcional.take(8)}...",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
+                        }
+                        IconButton(onClick = { garantiaOpcional = "" }) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Quitar garantía",
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+                }
+            } else {
+                Button(
+                    onClick = { navController.navigate(Screen.AddEditCollateral.createRoute(null)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.outlinedButtonColors()
+                ) {
+                    Icon(Icons.Default.Security, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Agregar garantía")
+                }
             }
             
             // Notas
@@ -407,7 +453,7 @@ fun AddLoanScreen(
                         monto = montoNum,
                         tasaInteresPorPeriodo = tasaNum,
                         frecuenciaPago = frecuenciaPago,
-                        garantiaId = null,
+                        garantiaId = if (garantiaOpcional.isNotBlank()) garantiaOpcional else null,
                         notas = notas
                     )
                     showConfirmDialog = false
