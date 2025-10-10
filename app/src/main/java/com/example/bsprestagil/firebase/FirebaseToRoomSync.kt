@@ -64,12 +64,97 @@ class FirebaseToRoomSync(
     }
     
     /**
+     * Descarga préstamos de Firebase y actualiza Room
+     */
+    suspend fun syncPrestamosFromFirebase(): Result<Unit> {
+        return try {
+            val snapshot = firestore.collection("prestamos").get().await()
+            val prestamosFirebase = snapshot.documents.map { doc ->
+                doc.data?.let { data ->
+                    PrestamoEntity(
+                        id = data["id"] as? String ?: doc.id,
+                        clienteId = data["clienteId"] as? String ?: "",
+                        clienteNombre = data["clienteNombre"] as? String ?: "",
+                        montoOriginal = (data["montoOriginal"] as? Number)?.toDouble() ?: 0.0,
+                        capitalPendiente = (data["capitalPendiente"] as? Number)?.toDouble() ?: 0.0,
+                        tasaInteresPorPeriodo = (data["tasaInteresPorPeriodo"] as? Number)?.toDouble() ?: 0.0,
+                        frecuenciaPago = data["frecuenciaPago"] as? String ?: "MENSUAL",
+                        garantiaId = data["garantiaId"] as? String,
+                        fechaInicio = data["fechaInicio"] as? Long ?: System.currentTimeMillis(),
+                        ultimaFechaPago = data["ultimaFechaPago"] as? Long ?: System.currentTimeMillis(),
+                        estado = data["estado"] as? String ?: "ACTIVO",
+                        totalInteresesPagados = (data["totalInteresesPagados"] as? Number)?.toDouble() ?: 0.0,
+                        totalCapitalPagado = (data["totalCapitalPagado"] as? Number)?.toDouble() ?: 0.0,
+                        totalMorasPagadas = (data["totalMorasPagadas"] as? Number)?.toDouble() ?: 0.0,
+                        notas = data["notas"] as? String ?: "",
+                        pendingSync = false,
+                        lastSyncTime = data["lastSyncTime"] as? Long ?: System.currentTimeMillis(),
+                        firebaseId = doc.id
+                    )
+                }
+            }.filterNotNull()
+            
+            prestamosFirebase.forEach { prestamo ->
+                prestamoRepository.insertPrestamo(prestamo.copy(pendingSync = false))
+            }
+            
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Descarga pagos de Firebase y actualiza Room
+     */
+    suspend fun syncPagosFromFirebase(): Result<Unit> {
+        return try {
+            val snapshot = firestore.collection("pagos").get().await()
+            val pagosFirebase = snapshot.documents.map { doc ->
+                doc.data?.let { data ->
+                    PagoEntity(
+                        id = data["id"] as? String ?: doc.id,
+                        prestamoId = data["prestamoId"] as? String ?: "",
+                        clienteId = data["clienteId"] as? String ?: "",
+                        clienteNombre = data["clienteNombre"] as? String ?: "",
+                        montoPagado = (data["montoPagado"] as? Number)?.toDouble() ?: 0.0,
+                        montoAInteres = (data["montoAInteres"] as? Number)?.toDouble() ?: 0.0,
+                        montoACapital = (data["montoACapital"] as? Number)?.toDouble() ?: 0.0,
+                        montoMora = (data["montoMora"] as? Number)?.toDouble() ?: 0.0,
+                        fechaPago = data["fechaPago"] as? Long ?: System.currentTimeMillis(),
+                        diasTranscurridos = (data["diasTranscurridos"] as? Long)?.toInt() ?: 0,
+                        interesCalculado = (data["interesCalculado"] as? Number)?.toDouble() ?: 0.0,
+                        capitalPendienteAntes = (data["capitalPendienteAntes"] as? Number)?.toDouble() ?: 0.0,
+                        capitalPendienteDespues = (data["capitalPendienteDespues"] as? Number)?.toDouble() ?: 0.0,
+                        metodoPago = data["metodoPago"] as? String ?: "EFECTIVO",
+                        recibidoPor = data["recibidoPor"] as? String ?: "",
+                        notas = data["notas"] as? String ?: "",
+                        reciboUrl = data["reciboUrl"] as? String ?: "",
+                        pendingSync = false,
+                        lastSyncTime = data["lastSyncTime"] as? Long ?: System.currentTimeMillis(),
+                        firebaseId = doc.id
+                    )
+                }
+            }.filterNotNull()
+            
+            pagosFirebase.forEach { pago ->
+                pagoRepository.insertPago(pago.copy(pendingSync = false))
+            }
+            
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    /**
      * Sincronización completa bidireccional
      */
     suspend fun fullSync(): Result<Unit> {
         return try {
             syncClientesFromFirebase()
-            // Aquí puedes agregar más entidades cuando las necesites
+            syncPrestamosFromFirebase()
+            syncPagosFromFirebase()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

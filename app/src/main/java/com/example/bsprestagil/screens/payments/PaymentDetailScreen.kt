@@ -34,10 +34,13 @@ fun PaymentDetailScreen(
     val pago by paymentsViewModel.getPagoById(paymentId).collectAsState(initial = null)
     
     val clienteNombre = pago?.clienteNombre ?: "Cargando..."
-    val monto = pago?.monto ?: 0.0
-    val montoCuota = pago?.montoCuota ?: 0.0
+    val montoPagado = pago?.montoPagado ?: 0.0
+    val montoAInteres = pago?.montoAInteres ?: 0.0
+    val montoACapital = pago?.montoACapital ?: 0.0
     val montoMora = pago?.montoMora ?: 0.0
     val fechaPago = pago?.fechaPago ?: System.currentTimeMillis()
+    val diasTranscurridos = pago?.diasTranscurridos ?: 0
+    val capitalPendienteDespues = pago?.capitalPendienteDespues ?: 0.0
     val metodoPago = when(pago?.metodoPago?.name) {
         "EFECTIVO" -> "Efectivo"
         "TRANSFERENCIA" -> "Transferencia"
@@ -45,7 +48,6 @@ fun PaymentDetailScreen(
         "OTRO" -> "Otro"
         else -> "N/A"
     }
-    val numeroCuota = pago?.numeroCuota ?: 0
     val recibidoPor = pago?.recibidoPor ?: ""
     val notas = pago?.notas ?: ""
     
@@ -55,7 +57,20 @@ fun PaymentDetailScreen(
                 title = "Detalle del pago",
                 onNavigateBack = { navController.navigateUp() },
                 actions = {
-                    IconButton(onClick = { /* TODO: Compartir recibo */ }) {
+                    IconButton(onClick = {
+                        ShareUtils.compartirReciboPorWhatsApp(
+                            context = context,
+                            clienteNombre = clienteNombre,
+                            montoPagado = montoPagado,
+                            montoAInteres = montoAInteres,
+                            montoACapital = montoACapital,
+                            montoMora = montoMora,
+                            metodoPago = metodoPago,
+                            fechaPago = fechaPago,
+                            recibidoPor = recibidoPor,
+                            capitalPendienteDespues = capitalPendienteDespues
+                        )
+                    }) {
                         Icon(Icons.Default.Share, contentDescription = "Compartir")
                     }
                 }
@@ -96,7 +111,7 @@ fun PaymentDetailScreen(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "$${String.format("%,.2f", monto)}",
+                            text = "$${String.format("%,.2f", montoPagado)}",
                             fontSize = 36.sp,
                             fontWeight = FontWeight.Bold,
                             color = SuccessColor
@@ -121,13 +136,19 @@ fun PaymentDetailScreen(
                         
                         DetailRow("Cliente", clienteNombre)
                         Divider()
-                        DetailRow("Cuota", "#$numeroCuota")
+                        DetailRow("Total pagado", "$${String.format("%,.2f", montoPagado)}")
                         Divider()
-                        DetailRow("Monto cuota", "$${String.format("%,.2f", montoCuota)}")
+                        DetailRow("→ A interés", "$${String.format("%,.2f", montoAInteres)}")
+                        Divider()
+                        DetailRow("→ A capital", "$${String.format("%,.2f", montoACapital)}")
                         if (montoMora > 0) {
                             Divider()
-                            DetailRow("Mora", "$${String.format("%,.2f", montoMora)}")
+                            DetailRow("→ Mora", "$${String.format("%,.2f", montoMora)}")
                         }
+                        Divider()
+                        DetailRow("Días transcurridos", "$diasTranscurridos días")
+                        Divider()
+                        DetailRow("Capital pendiente", "$${String.format("%,.2f", capitalPendienteDespues)}")
                         Divider()
                         DetailRow("Método de pago", metodoPago)
                         Divider()
@@ -175,13 +196,14 @@ fun PaymentDetailScreen(
                         ShareUtils.compartirReciboPorWhatsApp(
                             context = context,
                             clienteNombre = clienteNombre,
-                            monto = monto,
-                            montoCuota = montoCuota,
+                            montoPagado = montoPagado,
+                            montoAInteres = montoAInteres,
+                            montoACapital = montoACapital,
                             montoMora = montoMora,
-                            numeroCuota = numeroCuota,
                             metodoPago = metodoPago,
                             fechaPago = fechaPago,
-                            recibidoPor = recibidoPor
+                            recibidoPor = recibidoPor,
+                            capitalPendienteDespues = capitalPendienteDespues
                         )
                     },
                     modifier = Modifier.fillMaxWidth(),

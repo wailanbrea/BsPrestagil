@@ -14,13 +14,14 @@ object ShareUtils {
     fun compartirReciboPorWhatsApp(
         context: Context,
         clienteNombre: String,
-        monto: Double,
-        montoCuota: Double,
+        montoPagado: Double,
+        montoAInteres: Double,
+        montoACapital: Double,
         montoMora: Double,
-        numeroCuota: Int,
         metodoPago: String,
         fechaPago: Long,
         recibidoPor: String,
+        capitalPendienteDespues: Double,
         telefonoCliente: String? = null
     ) {
         val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
@@ -33,14 +34,17 @@ object ShareUtils {
             appendLine()
             appendLine("📋 *DATOS DEL PAGO*")
             appendLine("Cliente: $clienteNombre")
-            appendLine("Cuota #: $numeroCuota")
             appendLine()
-            appendLine("💰 *MONTOS*")
-            appendLine("Cuota: $${String.format("%,.2f", montoCuota)}")
+            appendLine("💰 *DISTRIBUCIÓN DEL PAGO*")
+            appendLine("Total pagado: $${String.format("%,.2f", montoPagado)}")
+            appendLine("→ A interés: $${String.format("%,.2f", montoAInteres)}")
+            appendLine("→ A capital: $${String.format("%,.2f", montoACapital)}")
             if (montoMora > 0) {
-                appendLine("Mora: $${String.format("%,.2f", montoMora)}")
+                appendLine("→ Mora: $${String.format("%,.2f", montoMora)}")
             }
-            appendLine("*Total pagado: $${String.format("%,.2f", monto)}*")
+            appendLine()
+            appendLine("📊 *ESTADO DEL PRÉSTAMO*")
+            appendLine("Capital pendiente: $${String.format("%,.2f", capitalPendienteDespues)}")
             appendLine()
             appendLine("📅 Fecha: ${dateFormat.format(Date(fechaPago))}")
             appendLine("💳 Método: $metodoPago")
