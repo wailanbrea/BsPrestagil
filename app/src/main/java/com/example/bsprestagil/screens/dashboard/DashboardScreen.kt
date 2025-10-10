@@ -24,6 +24,8 @@ import com.example.bsprestagil.ui.theme.ErrorColor
 import com.example.bsprestagil.ui.theme.SuccessColor
 import com.example.bsprestagil.ui.theme.WarningColor
 import com.example.bsprestagil.viewmodels.DashboardViewModel
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,6 +36,7 @@ fun DashboardScreen(
     val stats by dashboardViewModel.stats.collectAsState()
     val prestamosRecientes by dashboardViewModel.prestamosRecientes.collectAsState()
     val isLoading by dashboardViewModel.isLoading.collectAsState()
+    val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = isLoading)
     
     Scaffold(
         topBar = {
@@ -86,13 +89,16 @@ fun DashboardScreen(
             }
         }
     ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+        SwipeRefresh(
+            state = swipeRefreshState,
+            onRefresh = { dashboardViewModel.refresh() },
+            modifier = Modifier.padding(paddingValues)
         ) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
             // Estadísticas principales
             item {
                 Text(
@@ -239,6 +245,7 @@ fun DashboardScreen(
                         navController.navigate(Screen.LoanDetail.createRoute(prestamo.id))
                     }
                 )
+            }
             }
         }
     }

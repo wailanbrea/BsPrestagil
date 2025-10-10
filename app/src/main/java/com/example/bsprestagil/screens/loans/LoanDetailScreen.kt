@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -19,6 +20,7 @@ import com.example.bsprestagil.components.TopAppBarComponent
 import com.example.bsprestagil.data.models.EstadoPrestamo
 import com.example.bsprestagil.navigation.Screen
 import com.example.bsprestagil.ui.theme.SuccessColor
+import com.example.bsprestagil.utils.ShareUtils
 import com.example.bsprestagil.viewmodels.LoansViewModel
 import java.text.SimpleDateFormat
 import java.util.*
@@ -30,6 +32,7 @@ fun LoanDetailScreen(
     navController: NavController,
     loansViewModel: LoansViewModel = viewModel()
 ) {
+    val context = LocalContext.current
     val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     
     // Cargar datos del préstamo
@@ -52,7 +55,24 @@ fun LoanDetailScreen(
         topBar = {
             TopAppBarComponent(
                 title = "Detalles del préstamo",
-                onNavigateBack = { navController.navigateUp() }
+                onNavigateBack = { navController.navigateUp() },
+                actions = {
+                    IconButton(onClick = {
+                        prestamo?.let { p ->
+                            ShareUtils.compartirResumenPrestamo(
+                                context = context,
+                                clienteNombre = p.clienteNombre,
+                                montoOriginal = p.montoOriginal,
+                                tasaInteres = p.tasaInteres,
+                                totalAPagar = p.totalAPagar,
+                                plazoMeses = p.plazoMeses,
+                                fechaInicio = p.fechaInicio
+                            )
+                        }
+                    }) {
+                        Icon(Icons.Default.Share, contentDescription = "Compartir")
+                    }
+                }
             )
         }
     ) { paddingValues ->

@@ -9,6 +9,7 @@ import com.example.bsprestagil.data.mappers.toPago
 import com.example.bsprestagil.data.models.MetodoPago
 import com.example.bsprestagil.data.models.Pago
 import com.example.bsprestagil.data.repository.PagoRepository
+import com.example.bsprestagil.data.repository.PrestamoRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -16,6 +17,7 @@ class PaymentsViewModel(application: Application) : AndroidViewModel(application
     
     private val database = AppDatabase.getDatabase(application)
     private val pagoRepository = PagoRepository(database.pagoDao())
+    private val prestamoRepository = PrestamoRepository(database.prestamoDao())
     
     private val _pagos = MutableStateFlow<List<Pago>>(emptyList())
     val pagos: StateFlow<List<Pago>> = _pagos.asStateFlow()
@@ -82,6 +84,7 @@ class PaymentsViewModel(application: Application) : AndroidViewModel(application
             try {
                 _isLoading.value = true
                 
+                // Registrar el pago
                 val pago = PagoEntity(
                     id = "",
                     prestamoId = prestamoId,
@@ -100,12 +103,44 @@ class PaymentsViewModel(application: Application) : AndroidViewModel(application
                 )
                 
                 pagoRepository.insertPago(pago)
+                
+                // Actualizar el préstamo: reducir saldo y aumentar cuotas pagadas
+                actualizarPrestamoDespuesDePago(prestamoId, monto)
+                
                 loadEstadisticasHoy() // Actualizar estadísticas
                 _isLoading.value = false
             } catch (e: Exception) {
                 _isLoading.value = false
                 // Manejar error
             }
+        }
+    }
+    
+    private suspend fun actualizarPrestamoDespuesDePago(prestamoId: String, montoPagado: Double) {
+        try {
+            // Obtener el préstamo actual
+            prestamoRepository.getPrestamoById(prestamoId).firstOrNull()?.let { prestamo ->
+                val nuevoSaldo = (prestamo.saldoPendiente - montoPagado).coerceAtLeast(0.0)
+                val nuevasCuotasPagadas = prestamo.cuotasPagadas + 1
+                
+                // Determinar nuevo estado
+                val nuevoEstado = when {
+                    nuevoSaldo <= 0.0 -> "COMPLETADO"
+                    nuevasCuotasPagadas >= prestamo.totalCuotas -> "COMPLETADO"
+                    else -> prestamo.estado
+                }
+                
+                // Actualizar préstamo
+                prestamoRepository.updatePrestamo(
+                    prestamo.copy(
+                        saldoPendiente = nuevoSaldo,
+                        cuotasPagadas = nuevasCuotasPagadas,
+                        estado = nuevoEstado
+                    )
+                )
+            }
+        } catch (e: Exception) {
+            // Manejar error
         }
     }
     

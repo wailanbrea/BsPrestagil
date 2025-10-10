@@ -62,6 +62,9 @@ dependencies {
     // Icons Extended
     implementation("androidx.compose.material:material-icons-extended:1.6.1")
     
+    // Pull to Refresh
+    implementation("com.google.accompanist:accompanist-swiperefresh:0.32.0")
+    
     // Room Database
     val roomVersion = "2.6.1"
     implementation("androidx.room:room-runtime:$roomVersion")

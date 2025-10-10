@@ -77,7 +77,7 @@ fun SettingsScreen(
             item {
                 SettingsCard(
                     title = "Tasa de interés base",
-                    subtitle = "$tasaInteres%",
+                    subtitle = "${configuracion?.tasaInteresBase ?: 10.0}%",
                     onClick = { showInterestDialog = true }
                 )
             }

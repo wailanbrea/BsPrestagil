@@ -18,6 +18,7 @@ import androidx.navigation.NavController
 import com.example.bsprestagil.components.TopAppBarComponent
 import com.example.bsprestagil.data.models.FrecuenciaPago
 import com.example.bsprestagil.viewmodels.ClientsViewModel
+import com.example.bsprestagil.viewmodels.ConfiguracionViewModel
 import com.example.bsprestagil.viewmodels.LoansViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -26,7 +27,8 @@ fun AddLoanScreen(
     clientId: String?,
     navController: NavController,
     clientsViewModel: ClientsViewModel = viewModel(),
-    loansViewModel: LoansViewModel = viewModel()
+    loansViewModel: LoansViewModel = viewModel(),
+    configuracionViewModel: ConfiguracionViewModel = viewModel()
 ) {
     var clienteSeleccionado by remember { mutableStateOf(clientId ?: "") }
     var clienteNombre by remember { mutableStateOf("") }
@@ -38,6 +40,15 @@ fun AddLoanScreen(
     var notas by remember { mutableStateOf("") }
     var expandedFrecuencia by remember { mutableStateOf(false) }
     var showSuccessDialog by remember { mutableStateOf(false) }
+    var showConfirmDialog by remember { mutableStateOf(false) }
+    
+    // Cargar tasa de interés desde configuración
+    val configuracion by configuracionViewModel.configuracion.collectAsState()
+    LaunchedEffect(configuracion) {
+        configuracion?.let {
+            tasaInteres = it.tasaInteresBase.toString()
+        }
+    }
     
     // Si viene un clientId, cargar el nombre
     if (clientId != null) {
@@ -321,21 +332,7 @@ fun AddLoanScreen(
             // Botón de guardar
             Button(
                 onClick = {
-                    val montoNum = monto.toDoubleOrNull() ?: 0.0
-                    val tasaNum = tasaInteres.toDoubleOrNull() ?: 0.0
-                    val plazoNum = plazoMeses.toIntOrNull() ?: 0
-                    
-                    loansViewModel.crearPrestamo(
-                        clienteId = clienteSeleccionado,
-                        clienteNombre = clienteNombre,
-                        monto = montoNum,
-                        tasaInteres = tasaNum,
-                        plazoMeses = plazoNum,
-                        frecuenciaPago = frecuenciaPago,
-                        garantiaId = null,
-                        notas = notas
-                    )
-                    showSuccessDialog = true
+                    showConfirmDialog = true
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -356,6 +353,55 @@ fun AddLoanScreen(
             
             Spacer(modifier = Modifier.height(16.dp))
         }
+    }
+    
+    // Diálogo de confirmación
+    if (showConfirmDialog) {
+        val montoNum = monto.toDoubleOrNull() ?: 0.0
+        val tasaNum = tasaInteres.toDoubleOrNull() ?: 0.0
+        val plazoNum = plazoMeses.toIntOrNull() ?: 0
+        val interes = montoNum * (tasaNum / 100)
+        val total = montoNum + interes
+        
+        AlertDialog(
+            onDismissRequest = { showConfirmDialog = false },
+            title = { Text("Confirmar préstamo") },
+            text = {
+                Column {
+                    Text("¿Crear préstamo con los siguientes datos?", fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text("Cliente: $clienteNombre")
+                    Text("Monto: $${String.format("%,.2f", montoNum)}")
+                    Text("Interés ($tasaNum%): $${String.format("%,.2f", interes)}")
+                    Text("Total a pagar: $${String.format("%,.2f", total)}", fontWeight = FontWeight.Bold)
+                    Text("Plazo: $plazoNum meses")
+                    Text("Frecuencia: ${frecuenciaPago.name}")
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    loansViewModel.crearPrestamo(
+                        clienteId = clienteSeleccionado,
+                        clienteNombre = clienteNombre,
+                        monto = montoNum,
+                        tasaInteres = tasaNum,
+                        plazoMeses = plazoNum,
+                        frecuenciaPago = frecuenciaPago,
+                        garantiaId = null,
+                        notas = notas
+                    )
+                    showConfirmDialog = false
+                    showSuccessDialog = true
+                }) {
+                    Text("Confirmar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showConfirmDialog = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
     }
     
     // Diálogo de éxito

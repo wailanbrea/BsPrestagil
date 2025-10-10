@@ -9,30 +9,45 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.bsprestagil.components.TopAppBarComponent
 import com.example.bsprestagil.ui.theme.SuccessColor
+import com.example.bsprestagil.utils.ShareUtils
+import com.example.bsprestagil.viewmodels.PaymentsViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
 @Composable
 fun PaymentDetailScreen(
     paymentId: String,
-    navController: NavController
+    navController: NavController,
+    paymentsViewModel: PaymentsViewModel = viewModel()
 ) {
+    val context = LocalContext.current
     val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
     
-    // Datos de ejemplo
-    val clienteNombre = "Juan Pérez González"
-    val monto = 1000.0
-    val montoCuota = 1000.0
-    val montoMora = 0.0
-    val fechaPago = System.currentTimeMillis()
-    val metodoPago = "Efectivo"
-    val numeroCuota = 4
-    val recibidoPor = "Admin"
+    // Cargar datos del pago
+    val pago by paymentsViewModel.getPagoById(paymentId).collectAsState(initial = null)
+    
+    val clienteNombre = pago?.clienteNombre ?: "Cargando..."
+    val monto = pago?.monto ?: 0.0
+    val montoCuota = pago?.montoCuota ?: 0.0
+    val montoMora = pago?.montoMora ?: 0.0
+    val fechaPago = pago?.fechaPago ?: System.currentTimeMillis()
+    val metodoPago = when(pago?.metodoPago?.name) {
+        "EFECTIVO" -> "Efectivo"
+        "TRANSFERENCIA" -> "Transferencia"
+        "TARJETA" -> "Tarjeta"
+        "OTRO" -> "Otro"
+        else -> "N/A"
+    }
+    val numeroCuota = pago?.numeroCuota ?: 0
+    val recibidoPor = pago?.recibidoPor ?: ""
+    val notas = pago?.notas ?: ""
     
     Scaffold(
         topBar = {
@@ -119,6 +134,20 @@ fun PaymentDetailScreen(
                         DetailRow("Fecha", dateFormat.format(Date(fechaPago)))
                         Divider()
                         DetailRow("Recibido por", recibidoPor)
+                        if (notas.isNotBlank()) {
+                            Divider()
+                            Column {
+                                Text(
+                                    text = "Notas",
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = notas,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -142,8 +171,21 @@ fun PaymentDetailScreen(
             
             item {
                 OutlinedButton(
-                    onClick = { /* TODO: Enviar por WhatsApp */ },
-                    modifier = Modifier.fillMaxWidth()
+                    onClick = {
+                        ShareUtils.compartirReciboPorWhatsApp(
+                            context = context,
+                            clienteNombre = clienteNombre,
+                            monto = monto,
+                            montoCuota = montoCuota,
+                            montoMora = montoMora,
+                            numeroCuota = numeroCuota,
+                            metodoPago = metodoPago,
+                            fechaPago = fechaPago,
+                            recibidoPor = recibidoPor
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = pago != null
                 ) {
                     Icon(Icons.Default.Share, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
