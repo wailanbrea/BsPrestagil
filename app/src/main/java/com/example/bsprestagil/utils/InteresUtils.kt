@@ -142,7 +142,7 @@ object InteresUtils {
     fun calcularProgreso(capitalOriginal: Double, capitalPendiente: Double): Float {
         if (capitalOriginal == 0.0) return 0f
         val capitalPagado = capitalOriginal - capitalPendiente
-        return ((capitalPagado / capitalOriginal) * 100f).coerceIn(0f, 100f)
+        return ((capitalPagado / capitalOriginal) * 100.0).toFloat().coerceIn(0f, 100f)
     }
 }
 
