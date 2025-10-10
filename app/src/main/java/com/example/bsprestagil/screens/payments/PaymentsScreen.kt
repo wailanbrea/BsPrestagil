@@ -16,6 +16,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.bsprestagil.components.BottomNavigationBar
+import com.example.bsprestagil.data.models.MetodoPago
+import com.example.bsprestagil.data.models.Pago
 import com.example.bsprestagil.navigation.Screen
 import com.example.bsprestagil.ui.theme.SuccessColor
 import com.example.bsprestagil.viewmodels.PaymentsViewModel
