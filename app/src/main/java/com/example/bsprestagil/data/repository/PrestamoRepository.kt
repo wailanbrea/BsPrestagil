@@ -83,17 +83,9 @@ class PrestamoRepository(
         return prestamoDao.getCarteraVencida() ?: 0.0
     }
     
-    // Cálculo de intereses
-    fun calcularIntereses(monto: Double, tasa: Double): Double {
-        return monto * (tasa / 100)
-    }
-    
-    fun calcularTotalAPagar(monto: Double, tasa: Double): Double {
-        return monto + calcularIntereses(monto, tasa)
-    }
-    
-    fun calcularMontoCuota(totalAPagar: Double, numeroCuotas: Int): Double {
-        return if (numeroCuotas > 0) totalAPagar / numeroCuotas else 0.0
+    // Obtener préstamos recientes
+    suspend fun getRecentPrestamos(limit: Int = 5): List<PrestamoEntity> {
+        return prestamoDao.getRecentPrestamos(limit)
     }
 }
 

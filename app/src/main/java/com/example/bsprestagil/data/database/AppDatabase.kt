@@ -18,7 +18,7 @@ import com.example.bsprestagil.data.database.entities.*
         UsuarioEntity::class,
         ConfiguracionEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

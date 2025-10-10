@@ -42,7 +42,10 @@ interface PrestamoDao {
     @Query("SELECT SUM(montoOriginal) FROM prestamos WHERE estado IN ('ACTIVO', 'ATRASADO')")
     suspend fun getTotalPrestado(): Double?
     
-    @Query("SELECT SUM(saldoPendiente) FROM prestamos WHERE estado = 'ATRASADO'")
+    @Query("SELECT SUM(capitalPendiente) FROM prestamos WHERE estado = 'ATRASADO'")
     suspend fun getCarteraVencida(): Double?
+    
+    @Query("SELECT * FROM prestamos ORDER BY fechaInicio DESC LIMIT :limit")
+    suspend fun getRecentPrestamos(limit: Int): List<PrestamoEntity>
 }
 

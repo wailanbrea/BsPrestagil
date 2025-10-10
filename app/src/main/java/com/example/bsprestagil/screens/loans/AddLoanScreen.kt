@@ -35,7 +35,6 @@ fun AddLoanScreen(
     var clienteNombre by remember { mutableStateOf("") }
     var monto by remember { mutableStateOf("") }
     var tasaInteres by remember { mutableStateOf("10") }
-    var plazoMeses by remember { mutableStateOf("12") }
     var frecuenciaPago by remember { mutableStateOf(FrecuenciaPago.MENSUAL) }
     var garantiaOpcional by remember { mutableStateOf("") }
     var notas by remember { mutableStateOf("") }
@@ -165,31 +164,34 @@ fun AddLoanScreen(
                 prefix = { Text("$") }
             )
             
-            Row(
+            OutlinedTextField(
+                value = tasaInteres,
+                onValueChange = { tasaInteres = it },
+                label = { 
+                    val periodoTexto = when(frecuenciaPago) {
+                        FrecuenciaPago.DIARIO -> "Diaria"
+                        FrecuenciaPago.SEMANAL -> "Semanal"
+                        FrecuenciaPago.QUINCENAL -> "Quincenal"
+                        FrecuenciaPago.MENSUAL -> "Mensual"
+                    }
+                    Text("Tasa de interés $periodoTexto *")
+                },
+                leadingIcon = { Icon(Icons.Default.Percent, contentDescription = null) },
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                OutlinedTextField(
-                    value = tasaInteres,
-                    onValueChange = { tasaInteres = it },
-                    label = { Text("Tasa de interés *") },
-                    leadingIcon = { Icon(Icons.Default.Percent, contentDescription = null) },
-                    modifier = Modifier.weight(1f),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    suffix = { Text("%") }
-                )
-                
-                OutlinedTextField(
-                    value = plazoMeses,
-                    onValueChange = { plazoMeses = it },
-                    label = { Text("Plazo *") },
-                    leadingIcon = { Icon(Icons.Default.CalendarMonth, contentDescription = null) },
-                    modifier = Modifier.weight(1f),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    suffix = { Text("meses") }
-                )
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                suffix = { Text("%") },
+                supportingText = {
+                    Text(
+                        "Se cobra por período (${when(frecuenciaPago) {
+                            FrecuenciaPago.DIARIO -> "cada día"
+                            FrecuenciaPago.SEMANAL -> "cada semana"
+                            FrecuenciaPago.QUINCENAL -> "cada 15 días"
+                            FrecuenciaPago.MENSUAL -> "cada mes"
+                        }})",
+                        fontSize = 12.sp
+                    )
+                }
             }
             
             // Frecuencia de pago
@@ -292,51 +294,48 @@ fun AddLoanScreen(
                         
                         val montoNum = monto.toDoubleOrNull() ?: 0.0
                         val tasaNum = tasaInteres.toDoubleOrNull() ?: 0.0
-                        val interes = montoNum * (tasaNum / 100)
-                        val total = montoNum + interes
+                        val interesPorPeriodo = montoNum * (tasaNum / 100)
                         
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text("Capital:", color = MaterialTheme.colorScheme.onPrimaryContainer)
+                            Text("Capital a prestar:", color = MaterialTheme.colorScheme.onPrimaryContainer)
                             Text(
                                 "$${String.format("%,.2f", montoNum)}",
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                        }
-                        
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text("Interés ($tasaNum%):", color = MaterialTheme.colorScheme.onPrimaryContainer)
-                            Text(
-                                "$${String.format("%,.2f", interes)}",
-                                fontWeight = FontWeight.SemiBold,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 18.sp,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                         }
                         
                         Divider(color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.3f))
                         
+                        val periodoTexto = when(frecuenciaPago) {
+                            FrecuenciaPago.DIARIO -> "día"
+                            FrecuenciaPago.SEMANAL -> "semana"
+                            FrecuenciaPago.QUINCENAL -> "quincena"
+                            FrecuenciaPago.MENSUAL -> "mes"
+                        }
+                        
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
+                            Text("Interés por $periodoTexto:", color = MaterialTheme.colorScheme.onPrimaryContainer)
                             Text(
-                                "Total a pagar:",
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                            Text(
-                                "$${String.format("%,.2f", total)}",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 18.sp,
+                                "$${String.format("%,.2f", interesPorPeriodo)}",
+                                fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                         }
+                        
+                        Text(
+                            text = "ℹ️ El cliente debe pagar el interés cada $periodoTexto. Cualquier monto extra se aplicará al capital.",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
                     }
                 }
             }
@@ -353,8 +352,7 @@ fun AddLoanScreen(
                     .height(56.dp),
                 enabled = clienteSeleccionado.isNotBlank() && 
                          monto.isNotBlank() && 
-                         tasaInteres.isNotBlank() && 
-                         plazoMeses.isNotBlank()
+                         tasaInteres.isNotBlank()
             ) {
                 Icon(Icons.Default.Save, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
@@ -373,9 +371,14 @@ fun AddLoanScreen(
     if (showConfirmDialog) {
         val montoNum = monto.toDoubleOrNull() ?: 0.0
         val tasaNum = tasaInteres.toDoubleOrNull() ?: 0.0
-        val plazoNum = plazoMeses.toIntOrNull() ?: 0
-        val interes = montoNum * (tasaNum / 100)
-        val total = montoNum + interes
+        val interesPorPeriodo = montoNum * (tasaNum / 100)
+        
+        val periodoTexto = when(frecuenciaPago) {
+            FrecuenciaPago.DIARIO -> "diario"
+            FrecuenciaPago.SEMANAL -> "semanal"
+            FrecuenciaPago.QUINCENAL -> "quincenal"
+            FrecuenciaPago.MENSUAL -> "mensual"
+        }
         
         AlertDialog(
             onDismissRequest = { showConfirmDialog = false },
@@ -385,11 +388,15 @@ fun AddLoanScreen(
                     Text("¿Crear préstamo con los siguientes datos?", fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(12.dp))
                     Text("Cliente: $clienteNombre")
-                    Text("Monto: $${String.format("%,.2f", montoNum)}")
-                    Text("Interés ($tasaNum%): $${String.format("%,.2f", interes)}")
-                    Text("Total a pagar: $${String.format("%,.2f", total)}", fontWeight = FontWeight.Bold)
-                    Text("Plazo: $plazoNum meses")
-                    Text("Frecuencia: ${frecuenciaPago.name}")
+                    Text("Capital: $${String.format("%,.2f", montoNum)}", fontWeight = FontWeight.Bold)
+                    Text("Tasa: $tasaNum% $periodoTexto")
+                    Text("Interés por período: $${String.format("%,.2f", interesPorPeriodo)}")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        "ℹ️ El cliente pagará el interés cada período. Cualquier monto extra reducirá el capital.",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    )
                 }
             },
             confirmButton = {
@@ -398,8 +405,7 @@ fun AddLoanScreen(
                         clienteId = clienteSeleccionado,
                         clienteNombre = clienteNombre,
                         monto = montoNum,
-                        tasaInteres = tasaNum,
-                        plazoMeses = plazoNum,
+                        tasaInteresPorPeriodo = tasaNum,
                         frecuenciaPago = frecuenciaPago,
                         garantiaId = null,
                         notas = notas

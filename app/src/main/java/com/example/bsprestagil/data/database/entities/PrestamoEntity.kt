@@ -23,17 +23,16 @@ data class PrestamoEntity(
     val clienteId: String,
     val clienteNombre: String,
     val montoOriginal: Double,
-    val tasaInteres: Double,
-    val plazoMeses: Int,
+    val capitalPendiente: Double,
+    val tasaInteresPorPeriodo: Double,
     val frecuenciaPago: String, // DIARIO, SEMANAL, QUINCENAL, MENSUAL
     val garantiaId: String?,
     val fechaInicio: Long,
-    val fechaVencimiento: Long,
+    val ultimaFechaPago: Long,
     val estado: String, // ACTIVO, ATRASADO, COMPLETADO, CANCELADO
-    val saldoPendiente: Double,
-    val totalAPagar: Double,
-    val cuotasPagadas: Int,
-    val totalCuotas: Int,
+    val totalInteresesPagados: Double,
+    val totalCapitalPagado: Double,
+    val totalMorasPagadas: Double,
     val notas: String,
     
     // Campos de sincronización

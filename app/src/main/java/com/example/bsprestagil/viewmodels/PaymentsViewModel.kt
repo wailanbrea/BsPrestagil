@@ -10,6 +10,7 @@ import com.example.bsprestagil.data.models.MetodoPago
 import com.example.bsprestagil.data.models.Pago
 import com.example.bsprestagil.data.repository.PagoRepository
 import com.example.bsprestagil.data.repository.PrestamoRepository
+import com.example.bsprestagil.utils.InteresUtils
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -68,14 +69,16 @@ class PaymentsViewModel(application: Application) : AndroidViewModel(application
             .map { entities -> entities.map { it.toPago() } }
     }
     
+    /**
+     * Registra un pago usando el modelo de interés sobre saldo
+     * El pago se distribuye: primero al interés, luego al capital
+     */
     fun registrarPago(
         prestamoId: String,
         clienteId: String,
         clienteNombre: String,
-        monto: Double,
-        montoCuota: Double,
+        montoPagado: Double,
         montoMora: Double,
-        numeroCuota: Int,
         metodoPago: MetodoPago,
         recibidoPor: String,
         notas: String = ""
@@ -84,30 +87,70 @@ class PaymentsViewModel(application: Application) : AndroidViewModel(application
             try {
                 _isLoading.value = true
                 
-                // Registrar el pago
-                val pago = PagoEntity(
-                    id = "",
-                    prestamoId = prestamoId,
-                    clienteId = clienteId,
-                    clienteNombre = clienteNombre,
-                    monto = monto + montoMora,
-                    montoCuota = montoCuota,
-                    montoMora = montoMora,
-                    fechaPago = System.currentTimeMillis(),
-                    fechaVencimiento = System.currentTimeMillis(),
-                    numeroCuota = numeroCuota,
-                    metodoPago = metodoPago.name,
-                    recibidoPor = recibidoPor,
-                    notas = notas,
-                    reciboUrl = ""
-                )
+                // Obtener el préstamo actual
+                prestamoRepository.getPrestamoById(prestamoId).firstOrNull()?.let { prestamo ->
+                    val fechaPagoActual = System.currentTimeMillis()
+                    
+                    // Calcular días transcurridos desde el último pago
+                    val diasTranscurridos = InteresUtils.calcularDiasTranscurridos(
+                        prestamo.ultimaFechaPago,
+                        fechaPagoActual
+                    )
+                    
+                    // Calcular el interés del período (proporcional a días transcurridos)
+                    val interesCalculado = InteresUtils.calcularInteresProporcional(
+                        capitalPendiente = prestamo.capitalPendiente,
+                        tasaInteresPorPeriodo = prestamo.tasaInteresPorPeriodo,
+                        frecuenciaPago = com.example.bsprestagil.data.models.FrecuenciaPago.valueOf(prestamo.frecuenciaPago),
+                        diasTranscurridos = diasTranscurridos
+                    )
+                    
+                    // Distribuir el pago entre interés y capital
+                    val (montoAInteres, montoACapital) = InteresUtils.distribuirPago(
+                        montoPagado = montoPagado,
+                        interesDelPeriodo = interesCalculado,
+                        capitalPendiente = prestamo.capitalPendiente
+                    )
+                    
+                    // Calcular el nuevo capital pendiente
+                    val nuevoCapitalPendiente = (prestamo.capitalPendiente - montoACapital).coerceAtLeast(0.0)
+                    
+                    // Registrar el pago con toda la información detallada
+                    val pago = PagoEntity(
+                        id = "",
+                        prestamoId = prestamoId,
+                        clienteId = clienteId,
+                        clienteNombre = clienteNombre,
+                        montoPagado = montoPagado,
+                        montoAInteres = montoAInteres,
+                        montoACapital = montoACapital,
+                        montoMora = montoMora,
+                        fechaPago = fechaPagoActual,
+                        diasTranscurridos = diasTranscurridos,
+                        interesCalculado = interesCalculado,
+                        capitalPendienteAntes = prestamo.capitalPendiente,
+                        capitalPendienteDespues = nuevoCapitalPendiente,
+                        metodoPago = metodoPago.name,
+                        recibidoPor = recibidoPor,
+                        notas = notas,
+                        reciboUrl = ""
+                    )
+                    
+                    pagoRepository.insertPago(pago)
+                    
+                    // Actualizar el préstamo
+                    actualizarPrestamoDespuesDePago(
+                        prestamo = prestamo,
+                        nuevoCapitalPendiente = nuevoCapitalPendiente,
+                        montoAInteres = montoAInteres,
+                        montoACapital = montoACapital,
+                        montoMora = montoMora,
+                        fechaPago = fechaPagoActual
+                    )
+                    
+                    loadEstadisticasHoy() // Actualizar estadísticas
+                }
                 
-                pagoRepository.insertPago(pago)
-                
-                // Actualizar el préstamo: reducir saldo y aumentar cuotas pagadas
-                actualizarPrestamoDespuesDePago(prestamoId, monto)
-                
-                loadEstadisticasHoy() // Actualizar estadísticas
                 _isLoading.value = false
             } catch (e: Exception) {
                 _isLoading.value = false
@@ -116,29 +159,32 @@ class PaymentsViewModel(application: Application) : AndroidViewModel(application
         }
     }
     
-    private suspend fun actualizarPrestamoDespuesDePago(prestamoId: String, montoPagado: Double) {
+    private suspend fun actualizarPrestamoDespuesDePago(
+        prestamo: com.example.bsprestagil.data.database.entities.PrestamoEntity,
+        nuevoCapitalPendiente: Double,
+        montoAInteres: Double,
+        montoACapital: Double,
+        montoMora: Double,
+        fechaPago: Long
+    ) {
         try {
-            // Obtener el préstamo actual
-            prestamoRepository.getPrestamoById(prestamoId).firstOrNull()?.let { prestamo ->
-                val nuevoSaldo = (prestamo.saldoPendiente - montoPagado).coerceAtLeast(0.0)
-                val nuevasCuotasPagadas = prestamo.cuotasPagadas + 1
-                
-                // Determinar nuevo estado
-                val nuevoEstado = when {
-                    nuevoSaldo <= 0.0 -> "COMPLETADO"
-                    nuevasCuotasPagadas >= prestamo.totalCuotas -> "COMPLETADO"
-                    else -> prestamo.estado
-                }
-                
-                // Actualizar préstamo
-                prestamoRepository.updatePrestamo(
-                    prestamo.copy(
-                        saldoPendiente = nuevoSaldo,
-                        cuotasPagadas = nuevasCuotasPagadas,
-                        estado = nuevoEstado
-                    )
-                )
+            // Determinar nuevo estado
+            val nuevoEstado = when {
+                nuevoCapitalPendiente <= 0.0 -> "COMPLETADO"
+                else -> "ACTIVO" // Puede ser ATRASADO si hay mora, pero eso se maneja en otra parte
             }
+            
+            // Actualizar préstamo con los nuevos valores
+            prestamoRepository.updatePrestamo(
+                prestamo.copy(
+                    capitalPendiente = nuevoCapitalPendiente,
+                    ultimaFechaPago = fechaPago,
+                    totalInteresesPagados = prestamo.totalInteresesPagados + montoAInteres,
+                    totalCapitalPagado = prestamo.totalCapitalPagado + montoACapital,
+                    totalMorasPagadas = prestamo.totalMorasPagadas + montoMora,
+                    estado = nuevoEstado
+                )
+            )
         } catch (e: Exception) {
             // Manejar error
         }

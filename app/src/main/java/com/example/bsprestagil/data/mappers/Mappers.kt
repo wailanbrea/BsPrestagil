@@ -53,8 +53,8 @@ fun PrestamoEntity.toPrestamo() = Prestamo(
     clienteId = clienteId,
     clienteNombre = clienteNombre,
     montoOriginal = montoOriginal,
-    tasaInteres = tasaInteres,
-    plazoMeses = plazoMeses,
+    capitalPendiente = capitalPendiente,
+    tasaInteresPorPeriodo = tasaInteresPorPeriodo,
     frecuenciaPago = when (frecuenciaPago) {
         "DIARIO" -> FrecuenciaPago.DIARIO
         "SEMANAL" -> FrecuenciaPago.SEMANAL
@@ -64,7 +64,7 @@ fun PrestamoEntity.toPrestamo() = Prestamo(
     },
     garantiaId = garantiaId,
     fechaInicio = fechaInicio,
-    fechaVencimiento = fechaVencimiento,
+    ultimaFechaPago = ultimaFechaPago,
     estado = when (estado) {
         "ACTIVO" -> EstadoPrestamo.ACTIVO
         "ATRASADO" -> EstadoPrestamo.ATRASADO
@@ -72,10 +72,9 @@ fun PrestamoEntity.toPrestamo() = Prestamo(
         "CANCELADO" -> EstadoPrestamo.CANCELADO
         else -> EstadoPrestamo.ACTIVO
     },
-    saldoPendiente = saldoPendiente,
-    totalAPagar = totalAPagar,
-    cuotasPagadas = cuotasPagadas,
-    totalCuotas = totalCuotas,
+    totalInteresesPagados = totalInteresesPagados,
+    totalCapitalPagado = totalCapitalPagado,
+    totalMorasPagadas = totalMorasPagadas,
     notas = notas
 )
 
@@ -84,17 +83,16 @@ fun Prestamo.toEntity() = PrestamoEntity(
     clienteId = clienteId,
     clienteNombre = clienteNombre,
     montoOriginal = montoOriginal,
-    tasaInteres = tasaInteres,
-    plazoMeses = plazoMeses,
+    capitalPendiente = capitalPendiente,
+    tasaInteresPorPeriodo = tasaInteresPorPeriodo,
     frecuenciaPago = frecuenciaPago.name,
     garantiaId = garantiaId,
     fechaInicio = fechaInicio,
-    fechaVencimiento = fechaVencimiento,
+    ultimaFechaPago = ultimaFechaPago,
     estado = estado.name,
-    saldoPendiente = saldoPendiente,
-    totalAPagar = totalAPagar,
-    cuotasPagadas = cuotasPagadas,
-    totalCuotas = totalCuotas,
+    totalInteresesPagados = totalInteresesPagados,
+    totalCapitalPagado = totalCapitalPagado,
+    totalMorasPagadas = totalMorasPagadas,
     notas = notas
 )
 
@@ -104,12 +102,15 @@ fun PagoEntity.toPago() = Pago(
     prestamoId = prestamoId,
     clienteId = clienteId,
     clienteNombre = clienteNombre,
-    monto = monto,
-    montoCuota = montoCuota,
+    montoPagado = montoPagado,
+    montoAInteres = montoAInteres,
+    montoACapital = montoACapital,
     montoMora = montoMora,
     fechaPago = fechaPago,
-    fechaVencimiento = fechaVencimiento,
-    numeroCuota = numeroCuota,
+    diasTranscurridos = diasTranscurridos,
+    interesCalculado = interesCalculado,
+    capitalPendienteAntes = capitalPendienteAntes,
+    capitalPendienteDespues = capitalPendienteDespues,
     metodoPago = when (metodoPago) {
         "EFECTIVO" -> MetodoPago.EFECTIVO
         "TRANSFERENCIA" -> MetodoPago.TRANSFERENCIA
@@ -127,12 +128,15 @@ fun Pago.toEntity() = PagoEntity(
     prestamoId = prestamoId,
     clienteId = clienteId,
     clienteNombre = clienteNombre,
-    monto = monto,
-    montoCuota = montoCuota,
+    montoPagado = montoPagado,
+    montoAInteres = montoAInteres,
+    montoACapital = montoACapital,
     montoMora = montoMora,
     fechaPago = fechaPago,
-    fechaVencimiento = fechaVencimiento,
-    numeroCuota = numeroCuota,
+    diasTranscurridos = diasTranscurridos,
+    interesCalculado = interesCalculado,
+    capitalPendienteAntes = capitalPendienteAntes,
+    capitalPendienteDespues = capitalPendienteDespues,
     metodoPago = metodoPago.name,
     recibidoPor = recibidoPor,
     notas = notas,

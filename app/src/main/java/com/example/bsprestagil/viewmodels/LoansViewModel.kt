@@ -67,8 +67,7 @@ class LoansViewModel(application: Application) : AndroidViewModel(application) {
         clienteId: String,
         clienteNombre: String,
         monto: Double,
-        tasaInteres: Double,
-        plazoMeses: Int,
+        tasaInteresPorPeriodo: Double, // Ej: 20% mensual
         frecuenciaPago: FrecuenciaPago,
         garantiaId: String? = null,
         notas: String = ""
@@ -77,36 +76,23 @@ class LoansViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 _isLoading.value = true
                 
-                val intereses = prestamoRepository.calcularIntereses(monto, tasaInteres)
-                val totalAPagar = prestamoRepository.calcularTotalAPagar(monto, tasaInteres)
-                
-                // Calcular número de cuotas según frecuencia
-                val numeroCuotas = when (frecuenciaPago) {
-                    FrecuenciaPago.DIARIO -> plazoMeses * 30
-                    FrecuenciaPago.SEMANAL -> plazoMeses * 4
-                    FrecuenciaPago.QUINCENAL -> plazoMeses * 2
-                    FrecuenciaPago.MENSUAL -> plazoMeses
-                }
-                
                 val fechaInicio = System.currentTimeMillis()
-                val fechaVencimiento = fechaInicio + (plazoMeses * 30L * 24 * 60 * 60 * 1000)
                 
                 val prestamo = PrestamoEntity(
                     id = "",
                     clienteId = clienteId,
                     clienteNombre = clienteNombre,
                     montoOriginal = monto,
-                    tasaInteres = tasaInteres,
-                    plazoMeses = plazoMeses,
+                    capitalPendiente = monto, // Al inicio, el capital pendiente es el monto completo
+                    tasaInteresPorPeriodo = tasaInteresPorPeriodo,
                     frecuenciaPago = frecuenciaPago.name,
                     garantiaId = garantiaId,
                     fechaInicio = fechaInicio,
-                    fechaVencimiento = fechaVencimiento,
+                    ultimaFechaPago = fechaInicio, // Inicia con la fecha de creación
                     estado = "ACTIVO",
-                    saldoPendiente = totalAPagar,
-                    totalAPagar = totalAPagar,
-                    cuotasPagadas = 0,
-                    totalCuotas = numeroCuotas,
+                    totalInteresesPagados = 0.0,
+                    totalCapitalPagado = 0.0,
+                    totalMorasPagadas = 0.0,
                     notas = notas
                 )
                 
