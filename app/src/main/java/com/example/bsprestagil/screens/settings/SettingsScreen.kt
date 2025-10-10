@@ -15,21 +15,27 @@ import androidx.navigation.NavController
 import com.example.bsprestagil.components.BottomNavigationBar
 import com.example.bsprestagil.components.SettingsCard
 import com.example.bsprestagil.navigation.Screen
+import com.example.bsprestagil.sync.SyncManager
 import com.example.bsprestagil.viewmodels.AuthViewModel
 import com.example.bsprestagil.viewmodels.ConfiguracionViewModel
+import com.example.bsprestagil.viewmodels.SyncViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     navController: NavController,
     authViewModel: AuthViewModel = viewModel(),
-    configuracionViewModel: ConfiguracionViewModel = viewModel()
+    configuracionViewModel: ConfiguracionViewModel = viewModel(),
+    syncViewModel: SyncViewModel = viewModel()
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     var showInterestDialog by remember { mutableStateOf(false) }
     var tasaInteres by remember { mutableStateOf("10") }
     var showLogoutDialog by remember { mutableStateOf(false) }
     
     val configuracion by configuracionViewModel.configuracion.collectAsState()
+    val syncStatus by syncViewModel.syncStatus.collectAsState()
+    val totalPendientes = syncViewModel.getTotalPendientes()
     
     // Actualizar tasa de interés cuando cambie la configuración
     LaunchedEffect(configuracion) {
@@ -88,6 +94,57 @@ fun SettingsScreen(
                     subtitle = "Logo, datos del negocio",
                     onClick = { /* TODO: Abrir pantalla de personalización */ }
                 )
+            }
+            
+            // Sincronización
+            item {
+                Text(
+                    text = "SINCRONIZACIÓN",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+            
+            item {
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Estado de sincronización",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            if (totalPendientes > 0) {
+                                Text(
+                                    text = "$totalPendientes elementos pendientes",
+                                    fontSize = 14.sp,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            } else {
+                                Text(
+                                    text = "Todo sincronizado ✓",
+                                    fontSize = 14.sp,
+                                    color = com.example.bsprestagil.ui.theme.SuccessColor
+                                )
+                            }
+                        }
+                        IconButton(onClick = {
+                            SyncManager.forceSyncNow(context)
+                            syncViewModel.loadSyncStatus()
+                        }) {
+                            Icon(Icons.Default.Sync, contentDescription = "Sincronizar ahora")
+                        }
+                    }
+                }
             }
             
             // Cobradores
