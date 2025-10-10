@@ -81,6 +81,18 @@ fun CollateralsScreen(
                     garantia = garantia,
                     onClick = {
                         navController.navigate(Screen.CollateralDetail.createRoute(garantia.id))
+                    },
+                    onQRClick = {
+                        navController.navigate(
+                            Screen.QRGarantia.createRoute(
+                                garantiaId = garantia.id,
+                                clienteNombre = "Cliente", // TODO: Obtener nombre real del cliente
+                                descripcion = garantia.descripcion,
+                                valorEstimado = garantia.valorEstimado,
+                                tipo = garantia.tipo.name,
+                                fechaRegistro = garantia.fechaRegistro
+                            )
+                        )
                     }
                 )
             }
@@ -91,7 +103,8 @@ fun CollateralsScreen(
 @Composable
 fun CollateralCard(
     garantia: Garantia,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onQRClick: () -> Unit
 ) {
     val estadoColor = when (garantia.estado) {
         EstadoGarantia.RETENIDA -> WarningColor
@@ -100,15 +113,15 @@ fun CollateralCard(
     }
     
     Card(
-        onClick = onClick,
         modifier = Modifier.fillMaxWidth()
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Column {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
             Surface(
                 shape = RoundedCornerShape(8.dp),
                 color = MaterialTheme.colorScheme.primaryContainer,
@@ -176,6 +189,43 @@ fun CollateralCard(
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 )
+            }
+            }
+            
+            Divider()
+            
+            // Botones de acción
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedButton(
+                    onClick = onQRClick,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.QrCode2,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Ver QR", fontSize = 13.sp)
+                }
+                
+                Button(
+                    onClick = onClick,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Visibility,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Detalles", fontSize = 13.sp)
+                }
             }
         }
     }

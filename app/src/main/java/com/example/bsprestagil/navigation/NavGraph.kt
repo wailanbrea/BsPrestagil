@@ -14,6 +14,7 @@ import com.example.bsprestagil.screens.clients.ClientsScreen
 import com.example.bsprestagil.screens.collaterals.AddEditCollateralScreen
 import com.example.bsprestagil.screens.collaterals.CollateralDetailScreen
 import com.example.bsprestagil.screens.collaterals.CollateralsScreen
+import com.example.bsprestagil.screens.collaterals.QRGarantiaScreen
 import com.example.bsprestagil.screens.dashboard.DashboardScreen
 import com.example.bsprestagil.screens.loans.AddLoanScreen
 import com.example.bsprestagil.screens.loans.LoanDetailScreen
@@ -164,6 +165,28 @@ fun NavGraph(
             val collateralId = backStackEntry.arguments?.getString("collateralId")
             AddEditCollateralScreen(
                 collateralId = collateralId,
+                navController = navController
+            )
+        }
+        
+        composable(
+            route = Screen.QRGarantia.route,
+            arguments = listOf(
+                navArgument("garantiaId") { type = NavType.StringType },
+                navArgument("clienteNombre") { type = NavType.StringType },
+                navArgument("descripcion") { type = NavType.StringType },
+                navArgument("valorEstimado") { type = NavType.StringType },
+                navArgument("tipo") { type = NavType.StringType },
+                navArgument("fechaRegistro") { type = NavType.LongType }
+            )
+        ) { backStackEntry ->
+            QRGarantiaScreen(
+                garantiaId = backStackEntry.arguments?.getString("garantiaId") ?: "",
+                clienteNombre = backStackEntry.arguments?.getString("clienteNombre") ?: "",
+                descripcion = backStackEntry.arguments?.getString("descripcion") ?: "",
+                valorEstimado = backStackEntry.arguments?.getString("valorEstimado")?.toDoubleOrNull() ?: 0.0,
+                tipo = backStackEntry.arguments?.getString("tipo") ?: "",
+                fechaRegistro = backStackEntry.arguments?.getLong("fechaRegistro") ?: 0L,
                 navController = navController
             )
         }

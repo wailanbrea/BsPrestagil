@@ -42,6 +42,16 @@ sealed class Screen(val route: String) {
             if (collateralId != null) "add_edit_collateral?collateralId=$collateralId"
             else "add_edit_collateral"
     }
+    object QRGarantia : Screen("qr_garantia/{garantiaId}/{clienteNombre}/{descripcion}/{valorEstimado}/{tipo}/{fechaRegistro}") {
+        fun createRoute(
+            garantiaId: String,
+            clienteNombre: String,
+            descripcion: String,
+            valorEstimado: Double,
+            tipo: String,
+            fechaRegistro: Long
+        ) = "qr_garantia/$garantiaId/${android.net.Uri.encode(clienteNombre)}/${android.net.Uri.encode(descripcion)}/$valorEstimado/$tipo/$fechaRegistro"
+    }
     
     // Pagos
     object RegisterPayment : Screen("register_payment/{loanId}") {
