@@ -1,0 +1,226 @@
+package com.example.bsprestagil.data.mappers
+
+import com.example.bsprestagil.data.database.entities.*
+import com.example.bsprestagil.data.models.*
+
+// Cliente Mappers
+fun ClienteEntity.toCliente() = Cliente(
+    id = id,
+    nombre = nombre,
+    telefono = telefono,
+    direccion = direccion,
+    email = email,
+    fotoUrl = fotoUrl,
+    referencias = referencias.map { it.toReferencia() },
+    fechaRegistro = fechaRegistro,
+    prestamosActivos = prestamosActivos,
+    historialPagos = when (historialPagos) {
+        "AL_DIA" -> EstadoPagos.AL_DIA
+        "ATRASADO" -> EstadoPagos.ATRASADO
+        "MOROSO" -> EstadoPagos.MOROSO
+        else -> EstadoPagos.AL_DIA
+    }
+)
+
+fun Cliente.toEntity() = ClienteEntity(
+    id = id,
+    nombre = nombre,
+    telefono = telefono,
+    direccion = direccion,
+    email = email,
+    fotoUrl = fotoUrl,
+    referencias = referencias.map { it.toEntity() },
+    fechaRegistro = fechaRegistro,
+    prestamosActivos = prestamosActivos,
+    historialPagos = historialPagos.name
+)
+
+fun ReferenciaEntity.toReferencia() = Referencia(
+    nombre = nombre,
+    telefono = telefono,
+    relacion = relacion
+)
+
+fun Referencia.toEntity() = ReferenciaEntity(
+    nombre = nombre,
+    telefono = telefono,
+    relacion = relacion
+)
+
+// Préstamo Mappers
+fun PrestamoEntity.toPrestamo() = Prestamo(
+    id = id,
+    clienteId = clienteId,
+    clienteNombre = clienteNombre,
+    montoOriginal = montoOriginal,
+    tasaInteres = tasaInteres,
+    plazoMeses = plazoMeses,
+    frecuenciaPago = when (frecuenciaPago) {
+        "DIARIO" -> FrecuenciaPago.DIARIO
+        "SEMANAL" -> FrecuenciaPago.SEMANAL
+        "QUINCENAL" -> FrecuenciaPago.QUINCENAL
+        "MENSUAL" -> FrecuenciaPago.MENSUAL
+        else -> FrecuenciaPago.MENSUAL
+    },
+    garantiaId = garantiaId,
+    fechaInicio = fechaInicio,
+    fechaVencimiento = fechaVencimiento,
+    estado = when (estado) {
+        "ACTIVO" -> EstadoPrestamo.ACTIVO
+        "ATRASADO" -> EstadoPrestamo.ATRASADO
+        "COMPLETADO" -> EstadoPrestamo.COMPLETADO
+        "CANCELADO" -> EstadoPrestamo.CANCELADO
+        else -> EstadoPrestamo.ACTIVO
+    },
+    saldoPendiente = saldoPendiente,
+    totalAPagar = totalAPagar,
+    cuotasPagadas = cuotasPagadas,
+    totalCuotas = totalCuotas,
+    notas = notas
+)
+
+fun Prestamo.toEntity() = PrestamoEntity(
+    id = id,
+    clienteId = clienteId,
+    clienteNombre = clienteNombre,
+    montoOriginal = montoOriginal,
+    tasaInteres = tasaInteres,
+    plazoMeses = plazoMeses,
+    frecuenciaPago = frecuenciaPago.name,
+    garantiaId = garantiaId,
+    fechaInicio = fechaInicio,
+    fechaVencimiento = fechaVencimiento,
+    estado = estado.name,
+    saldoPendiente = saldoPendiente,
+    totalAPagar = totalAPagar,
+    cuotasPagadas = cuotasPagadas,
+    totalCuotas = totalCuotas,
+    notas = notas
+)
+
+// Pago Mappers
+fun PagoEntity.toPago() = Pago(
+    id = id,
+    prestamoId = prestamoId,
+    clienteId = clienteId,
+    clienteNombre = clienteNombre,
+    monto = monto,
+    montoCuota = montoCuota,
+    montoMora = montoMora,
+    fechaPago = fechaPago,
+    fechaVencimiento = fechaVencimiento,
+    numeroCuota = numeroCuota,
+    metodoPago = when (metodoPago) {
+        "EFECTIVO" -> MetodoPago.EFECTIVO
+        "TRANSFERENCIA" -> MetodoPago.TRANSFERENCIA
+        "TARJETA" -> MetodoPago.TARJETA
+        "OTRO" -> MetodoPago.OTRO
+        else -> MetodoPago.EFECTIVO
+    },
+    recibidoPor = recibidoPor,
+    notas = notas,
+    reciboUrl = reciboUrl
+)
+
+fun Pago.toEntity() = PagoEntity(
+    id = id,
+    prestamoId = prestamoId,
+    clienteId = clienteId,
+    clienteNombre = clienteNombre,
+    monto = monto,
+    montoCuota = montoCuota,
+    montoMora = montoMora,
+    fechaPago = fechaPago,
+    fechaVencimiento = fechaVencimiento,
+    numeroCuota = numeroCuota,
+    metodoPago = metodoPago.name,
+    recibidoPor = recibidoPor,
+    notas = notas,
+    reciboUrl = reciboUrl
+)
+
+// Garantía Mappers
+fun GarantiaEntity.toGarantia() = Garantia(
+    id = id,
+    tipo = when (tipo) {
+        "VEHICULO" -> TipoGarantia.VEHICULO
+        "ELECTRODOMESTICO" -> TipoGarantia.ELECTRODOMESTICO
+        "ELECTRONICO" -> TipoGarantia.ELECTRONICO
+        "JOYA" -> TipoGarantia.JOYA
+        "MUEBLE" -> TipoGarantia.MUEBLE
+        "OTRO" -> TipoGarantia.OTRO
+        else -> TipoGarantia.OTRO
+    },
+    descripcion = descripcion,
+    valorEstimado = valorEstimado,
+    fotosUrls = fotosUrls,
+    estado = when (estado) {
+        "RETENIDA" -> EstadoGarantia.RETENIDA
+        "DEVUELTA" -> EstadoGarantia.DEVUELTA
+        "EJECUTADA" -> EstadoGarantia.EJECUTADA
+        else -> EstadoGarantia.RETENIDA
+    },
+    fechaRegistro = fechaRegistro,
+    notas = notas
+)
+
+fun Garantia.toEntity() = GarantiaEntity(
+    id = id,
+    tipo = tipo.name,
+    descripcion = descripcion,
+    valorEstimado = valorEstimado,
+    fotosUrls = fotosUrls,
+    estado = estado.name,
+    fechaRegistro = fechaRegistro,
+    notas = notas
+)
+
+// Usuario Mappers
+fun UsuarioEntity.toUsuario() = Usuario(
+    id = id,
+    nombre = nombre,
+    email = email,
+    rol = when (rol) {
+        "PRESTAMISTA" -> RolUsuario.PRESTAMISTA
+        "COBRADOR" -> RolUsuario.COBRADOR
+        else -> RolUsuario.PRESTAMISTA
+    },
+    fechaCreacion = fechaCreacion
+)
+
+fun Usuario.toEntity() = UsuarioEntity(
+    id = id,
+    nombre = nombre,
+    email = email,
+    rol = rol.name,
+    fechaCreacion = fechaCreacion
+)
+
+// Configuración Mappers
+fun ConfiguracionEntity.toConfiguracion() = Configuracion(
+    tasaInteresBase = tasaInteresBase,
+    tasaMoraBase = tasaMoraBase,
+    nombreNegocio = nombreNegocio,
+    telefonoNegocio = telefonoNegocio,
+    direccionNegocio = direccionNegocio,
+    logoUrl = logoUrl,
+    mensajeRecibo = mensajeRecibo,
+    notificacionesActivas = notificacionesActivas,
+    envioWhatsApp = envioWhatsApp,
+    envioSMS = envioSMS
+)
+
+fun Configuracion.toEntity() = ConfiguracionEntity(
+    id = 1,
+    tasaInteresBase = tasaInteresBase,
+    tasaMoraBase = tasaMoraBase,
+    nombreNegocio = nombreNegocio,
+    telefonoNegocio = telefonoNegocio,
+    direccionNegocio = direccionNegocio,
+    logoUrl = logoUrl,
+    mensajeRecibo = mensajeRecibo,
+    notificacionesActivas = notificacionesActivas,
+    envioWhatsApp = envioWhatsApp,
+    envioSMS = envioSMS
+)
+
