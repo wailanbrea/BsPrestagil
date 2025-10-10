@@ -87,12 +87,22 @@ object ShareUtils {
         context: Context,
         clienteNombre: String,
         montoOriginal: Double,
-        tasaInteres: Double,
-        totalAPagar: Double,
-        plazoMeses: Int,
+        capitalPendiente: Double,
+        tasaInteresPorPeriodo: Double,
+        frecuenciaPago: String,
+        totalCapitalPagado: Double,
+        totalInteresesPagados: Double,
         fechaInicio: Long
     ) {
         val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        
+        val periodoTexto = when(frecuenciaPago) {
+            "DIARIO" -> "diario"
+            "SEMANAL" -> "semanal"
+            "QUINCENAL" -> "quincenal"
+            "MENSUAL" -> "mensual"
+            else -> "mensual"
+        }
         
         val mensaje = buildString {
             appendLine("📊 *RESUMEN DE PRÉSTAMO*")
@@ -103,12 +113,15 @@ object ShareUtils {
             appendLine("Cliente: $clienteNombre")
             appendLine()
             appendLine("💰 *DETALLES FINANCIEROS*")
-            appendLine("Monto prestado: $${String.format("%,.2f", montoOriginal)}")
-            appendLine("Tasa de interés: ${tasaInteres.toInt()}%")
-            appendLine("*Total a pagar: $${String.format("%,.2f", totalAPagar)}*")
+            appendLine("Capital prestado: $${String.format("%,.2f", montoOriginal)}")
+            appendLine("Capital pendiente: $${String.format("%,.2f", capitalPendiente)}")
+            appendLine("Capital pagado: $${String.format("%,.2f", totalCapitalPagado)}")
+            appendLine()
+            appendLine("Tasa de interés: ${tasaInteresPorPeriodo.toInt()}% $periodoTexto")
+            appendLine("Intereses pagados: $${String.format("%,.2f", totalInteresesPagados)}")
             appendLine()
             appendLine("📅 Fecha de inicio: ${dateFormat.format(Date(fechaInicio))}")
-            appendLine("⏱️ Plazo: $plazoMeses meses")
+            appendLine("📊 Progreso: ${((totalCapitalPagado / montoOriginal) * 100).toInt()}%")
             appendLine()
             appendLine("━━━━━━━━━━━━━━━━━━━━")
         }

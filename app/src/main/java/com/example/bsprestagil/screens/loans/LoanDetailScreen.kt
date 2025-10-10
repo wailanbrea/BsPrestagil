@@ -40,16 +40,15 @@ fun LoanDetailScreen(
     
     val clienteNombre = prestamo?.clienteNombre ?: "Cargando..."
     val montoOriginal = prestamo?.montoOriginal ?: 0.0
-    val tasaInteres = prestamo?.tasaInteres ?: 0.0
-    val plazoMeses = prestamo?.plazoMeses ?: 0
-    val cuotasPagadas = prestamo?.cuotasPagadas ?: 0
-    val totalCuotas = prestamo?.totalCuotas ?: 1
-    val saldoPendiente = prestamo?.saldoPendiente ?: 0.0
-    val totalAPagar = prestamo?.totalAPagar ?: 0.0
+    val capitalPendiente = prestamo?.capitalPendiente ?: 0.0
+    val tasaInteresPorPeriodo = prestamo?.tasaInteresPorPeriodo ?: 0.0
     val fechaInicio = prestamo?.fechaInicio ?: System.currentTimeMillis()
-    val fechaVencimiento = prestamo?.fechaVencimiento ?: System.currentTimeMillis()
+    val ultimaFechaPago = prestamo?.ultimaFechaPago ?: System.currentTimeMillis()
     val estado = prestamo?.estado ?: EstadoPrestamo.ACTIVO
-    val montoInteres = totalAPagar - montoOriginal
+    val totalInteresesPagados = prestamo?.totalInteresesPagados ?: 0.0
+    val totalCapitalPagado = prestamo?.totalCapitalPagado ?: 0.0
+    val totalMorasPagadas = prestamo?.totalMorasPagadas ?: 0.0
+    val frecuenciaPago = prestamo?.frecuenciaPago ?: com.example.bsprestagil.data.models.FrecuenciaPago.MENSUAL
     
     Scaffold(
         topBar = {
@@ -63,9 +62,11 @@ fun LoanDetailScreen(
                                 context = context,
                                 clienteNombre = p.clienteNombre,
                                 montoOriginal = p.montoOriginal,
-                                tasaInteres = p.tasaInteres,
-                                totalAPagar = p.totalAPagar,
-                                plazoMeses = p.plazoMeses,
+                                capitalPendiente = p.capitalPendiente,
+                                tasaInteresPorPeriodo = p.tasaInteresPorPeriodo,
+                                frecuenciaPago = p.frecuenciaPago.name,
+                                totalCapitalPagado = p.totalCapitalPagado,
+                                totalInteresesPagados = p.totalInteresesPagados,
                                 fechaInicio = p.fechaInicio
                             )
                         }
@@ -200,13 +201,40 @@ fun LoanDetailScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     InfoCard(
-                        title = "Monto original",
+                        title = "Capital original",
                         value = "$${String.format("%,.2f", montoOriginal)}",
                         modifier = Modifier.weight(1f)
                     )
                     InfoCard(
-                        title = "Tasa de interés",
-                        value = "${tasaInteres.toInt()}%",
+                        title = "Capital pendiente",
+                        value = "$${String.format("%,.2f", capitalPendiente)}",
+                        color = if (capitalPendiente > 0) MaterialTheme.colorScheme.error else SuccessColor,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+            
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    val periodoTexto = when(frecuenciaPago) {
+                        com.example.bsprestagil.data.models.FrecuenciaPago.DIARIO -> "día"
+                        com.example.bsprestagil.data.models.FrecuenciaPago.SEMANAL -> "semana"
+                        com.example.bsprestagil.data.models.FrecuenciaPago.QUINCENAL -> "quincena"
+                        com.example.bsprestagil.data.models.FrecuenciaPago.MENSUAL -> "mes"
+                    }
+                    
+                    InfoCard(
+                        title = "Tasa por $periodoTexto",
+                        value = "${tasaInteresPorPeriodo.toInt()}%",
+                        modifier = Modifier.weight(1f)
+                    )
+                    InfoCard(
+                        title = "Capital pagado",
+                        value = "$${String.format("%,.2f", totalCapitalPagado)}",
+                        color = SuccessColor,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -218,24 +246,26 @@ fun LoanDetailScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     InfoCard(
-                        title = "Total a pagar",
-                        value = "$${String.format("%,.2f", totalAPagar)}",
+                        title = "Intereses pagados",
+                        value = "$${String.format("%,.2f", totalInteresesPagados)}",
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.weight(1f)
                     )
-                    InfoCard(
-                        title = "Saldo pendiente",
-                        value = "$${String.format("%,.2f", saldoPendiente)}",
-                        color = SuccessColor,
-                        modifier = Modifier.weight(1f)
-                    )
+                    if (totalMorasPagadas > 0) {
+                        InfoCard(
+                            title = "Moras pagadas",
+                            value = "$${String.format("%,.2f", totalMorasPagadas)}",
+                            color = com.example.bsprestagil.ui.theme.WarningColor,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
                 }
             }
             
             // Progreso de pagos
             item {
                 Text(
-                    text = "Progreso de pagos",
+                    text = "Progreso del préstamo",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(top = 8.dp)
@@ -247,32 +277,43 @@ fun LoanDetailScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp)
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
+                        // Progreso del capital
+                        val progresoCapital = if (montoOriginal > 0) {
+                            ((totalCapitalPagado / montoOriginal) * 100).toInt()
+                        } else 0
+                        
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "$cuotasPagadas de $totalCuotas cuotas",
+                                text = "Capital pagado",
                                 fontSize = 14.sp,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                             )
                             Text(
-                                text = "${(cuotasPagadas * 100) / totalCuotas}%",
+                                text = "$progresoCapital%",
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = SuccessColor
                             )
                         }
-                        Spacer(modifier = Modifier.height(8.dp))
                         LinearProgressIndicator(
-                            progress = { cuotasPagadas.toFloat() / totalCuotas.toFloat() },
+                            progress = { progresoCapital / 100f },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(8.dp),
                             color = SuccessColor,
                             trackColor = SuccessColor.copy(alpha = 0.2f)
+                        )
+                        
+                        Text(
+                            text = "$${String.format("%,.2f", totalCapitalPagado)} de $${String.format("%,.2f", montoOriginal)}",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                         )
                     }
                 }
@@ -306,11 +347,11 @@ fun LoanDetailScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "Fecha de vencimiento",
+                                text = "Último pago",
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                             )
                             Text(
-                                text = dateFormat.format(Date(fechaVencimiento)),
+                                text = dateFormat.format(Date(ultimaFechaPago)),
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
@@ -319,12 +360,18 @@ fun LoanDetailScreen(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
+                            val periodoTexto = when(frecuenciaPago) {
+                                com.example.bsprestagil.data.models.FrecuenciaPago.DIARIO -> "Diaria"
+                                com.example.bsprestagil.data.models.FrecuenciaPago.SEMANAL -> "Semanal"
+                                com.example.bsprestagil.data.models.FrecuenciaPago.QUINCENAL -> "Quincenal"
+                                com.example.bsprestagil.data.models.FrecuenciaPago.MENSUAL -> "Mensual"
+                            }
                             Text(
-                                text = "Plazo",
+                                text = "Frecuencia",
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                             )
                             Text(
-                                text = "$plazoMeses meses",
+                                text = periodoTexto,
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
