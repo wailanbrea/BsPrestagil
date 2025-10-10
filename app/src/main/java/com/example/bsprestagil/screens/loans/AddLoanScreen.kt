@@ -184,13 +184,14 @@ fun AddLoanScreen(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 suffix = { Text("%") },
                 supportingText = {
+                    val periodoDescripcion = when(frecuenciaPago) {
+                        FrecuenciaPago.DIARIO -> "cada día"
+                        FrecuenciaPago.SEMANAL -> "cada semana"
+                        FrecuenciaPago.QUINCENAL -> "cada 15 días"
+                        FrecuenciaPago.MENSUAL -> "cada mes"
+                    }
                     Text(
-                        "Se cobra por período (${when(frecuenciaPago) {
-                            FrecuenciaPago.DIARIO -> "cada día"
-                            FrecuenciaPago.SEMANAL -> "cada semana"
-                            FrecuenciaPago.QUINCENAL -> "cada 15 días"
-                            FrecuenciaPago.MENSUAL -> "cada mes"
-                        }})",
+                        "Se cobra por período ($periodoDescripcion)",
                         fontSize = 12.sp
                     )
                 }
