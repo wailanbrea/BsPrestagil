@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -46,6 +47,7 @@ fun AddLoanScreen(
     var showSuccessDialog by remember { mutableStateOf(false) }
     var showConfirmDialog by remember { mutableStateOf(false) }
     var showClientSelector by remember { mutableStateOf(false) }
+    var mostrarTablaEnConfirmacion by remember { mutableStateOf(false) }
     
     // Cargar lista de clientes
     val clientes by clientsViewModel.clientes.collectAsState()
@@ -471,7 +473,9 @@ fun AddLoanScreen(
             onDismissRequest = { showConfirmDialog = false },
             title = { Text("Confirmar préstamo") },
             text = {
-                Column {
+                Column(
+                    modifier = Modifier.verticalScroll(rememberScrollState())
+                ) {
                     Text("¿Crear préstamo con los siguientes datos?", fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(12.dp))
                     Text("Cliente: $clienteNombre")
@@ -488,9 +492,93 @@ fun AddLoanScreen(
                     Spacer(modifier = Modifier.height(8.dp))
                     Text("Total a pagar: $${String.format("%,.2f", totalAPagar)}")
                     Text("Total intereses: $${String.format("%,.2f", totalIntereses)}")
+                    
+                    Spacer(modifier = Modifier.height(12.dp))
+                    
+                    // Botón para mostrar/ocultar tabla
+                    OutlinedButton(
+                        onClick = { mostrarTablaEnConfirmacion = !mostrarTablaEnConfirmacion },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(
+                            if (mostrarTablaEnConfirmacion) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                            contentDescription = null
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(if (mostrarTablaEnConfirmacion) "Ocultar tabla" else "Ver tabla de amortización")
+                    }
+                    
+                    // Tabla de amortización
+                    if (mostrarTablaEnConfirmacion) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        
+                        // Generar tabla
+                        val tablaAmortizacion = AmortizacionUtils.generarTablaAmortizacion(
+                            capitalInicial = montoNum,
+                            tasaInteresPorPeriodo = tasaNum,
+                            numeroCuotas = cuotasNum
+                        )
+                        
+                        // Encabezado
+                        Text(
+                            text = "Cronograma de pagos:",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        )
+                        
+                        // Filas de la tabla (mostrar solo primeras 3 y últimas 2)
+                        val filasAMostrar = if (tablaAmortizacion.size > 5) {
+                            tablaAmortizacion.take(3) + listOf(null) + tablaAmortizacion.takeLast(2)
+                        } else {
+                            tablaAmortizacion
+                        }
+                        
+                        filasAMostrar.forEach { fila ->
+                            if (fila == null) {
+                                Text(
+                                    text = "...",
+                                    fontSize = 10.sp,
+                                    modifier = Modifier.padding(vertical = 2.dp),
+                                    textAlign = TextAlign.Center
+                                )
+                            } else {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 2.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = "${fila.numeroCuota}.",
+                                        fontSize = 10.sp,
+                                        modifier = Modifier.width(20.dp)
+                                    )
+                                    Text(
+                                        text = "$${String.format("%,.0f", fila.cuotaFija)}",
+                                        fontSize = 10.sp,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    Text(
+                                        text = "Int: $${String.format("%,.0f", fila.interes)}",
+                                        fontSize = 10.sp,
+                                        modifier = Modifier.weight(1f),
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                    )
+                                    Text(
+                                        text = "$${String.format("%,.0f", fila.balanceRestante)}",
+                                        fontSize = 10.sp,
+                                        modifier = Modifier.weight(1f),
+                                        textAlign = TextAlign.End
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        "ℹ️ Sistema Francés: Cuota fija de $${String.format("%,.0f", cuotaFijaCalculada)} cada $periodoTexto. Se generará cronograma completo.",
+                        "ℹ️ Sistema Francés: Cuota fija de $${String.format("%,.0f", cuotaFijaCalculada)} cada $periodoTexto.",
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                     )
