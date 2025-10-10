@@ -33,6 +33,8 @@ fun TestSyncScreen(
     
     var mensaje by remember { mutableStateOf("Listo para probar sincronización") }
     var loading by remember { mutableStateOf(false) }
+    var clienteIdCreado by remember { mutableStateOf<String?>(null) }
+    var prestamoIdCreado by remember { mutableStateOf<String?>(null) }
     
     Scaffold(
         topBar = {
@@ -119,6 +121,7 @@ fun TestSyncScreen(
                                         historialPagos = "AL_DIA"
                                     )
                                 )
+                                clienteIdCreado = clienteId
                                 mensaje = "✅ Cliente creado con ID: $clienteId"
                                 loading = false
                             } catch (e: Exception) {
@@ -134,20 +137,24 @@ fun TestSyncScreen(
                 ) {
                     Icon(Icons.Default.PersonAdd, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("1. Crear Cliente de Prueba")
+                    Text(if (clienteIdCreado != null) "✅ Cliente creado" else "1. Crear Cliente de Prueba")
                 }
             }
             
             item {
                 Button(
                     onClick = {
+                        if (clienteIdCreado == null) {
+                            mensaje = "⚠️ Primero debes crear un cliente"
+                            return@Button
+                        }
                         loading = true
                         scope.launch {
                             try {
                                 val prestamoId = prestamoRepository.insertPrestamo(
                                     PrestamoEntity(
                                         id = "",
-                                        clienteId = "test-client-1",
+                                        clienteId = clienteIdCreado!!,
                                         clienteNombre = "Juan Pérez González",
                                         montoOriginal = 10000.0,
                                         tasaInteres = 10.0,
@@ -164,6 +171,7 @@ fun TestSyncScreen(
                                         notas = "Préstamo de prueba"
                                     )
                                 )
+                                prestamoIdCreado = prestamoId
                                 mensaje = "✅ Préstamo creado con ID: $prestamoId"
                                 loading = false
                             } catch (e: Exception) {
@@ -175,25 +183,29 @@ fun TestSyncScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
-                    enabled = !loading
+                    enabled = !loading && clienteIdCreado != null
                 ) {
                     Icon(Icons.Default.AccountBalance, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("2. Crear Préstamo de Prueba")
+                    Text(if (prestamoIdCreado != null) "✅ Préstamo creado" else "2. Crear Préstamo de Prueba")
                 }
             }
             
             item {
                 Button(
                     onClick = {
+                        if (prestamoIdCreado == null) {
+                            mensaje = "⚠️ Primero debes crear un préstamo"
+                            return@Button
+                        }
                         loading = true
                         scope.launch {
                             try {
                                 val pagoId = pagoRepository.insertPago(
                                     PagoEntity(
                                         id = "",
-                                        prestamoId = "test-prestamo-1",
-                                        clienteId = "test-client-1",
+                                        prestamoId = prestamoIdCreado!!,
+                                        clienteId = clienteIdCreado!!,
                                         clienteNombre = "Juan Pérez González",
                                         monto = 1000.0,
                                         montoCuota = 1000.0,
@@ -218,7 +230,7 @@ fun TestSyncScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
-                    enabled = !loading
+                    enabled = !loading && prestamoIdCreado != null
                 ) {
                     Icon(Icons.Default.Payment, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
