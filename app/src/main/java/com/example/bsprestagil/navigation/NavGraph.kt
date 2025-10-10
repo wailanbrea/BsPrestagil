@@ -18,6 +18,7 @@ import com.example.bsprestagil.screens.collaterals.HistorialGarantiasScreen
 import com.example.bsprestagil.screens.collaterals.QRGarantiaScreen
 import com.example.bsprestagil.screens.collaterals.QRScannerScreen
 import com.example.bsprestagil.screens.dashboard.DashboardScreen
+import com.example.bsprestagil.screens.calculator.CalculadoraPrestamoScreen
 import com.example.bsprestagil.screens.loans.AddLoanScreen
 import com.example.bsprestagil.screens.loans.LoanDetailScreen
 import com.example.bsprestagil.screens.loans.LoansScreen
@@ -138,6 +139,10 @@ fun NavGraph(
                 clientId = clientId,
                 navController = navController
             )
+        }
+        
+        composable(Screen.CalculadoraPrestamo.route) {
+            CalculadoraPrestamoScreen(navController = navController)
         }
         
         // Collaterals

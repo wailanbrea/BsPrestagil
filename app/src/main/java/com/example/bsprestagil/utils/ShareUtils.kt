@@ -85,7 +85,7 @@ object ShareUtils {
     }
     
     /**
-     * Genera resumen de préstamo para compartir
+     * Genera resumen de préstamo para compartir con tabla de amortización
      */
     fun compartirResumenPrestamo(
         context: Context,
@@ -94,9 +94,12 @@ object ShareUtils {
         capitalPendiente: Double,
         tasaInteresPorPeriodo: Double,
         frecuenciaPago: String,
+        numeroCuotas: Int,
+        montoCuotaFija: Double,
         totalCapitalPagado: Double,
         totalInteresesPagados: Double,
-        fechaInicio: Long
+        fechaInicio: Long,
+        incluirTablaAmortizacion: Boolean = true
     ) {
         val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
         
@@ -109,24 +112,43 @@ object ShareUtils {
         
         val mensaje = buildString {
             appendLine("📊 *RESUMEN DE PRÉSTAMO*")
-            appendLine("━━━━━━━━━━━━━━━━━━━━")
+            appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
             appendLine()
-            appendLine("*Prestágil*")
+            appendLine("*Prestágil - Sistema de Gestión*")
             appendLine()
-            appendLine("Cliente: $clienteNombre")
+            appendLine("👤 Cliente: *$clienteNombre*")
+            appendLine("📅 Fecha de inicio: ${dateFormat.format(Date(fechaInicio))}")
             appendLine()
-            appendLine("💰 *DETALLES FINANCIEROS*")
+            appendLine("💰 *INFORMACIÓN DEL PRÉSTAMO*")
+            appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
             appendLine("Capital prestado: $${String.format("%,.2f", montoOriginal)}")
+            appendLine("Tasa de interés: ${tasaInteresPorPeriodo.toInt()}% $periodoTexto")
+            appendLine("Número de cuotas: $numeroCuotas")
+            appendLine("*Cuota fija: $${String.format("%,.2f", montoCuotaFija)}*")
+            appendLine()
+            appendLine("📊 *ESTADO ACTUAL*")
+            appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
             appendLine("Capital pendiente: $${String.format("%,.2f", capitalPendiente)}")
             appendLine("Capital pagado: $${String.format("%,.2f", totalCapitalPagado)}")
-            appendLine()
-            appendLine("Tasa de interés: ${tasaInteresPorPeriodo.toInt()}% $periodoTexto")
             appendLine("Intereses pagados: $${String.format("%,.2f", totalInteresesPagados)}")
+            appendLine("Progreso: ${((totalCapitalPagado / montoOriginal) * 100).toInt()}%")
             appendLine()
-            appendLine("📅 Fecha de inicio: ${dateFormat.format(Date(fechaInicio))}")
-            appendLine("📊 Progreso: ${((totalCapitalPagado / montoOriginal) * 100).toInt()}%")
+            
+            if (incluirTablaAmortizacion) {
+                appendLine()
+                val tablaTexto = AmortizacionUtils.generarTextoTablaAmortizacion(
+                    capitalInicial = montoOriginal,
+                    tasaInteresPorPeriodo = tasaInteresPorPeriodo,
+                    numeroCuotas = numeroCuotas,
+                    incluirEncabezado = true
+                )
+                append(tablaTexto)
+                appendLine()
+            }
+            
             appendLine()
-            appendLine("━━━━━━━━━━━━━━━━━━━━")
+            appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+            appendLine("📱 *Prestágil* - Tu socio financiero")
         }
         
         compartirTextoGenerico(context, mensaje, "Resumen de Préstamo")

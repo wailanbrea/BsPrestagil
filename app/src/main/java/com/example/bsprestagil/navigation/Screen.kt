@@ -31,6 +31,7 @@ sealed class Screen(val route: String) {
             if (clientId != null) "add_loan?clientId=$clientId"
             else "add_loan"
     }
+    object CalculadoraPrestamo : Screen("calculadora_prestamo")
     
     // Garantías
     object Collaterals : Screen("collaterals")

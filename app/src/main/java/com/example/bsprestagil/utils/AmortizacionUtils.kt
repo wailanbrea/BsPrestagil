@@ -137,5 +137,53 @@ object AmortizacionUtils {
             0.0
         }
     }
+    
+    /**
+     * Genera texto formateado de la tabla de amortización para compartir/imprimir
+     */
+    fun generarTextoTablaAmortizacion(
+        capitalInicial: Double,
+        tasaInteresPorPeriodo: Double,
+        numeroCuotas: Int,
+        incluirEncabezado: Boolean = true
+    ): String {
+        val tabla = generarTablaAmortizacion(capitalInicial, tasaInteresPorPeriodo, numeroCuotas)
+        
+        return buildString {
+            if (incluirEncabezado) {
+                appendLine("📊 *TABLA DE AMORTIZACIÓN*")
+                appendLine("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+                appendLine()
+            }
+            
+            // Encabezado de la tabla
+            appendLine("No. | Cuota      | Capital    | Interés    | Balance")
+            appendLine("----+------------+------------+------------+------------")
+            
+            // Filas de datos
+            tabla.forEach { fila ->
+                val numCuota = fila.numeroCuota.toString().padStart(3)
+                val cuota = "$${String.format("%,.2f", fila.cuotaFija)}".padStart(10)
+                val capital = "$${String.format("%,.2f", fila.capital)}".padStart(10)
+                val interes = "$${String.format("%,.2f", fila.interes)}".padStart(10)
+                val balance = "$${String.format("%,.2f", fila.balanceRestante)}".padStart(10)
+                
+                appendLine("$numCuota | $cuota | $capital | $interes | $balance")
+            }
+            
+            appendLine("----+------------+------------+------------+------------")
+            
+            // Totales
+            val totalCuotas = tabla.sumOf { it.cuotaFija }
+            val totalCapital = tabla.sumOf { it.capital }
+            val totalIntereses = tabla.sumOf { it.interes }
+            
+            appendLine()
+            appendLine("*Totales:*")
+            appendLine("• Total a pagar: $${String.format("%,.2f", totalCuotas)}")
+            appendLine("• Total capital: $${String.format("%,.2f", totalCapital)}")
+            appendLine("• Total intereses: $${String.format("%,.2f", totalIntereses)}")
+        }
+    }
 }
 

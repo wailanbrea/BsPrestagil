@@ -76,9 +76,12 @@ fun LoanDetailScreen(
                                 capitalPendiente = p.capitalPendiente,
                                 tasaInteresPorPeriodo = p.tasaInteresPorPeriodo,
                                 frecuenciaPago = p.frecuenciaPago.name,
+                                numeroCuotas = p.numeroCuotas,
+                                montoCuotaFija = p.montoCuotaFija,
                                 totalCapitalPagado = p.totalCapitalPagado,
                                 totalInteresesPagados = p.totalInteresesPagados,
-                                fechaInicio = p.fechaInicio
+                                fechaInicio = p.fechaInicio,
+                                incluirTablaAmortizacion = true
                             )
                         }
                     }) {
@@ -388,89 +391,238 @@ fun LoanDetailScreen(
                 }
             }
             
-            // Cronograma de cuotas
+            // Tabla de Amortización
             item {
                 Text(
-                    text = "Cronograma de cuotas",
+                    text = "Tabla de Amortización",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(top = 8.dp)
                 )
             }
             
-            items(cuotas.size) { index ->
-                val cuota = cuotas[index]
-                val estadoCuotaColor = when(cuota.estado) {
-                    EstadoCuota.PAGADA -> SuccessColor
-                    EstadoCuota.PENDIENTE -> com.example.bsprestagil.ui.theme.WarningColor
-                    EstadoCuota.VENCIDA -> com.example.bsprestagil.ui.theme.ErrorColor
-                    EstadoCuota.PARCIAL -> MaterialTheme.colorScheme.primary
-                }
-                
-                val estadoTexto = when(cuota.estado) {
-                    EstadoCuota.PAGADA -> "✅ Pagada"
-                    EstadoCuota.PENDIENTE -> "⏳ Pendiente"
-                    EstadoCuota.VENCIDA -> "⚠️ Vencida"
-                    EstadoCuota.PARCIAL -> "🔄 Parcial"
-                }
-                
+            // Encabezado de la tabla
+            item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
-                        containerColor = if (cuota.estado == EstadoCuota.PAGADA)
-                            estadoCuotaColor.copy(alpha = 0.1f)
-                        else
-                            MaterialTheme.colorScheme.surface
-                    ),
-                    border = BorderStroke(
-                        width = 1.dp,
-                        color = estadoCuotaColor.copy(alpha = 0.3f)
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
                     )
                 ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(12.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Column {
+                        Text(
+                            text = "No.",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.weight(0.5f)
+                        )
+                        Text(
+                            text = "Cuota",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            text = "Capital",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            text = "Interés",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            text = "Balance",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+            }
+            
+            // Filas de datos
+            items(cuotas.size) { index ->
+                val cuota = cuotas[index]
+                
+                // Extraer los datos proyectados de las notas
+                val notasParts = cuota.notas.split(",")
+                val interesProyectado = notasParts.getOrNull(0)?.substringAfter("$")?.trim()?.toDoubleOrNull() ?: 0.0
+                val capitalProyectado = notasParts.getOrNull(1)?.substringAfter("$")?.trim()?.toDoubleOrNull() ?: 0.0
+                
+                // Calcular balance (capital pendiente después de esta cuota)
+                val balanceProyectado = cuota.capitalPendienteAlInicio - capitalProyectado
+                
+                val estadoCuotaColor = when(cuota.estado) {
+                    EstadoCuota.PAGADA -> SuccessColor
+                    EstadoCuota.PENDIENTE -> MaterialTheme.colorScheme.onSurface
+                    EstadoCuota.VENCIDA -> com.example.bsprestagil.ui.theme.ErrorColor
+                    EstadoCuota.PARCIAL -> MaterialTheme.colorScheme.primary
+                }
+                
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (cuota.estado == EstadoCuota.PAGADA)
+                            SuccessColor.copy(alpha = 0.1f)
+                        else
+                            MaterialTheme.colorScheme.surface
+                    ),
+                    border = if (cuota.estado == EstadoCuota.PENDIENTE && index == cuotas.indexOfFirst { it.estado == EstadoCuota.PENDIENTE })
+                        BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
+                    else null
+                ) {
+                    Column {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Text(
-                                text = "Cuota ${cuota.numeroCuota}",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold
+                                text = "${cuota.numeroCuota}",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = estadoCuotaColor,
+                                modifier = Modifier.weight(0.5f)
                             )
+                            Text(
+                                text = "$${String.format("%,.0f", cuota.montoCuotaMinimo)}",
+                                fontSize = 11.sp,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Text(
+                                text = "$${String.format("%,.0f", capitalProyectado)}",
+                                fontSize = 11.sp,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Text(
+                                text = "$${String.format("%,.0f", interesProyectado)}",
+                                fontSize = 11.sp,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Text(
+                                text = "$${String.format("%,.0f", balanceProyectado)}",
+                                fontSize = 11.sp,
+                                fontWeight = if (balanceProyectado <= 0) FontWeight.Bold else FontWeight.Normal,
+                                color = if (balanceProyectado <= 0) SuccessColor else MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                        
+                        // Fecha de vencimiento y estado
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 12.dp, end = 12.dp, bottom = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Text(
                                 text = "Vence: ${dateFormat.format(Date(cuota.fechaVencimiento))}",
-                                fontSize = 12.sp,
+                                fontSize = 10.sp,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                             )
-                            Text(
-                                text = "Mínimo: $${String.format("%,.0f", cuota.montoCuotaMinimo)}",
-                                fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                            )
-                            if (cuota.montoPagado > 0) {
-                                Spacer(modifier = Modifier.height(4.dp))
+                            
+                            val estadoTexto = when(cuota.estado) {
+                                EstadoCuota.PAGADA -> "✅ Pagada"
+                                EstadoCuota.PENDIENTE -> if (index == cuotas.indexOfFirst { it.estado == EstadoCuota.PENDIENTE }) "⏭️ Próxima" else "⏳ Pendiente"
+                                EstadoCuota.VENCIDA -> "⚠️ Vencida"
+                                EstadoCuota.PARCIAL -> "🔄 Parcial"
+                            }
+                            
+                            Surface(
+                                shape = RoundedCornerShape(4.dp),
+                                color = estadoCuotaColor.copy(alpha = 0.1f)
+                            ) {
                                 Text(
-                                    text = "Pagado: $${String.format("%,.0f", cuota.montoPagado)}",
-                                    fontSize = 12.sp,
+                                    text = estadoTexto,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                    fontSize = 10.sp,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = SuccessColor
+                                    color = estadoCuotaColor
                                 )
                             }
                         }
+                    }
+                }
+            }
+            
+            // Totales
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = "Resumen del cronograma",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold
+                        )
                         
-                        Surface(
-                            shape = RoundedCornerShape(4.dp),
-                            color = estadoCuotaColor.copy(alpha = 0.1f)
+                        Divider()
+                        
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = estadoTexto,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = estadoCuotaColor
+                                text = "Total a pagar:",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                            )
+                            Text(
+                                text = "$${String.format("%,.2f", cuotas.sumOf { it.montoCuotaMinimo.toDouble() })}",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "Total capital:",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                            )
+                            Text(
+                                text = "$${String.format("%,.2f", montoOriginal)}",
+                                fontSize = 12.sp
+                            )
+                        }
+                        
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "Total intereses:",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                            )
+                            Text(
+                                text = "$${String.format("%,.2f", cuotas.sumOf { it.montoCuotaMinimo.toDouble() } - montoOriginal)}",
+                                fontSize = 12.sp,
+                                color = com.example.bsprestagil.ui.theme.WarningColor
                             )
                         }
                     }
