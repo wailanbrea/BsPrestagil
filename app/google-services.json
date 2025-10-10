@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "764073349355",
+    "project_id": "bsprestagil",
+    "storage_bucket": "bsprestagil.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:764073349355:android:c28a33af75d98288c86eae",
+        "android_client_info": {
+          "package_name": "com.example.bsprestagil"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBH1Dmr2J_5ssFCA_4y0F7aAPXiasbi0bw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
