@@ -2,11 +2,13 @@ package com.example.bsprestagil.data.repository
 
 import com.example.bsprestagil.data.database.dao.ClienteDao
 import com.example.bsprestagil.data.database.entities.ClienteEntity
+import com.example.bsprestagil.firebase.FirebaseService
 import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 
 class ClienteRepository(
-    private val clienteDao: ClienteDao
+    private val clienteDao: ClienteDao,
+    private val firebaseService: FirebaseService = FirebaseService()
 ) {
     
     // Observar todos los clientes
@@ -52,7 +54,13 @@ class ClienteRepository(
     
     // Eliminar cliente
     suspend fun deleteCliente(cliente: ClienteEntity) {
+        // Eliminar de Room (local)
         clienteDao.deleteCliente(cliente)
+        
+        // Eliminar de Firebase (nube) si tiene firebaseId
+        if (cliente.firebaseId != null) {
+            firebaseService.deleteCliente(cliente.id, cliente.firebaseId)
+        }
     }
     
     // Obtener clientes pendientes de sincronizar

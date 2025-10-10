@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.bsprestagil.components.TopAppBarComponent
+import com.example.bsprestagil.data.mappers.toEntity
 import com.example.bsprestagil.viewmodels.ClientsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -38,6 +39,7 @@ fun AddEditClientScreen(
     var referencia2Telefono by remember { mutableStateOf("") }
     var referencia2Relacion by remember { mutableStateOf("") }
     var showSuccessDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
     
     // Si estamos editando, cargar datos del cliente
     if (isEditing && clientId != null) {
@@ -69,7 +71,18 @@ fun AddEditClientScreen(
         topBar = {
             TopAppBarComponent(
                 title = if (isEditing) "Editar cliente" else "Nuevo cliente",
-                onNavigateBack = { navController.navigateUp() }
+                onNavigateBack = { navController.navigateUp() },
+                actions = {
+                    if (isEditing) {
+                        IconButton(onClick = { showDeleteDialog = true }) {
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = "Eliminar cliente",
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+                }
             )
         }
     ) { paddingValues ->
@@ -279,6 +292,51 @@ fun AddEditClientScreen(
                     Text("OK")
                 }
             }
+        )
+    }
+    
+    // Diálogo de confirmación de eliminación
+    if (showDeleteDialog && isEditing && clientId != null) {
+        val cliente by clientsViewModel.getClienteById(clientId).collectAsState(initial = null)
+        
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("⚠️ Eliminar cliente") },
+            text = {
+                Column {
+                    Text("¿Estás seguro que deseas eliminar este cliente?")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Cliente: ${cliente?.nombre ?: ""}",
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "⚠️ Esta acción NO se puede deshacer y se eliminará de la nube también.",
+                        fontSize = 13.sp,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        cliente?.let { c ->
+                            clientsViewModel.deleteCliente(c.toEntity())
+                            showDeleteDialog = false
+                            navController.navigateUp()
+                        }
+                    }
+                ) {
+                    Text("Eliminar", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Cancelar")
+                }
+            },
+            containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
         )
     }
 }

@@ -29,12 +29,15 @@ class SyncWorker(
                 return@withContext Result.retry()
             }
             
-            // Sincronizar cada entidad
+            // Sincronizar cada entidad (subir cambios locales a Firebase)
             syncClientes()
             syncPrestamos()
             syncPagos()
             syncGarantias()
             syncConfiguracion()
+            
+            // Descargar cambios de Firebase a local (sincronización bidireccional)
+            downloadFromFirebase()
             
             Result.success()
         } catch (e: Exception) {
@@ -108,6 +111,16 @@ class SyncWorker(
                     configuracionRepository.markAsSynced()
                 }
             }
+        } catch (e: Exception) {
+            // Log error
+        }
+    }
+    
+    private suspend fun downloadFromFirebase() {
+        try {
+            // Por ahora, esta función está preparada para futura implementación
+            // de sincronización bidireccional completa desde Firebase a Room
+            // TODO: Implementar descarga y merge de datos desde Firestore
         } catch (e: Exception) {
             // Log error
         }

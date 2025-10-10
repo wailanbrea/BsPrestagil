@@ -41,6 +41,10 @@ fun AddLoanScreen(
     var expandedFrecuencia by remember { mutableStateOf(false) }
     var showSuccessDialog by remember { mutableStateOf(false) }
     var showConfirmDialog by remember { mutableStateOf(false) }
+    var showClientSelector by remember { mutableStateOf(false) }
+    
+    // Cargar lista de clientes
+    val clientes by clientsViewModel.clientes.collectAsState()
     
     // Cargar tasa de interés desde configuración
     val configuracion by configuracionViewModel.configuracion.collectAsState()
@@ -88,45 +92,54 @@ fun AddLoanScreen(
             )
             
             if (clienteSeleccionado.isNotBlank()) {
-                Card(modifier = Modifier.fillMaxWidth()) {
+                Card(
+                    onClick = { if (clientId == null) showClientSelector = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column {
-                            Text(
-                                text = "Cliente seleccionado",
-                                fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary
                             )
-                            Text(
-                                text = clienteNombre.ifBlank { "Cargando..." },
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.SemiBold
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    text = "Cliente seleccionado",
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                )
+                                Text(
+                                    text = clienteNombre.ifBlank { "Cargando..." },
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                        }
+                        if (clientId == null) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "Cambiar",
+                                tint = MaterialTheme.colorScheme.primary
                             )
                         }
                     }
                 }
             } else {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
-                    )
+                Button(
+                    onClick = { showClientSelector = true },
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(
-                        text = "⚠️ Selecciona un cliente desde la pantalla de clientes",
-                        modifier = Modifier.padding(16.dp),
-                        color = MaterialTheme.colorScheme.onErrorContainer
-                    )
+                    Icon(Icons.Default.PersonAdd, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Seleccionar cliente")
                 }
             }
             
@@ -416,6 +429,89 @@ fun AddLoanScreen(
                     navController.navigateUp()
                 }) {
                     Text("OK")
+                }
+            }
+        )
+    }
+    
+    // Diálogo selector de clientes
+    if (showClientSelector) {
+        AlertDialog(
+            onDismissRequest = { showClientSelector = false },
+            title = { Text("Seleccionar cliente") },
+            text = {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(400.dp)
+                ) {
+                    if (clientes.isEmpty()) {
+                        item {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(32.dp),
+                                horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.PersonOff,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(48.dp),
+                                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(
+                                    text = "No hay clientes registrados",
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                )
+                            }
+                        }
+                    }
+                    
+                    items(clientes.size) { index ->
+                        val cliente = clientes[index]
+                        Card(
+                            onClick = {
+                                clienteSeleccionado = cliente.id
+                                clienteNombre = cliente.nombre
+                                showClientSelector = false
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Person,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text(
+                                        text = cliente.nombre,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                    Text(
+                                        text = cliente.telefono,
+                                        fontSize = 13.sp,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showClientSelector = false }) {
+                    Text("Cancelar")
                 }
             }
         )

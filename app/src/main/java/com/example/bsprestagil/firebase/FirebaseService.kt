@@ -66,6 +66,17 @@ class FirebaseService {
         }
     }
     
+    suspend fun deleteCliente(clienteId: String, firebaseId: String?): Result<Unit> {
+        return try {
+            if (firebaseId != null) {
+                firestore.collection(COLLECTION_CLIENTES).document(firebaseId).delete().await()
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
     // ==================== PRÉSTAMOS ====================
     
     suspend fun syncPrestamo(prestamo: PrestamoEntity): Result<String> {
