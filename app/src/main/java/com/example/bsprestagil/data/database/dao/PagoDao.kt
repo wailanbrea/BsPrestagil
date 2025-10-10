@@ -42,6 +42,12 @@ interface PagoDao {
     @Query("SELECT SUM(montoPagado) FROM pagos WHERE fechaPago >= :startDate")
     suspend fun getTotalCobradoDesde(startDate: Long): Double?
     
+    @Query("SELECT SUM(montoAInteres) FROM pagos WHERE fechaPago >= :startDate")
+    suspend fun getTotalInteresesDesde(startDate: Long): Double?
+    
+    @Query("SELECT SUM(montoACapital) FROM pagos WHERE fechaPago >= :startDate")
+    suspend fun getTotalCapitalDesde(startDate: Long): Double?
+    
     @Query("SELECT SUM(montoMora) FROM pagos WHERE fechaPago >= :startDate")
     suspend fun getTotalMoraDesde(startDate: Long): Double?
     

@@ -64,8 +64,8 @@ class ReportsViewModel(application: Application) : AndroidViewModel(application)
                 
                 // Cobros del período
                 val totalCobrado = pagoRepository.getTotalCobradoDesde(fechaInicio)
+                val totalIntereses = pagoRepository.getTotalInteresesDesde(fechaInicio)
                 val totalMora = pagoRepository.getTotalMoraDesde(fechaInicio)
-                val totalIntereses = totalCobrado - totalMora
                 
                 // Préstamos
                 val prestamosActivos = prestamoRepository.getPrestamosCountByEstado("ACTIVO")

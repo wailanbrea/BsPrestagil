@@ -80,6 +80,14 @@ class PagoRepository(
         return pagoDao.getTotalCobradoDesde(startDate) ?: 0.0
     }
     
+    suspend fun getTotalInteresesDesde(startDate: Long): Double {
+        return pagoDao.getTotalInteresesDesde(startDate) ?: 0.0
+    }
+    
+    suspend fun getTotalCapitalDesde(startDate: Long): Double {
+        return pagoDao.getTotalCapitalDesde(startDate) ?: 0.0
+    }
+    
     suspend fun getTotalMoraDesde(startDate: Long): Double {
         return pagoDao.getTotalMoraDesde(startDate) ?: 0.0
     }

@@ -51,8 +51,7 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
                 
                 // Calcular intereses del mes actual
                 val inicioMes = getStartOfMonth()
-                val interesesMes = pagoRepository.getTotalCobradoDesde(inicioMes) - 
-                                   pagoRepository.getTotalMoraDesde(inicioMes)
+                val interesesMes = pagoRepository.getTotalInteresesDesde(inicioMes)
                 
                 _stats.value = DashboardStats(
                     totalPrestado = totalPrestado,
