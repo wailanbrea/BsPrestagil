@@ -13,62 +13,27 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.bsprestagil.components.BottomNavigationBar
 import com.example.bsprestagil.components.InfoCard
 import com.example.bsprestagil.components.LoanCard
 import com.example.bsprestagil.data.models.EstadoPrestamo
-import com.example.bsprestagil.data.models.Prestamo
 import com.example.bsprestagil.navigation.Screen
 import com.example.bsprestagil.ui.theme.ErrorColor
 import com.example.bsprestagil.ui.theme.SuccessColor
 import com.example.bsprestagil.ui.theme.WarningColor
+import com.example.bsprestagil.viewmodels.DashboardViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
-    navController: NavController
+    navController: NavController,
+    dashboardViewModel: DashboardViewModel = viewModel()
 ) {
-    // Datos de ejemplo
-    val totalPrestado = 125000.00
-    val interesesGenerados = 15600.00
-    val carteraVencida = 8500.00
-    val prestamosActivos = 12
-    
-    val prestamosRecientes = remember {
-        listOf(
-            Prestamo(
-                id = "1",
-                clienteId = "c1",
-                clienteNombre = "Juan Pérez",
-                montoOriginal = 10000.0,
-                saldoPendiente = 6500.0,
-                cuotasPagadas = 4,
-                totalCuotas = 12,
-                estado = EstadoPrestamo.ACTIVO
-            ),
-            Prestamo(
-                id = "2",
-                clienteId = "c2",
-                clienteNombre = "María González",
-                montoOriginal = 5000.0,
-                saldoPendiente = 5800.0,
-                cuotasPagadas = 2,
-                totalCuotas = 6,
-                estado = EstadoPrestamo.ATRASADO
-            ),
-            Prestamo(
-                id = "3",
-                clienteId = "c3",
-                clienteNombre = "Carlos Ramírez",
-                montoOriginal = 15000.0,
-                saldoPendiente = 12000.0,
-                cuotasPagadas = 1,
-                totalCuotas = 10,
-                estado = EstadoPrestamo.ACTIVO
-            )
-        )
-    }
+    val stats by dashboardViewModel.stats.collectAsState()
+    val prestamosRecientes by dashboardViewModel.prestamosRecientes.collectAsState()
+    val isLoading by dashboardViewModel.isLoading.collectAsState()
     
     Scaffold(
         topBar = {
@@ -145,8 +110,8 @@ fun DashboardScreen(
                     item {
                         InfoCard(
                             title = "Capital prestado",
-                            value = "$${String.format("%,.0f", totalPrestado)}",
-                            subtitle = "$prestamosActivos préstamos activos",
+                            value = "$${String.format("%,.0f", stats.totalPrestado)}",
+                            subtitle = "${stats.prestamosActivos} préstamos activos",
                             color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.width(200.dp)
                         )
@@ -155,7 +120,7 @@ fun DashboardScreen(
                     item {
                         InfoCard(
                             title = "Intereses generados",
-                            value = "$${String.format("%,.0f", interesesGenerados)}",
+                            value = "$${String.format("%,.0f", stats.interesesGenerados)}",
                             subtitle = "Mes actual",
                             color = SuccessColor,
                             modifier = Modifier.width(200.dp)
@@ -165,8 +130,8 @@ fun DashboardScreen(
                     item {
                         InfoCard(
                             title = "Cartera vencida",
-                            value = "$${String.format("%,.0f", carteraVencida)}",
-                            subtitle = "3 clientes morosos",
+                            value = "$${String.format("%,.0f", stats.carteraVencida)}",
+                            subtitle = "${stats.prestamosAtrasados} préstamos atrasados",
                             color = ErrorColor,
                             modifier = Modifier.width(200.dp)
                         )

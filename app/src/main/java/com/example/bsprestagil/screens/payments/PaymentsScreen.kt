@@ -13,64 +13,26 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.bsprestagil.components.BottomNavigationBar
-import com.example.bsprestagil.data.models.MetodoPago
-import com.example.bsprestagil.data.models.Pago
 import com.example.bsprestagil.navigation.Screen
 import com.example.bsprestagil.ui.theme.SuccessColor
+import com.example.bsprestagil.viewmodels.PaymentsViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PaymentsScreen(
-    navController: NavController
+    navController: NavController,
+    paymentsViewModel: PaymentsViewModel = viewModel()
 ) {
     val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     
-    val pagos = remember {
-        listOf(
-            Pago(
-                id = "1",
-                prestamoId = "p1",
-                clienteId = "c1",
-                clienteNombre = "Juan Pérez González",
-                monto = 1000.0,
-                montoCuota = 1000.0,
-                montoMora = 0.0,
-                fechaPago = System.currentTimeMillis(),
-                numeroCuota = 4,
-                metodoPago = MetodoPago.EFECTIVO
-            ),
-            Pago(
-                id = "2",
-                prestamoId = "p2",
-                clienteId = "c2",
-                clienteNombre = "María González López",
-                monto = 950.0,
-                montoCuota = 900.0,
-                montoMora = 50.0,
-                fechaPago = System.currentTimeMillis() - (24 * 60 * 60 * 1000),
-                numeroCuota = 2,
-                metodoPago = MetodoPago.TRANSFERENCIA
-            ),
-            Pago(
-                id = "3",
-                prestamoId = "p3",
-                clienteId = "c3",
-                clienteNombre = "Carlos Ramírez Sánchez",
-                monto = 1800.0,
-                montoCuota = 1800.0,
-                montoMora = 0.0,
-                fechaPago = System.currentTimeMillis() - (2 * 24 * 60 * 60 * 1000),
-                numeroCuota = 1,
-                metodoPago = MetodoPago.EFECTIVO
-            )
-        )
-    }
-    
-    val totalCobrado = pagos.sumOf { it.monto }
+    val pagos by paymentsViewModel.pagos.collectAsState()
+    val totalCobradoHoy by paymentsViewModel.totalCobradoHoy.collectAsState()
+    val countPagosHoy by paymentsViewModel.countPagosHoy.collectAsState()
     
     Scaffold(
         topBar = {
@@ -125,14 +87,14 @@ fun PaymentsScreen(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "$${String.format("%,.2f", totalCobrado)}",
+                            text = "$${String.format("%,.2f", totalCobradoHoy)}",
                             fontSize = 32.sp,
                             fontWeight = FontWeight.Bold,
                             color = SuccessColor
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "${pagos.size} pagos registrados",
+                            text = "$countPagosHoy pagos registrados",
                             fontSize = 13.sp,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                         )

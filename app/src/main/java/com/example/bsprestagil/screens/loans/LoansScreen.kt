@@ -12,89 +12,26 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.bsprestagil.components.BottomNavigationBar
 import com.example.bsprestagil.components.LoanCard
 import com.example.bsprestagil.data.models.EstadoPrestamo
-import com.example.bsprestagil.data.models.Prestamo
 import com.example.bsprestagil.navigation.Screen
 import com.example.bsprestagil.ui.theme.ErrorColor
 import com.example.bsprestagil.ui.theme.SuccessColor
 import com.example.bsprestagil.ui.theme.WarningColor
+import com.example.bsprestagil.viewmodels.LoansViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoansScreen(
-    navController: NavController
+    navController: NavController,
+    loansViewModel: LoansViewModel = viewModel()
 ) {
-    var filtroEstado by remember { mutableStateOf<EstadoPrestamo?>(null) }
+    val prestamos by loansViewModel.prestamos.collectAsState()
+    val filtroEstado by loansViewModel.filtroEstado.collectAsState()
     var showFilterMenu by remember { mutableStateOf(false) }
-    
-    val prestamos = remember {
-        listOf(
-            Prestamo(
-                id = "1",
-                clienteId = "c1",
-                clienteNombre = "Juan Pérez González",
-                montoOriginal = 10000.0,
-                saldoPendiente = 6500.0,
-                cuotasPagadas = 4,
-                totalCuotas = 12,
-                estado = EstadoPrestamo.ACTIVO,
-                tasaInteres = 10.0
-            ),
-            Prestamo(
-                id = "2",
-                clienteId = "c2",
-                clienteNombre = "María González López",
-                montoOriginal = 5000.0,
-                saldoPendiente = 5800.0,
-                cuotasPagadas = 2,
-                totalCuotas = 6,
-                estado = EstadoPrestamo.ATRASADO,
-                tasaInteres = 10.0
-            ),
-            Prestamo(
-                id = "3",
-                clienteId = "c3",
-                clienteNombre = "Carlos Ramírez Sánchez",
-                montoOriginal = 15000.0,
-                saldoPendiente = 12000.0,
-                cuotasPagadas = 1,
-                totalCuotas = 10,
-                estado = EstadoPrestamo.ACTIVO,
-                tasaInteres = 12.0
-            ),
-            Prestamo(
-                id = "4",
-                clienteId = "c4",
-                clienteNombre = "Ana Martínez García",
-                montoOriginal = 8000.0,
-                saldoPendiente = 0.0,
-                cuotasPagadas = 8,
-                totalCuotas = 8,
-                estado = EstadoPrestamo.COMPLETADO,
-                tasaInteres = 10.0
-            ),
-            Prestamo(
-                id = "5",
-                clienteId = "c5",
-                clienteNombre = "Roberto Silva Torres",
-                montoOriginal = 20000.0,
-                saldoPendiente = 22500.0,
-                cuotasPagadas = 0,
-                totalCuotas = 12,
-                estado = EstadoPrestamo.ATRASADO,
-                tasaInteres = 15.0
-            )
-        )
-    }
-    
-    val prestamosFiltrados = if (filtroEstado != null) {
-        prestamos.filter { it.estado == filtroEstado }
-    } else {
-        prestamos
-    }
     
     Scaffold(
         topBar = {
@@ -124,35 +61,35 @@ fun LoansScreen(
                         DropdownMenuItem(
                             text = { Text("Todos") },
                             onClick = {
-                                filtroEstado = null
+                                loansViewModel.setFiltroEstado(null)
                                 showFilterMenu = false
                             }
                         )
                         DropdownMenuItem(
                             text = { Text("Activos") },
                             onClick = {
-                                filtroEstado = EstadoPrestamo.ACTIVO
+                                loansViewModel.setFiltroEstado(EstadoPrestamo.ACTIVO)
                                 showFilterMenu = false
                             }
                         )
                         DropdownMenuItem(
                             text = { Text("Atrasados") },
                             onClick = {
-                                filtroEstado = EstadoPrestamo.ATRASADO
+                                loansViewModel.setFiltroEstado(EstadoPrestamo.ATRASADO)
                                 showFilterMenu = false
                             }
                         )
                         DropdownMenuItem(
                             text = { Text("Completados") },
                             onClick = {
-                                filtroEstado = EstadoPrestamo.COMPLETADO
+                                loansViewModel.setFiltroEstado(EstadoPrestamo.COMPLETADO)
                                 showFilterMenu = false
                             }
                         )
                         DropdownMenuItem(
                             text = { Text("Cancelados") },
                             onClick = {
-                                filtroEstado = EstadoPrestamo.CANCELADO
+                                loansViewModel.setFiltroEstado(EstadoPrestamo.CANCELADO)
                                 showFilterMenu = false
                             }
                         )
@@ -186,16 +123,16 @@ fun LoansScreen(
                 item {
                     FilterChip(
                         selected = true,
-                        onClick = { filtroEstado = null },
+                        onClick = { loansViewModel.setFiltroEstado(null) },
                         label = { Text("Filtrado: ${filtroEstado!!.name}") },
                         trailingIcon = {
-                            Icon(Icons.Default.Add, contentDescription = null)
+                            Icon(Icons.Default.Close, contentDescription = null)
                         }
                     )
                 }
             }
             
-            items(prestamosFiltrados) { prestamo ->
+            items(prestamos) { prestamo ->
                 val estadoColor = when (prestamo.estado) {
                     EstadoPrestamo.ACTIVO -> SuccessColor
                     EstadoPrestamo.ATRASADO -> WarningColor
@@ -224,7 +161,7 @@ fun LoansScreen(
                 )
             }
             
-            if (prestamosFiltrados.isEmpty()) {
+            if (prestamos.isEmpty()) {
                 item {
                     Box(
                         modifier = Modifier
@@ -232,7 +169,10 @@ fun LoansScreen(
                             .padding(32.dp)
                     ) {
                         Text(
-                            text = "No se encontraron préstamos",
+                            text = if (filtroEstado != null) 
+                                "No hay préstamos con este filtro"
+                            else 
+                                "No hay préstamos registrados",
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                         )
                     }

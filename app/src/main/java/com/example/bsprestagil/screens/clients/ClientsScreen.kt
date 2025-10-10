@@ -12,76 +12,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.bsprestagil.components.BottomNavigationBar
 import com.example.bsprestagil.components.ClientCard
-import com.example.bsprestagil.data.models.Cliente
 import com.example.bsprestagil.data.models.EstadoPagos
 import com.example.bsprestagil.navigation.Screen
 import com.example.bsprestagil.ui.theme.ErrorColor
 import com.example.bsprestagil.ui.theme.SuccessColor
 import com.example.bsprestagil.ui.theme.WarningColor
+import com.example.bsprestagil.viewmodels.ClientsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ClientsScreen(
-    navController: NavController
+    navController: NavController,
+    clientsViewModel: ClientsViewModel = viewModel()
 ) {
-    var searchQuery by remember { mutableStateOf("") }
-    
-    val clientes = remember {
-        listOf(
-            Cliente(
-                id = "1",
-                nombre = "Juan Pérez González",
-                telefono = "+52 999 123 4567",
-                direccion = "Calle Principal #123",
-                prestamosActivos = 2,
-                historialPagos = EstadoPagos.AL_DIA
-            ),
-            Cliente(
-                id = "2",
-                nombre = "María González López",
-                telefono = "+52 999 234 5678",
-                direccion = "Av. Reforma #456",
-                prestamosActivos = 1,
-                historialPagos = EstadoPagos.ATRASADO
-            ),
-            Cliente(
-                id = "3",
-                nombre = "Carlos Ramírez Sánchez",
-                telefono = "+52 999 345 6789",
-                direccion = "Col. Centro #789",
-                prestamosActivos = 3,
-                historialPagos = EstadoPagos.AL_DIA
-            ),
-            Cliente(
-                id = "4",
-                nombre = "Ana Martínez García",
-                telefono = "+52 999 456 7890",
-                direccion = "Fracc. Las Flores #321",
-                prestamosActivos = 1,
-                historialPagos = EstadoPagos.MOROSO
-            ),
-            Cliente(
-                id = "5",
-                nombre = "Roberto Silva Torres",
-                telefono = "+52 999 567 8901",
-                direccion = "Col. Juárez #654",
-                prestamosActivos = 0,
-                historialPagos = EstadoPagos.AL_DIA
-            )
-        )
-    }
-    
-    val filteredClientes = if (searchQuery.isBlank()) {
-        clientes
-    } else {
-        clientes.filter {
-            it.nombre.contains(searchQuery, ignoreCase = true) ||
-            it.telefono.contains(searchQuery, ignoreCase = true)
-        }
-    }
+    val clientes by clientsViewModel.clientes.collectAsState()
+    val searchQuery by clientsViewModel.searchQuery.collectAsState()
     
     Scaffold(
         topBar = {
@@ -125,7 +74,7 @@ fun ClientsScreen(
             // Barra de búsqueda
             OutlinedTextField(
                 value = searchQuery,
-                onValueChange = { searchQuery = it },
+                onValueChange = { clientsViewModel.searchClientes(it) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
@@ -142,7 +91,7 @@ fun ClientsScreen(
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(filteredClientes) { cliente ->
+                items(clientes) { cliente ->
                     val estadoColor = when (cliente.historialPagos) {
                         EstadoPagos.AL_DIA -> SuccessColor
                         EstadoPagos.ATRASADO -> WarningColor
@@ -167,7 +116,7 @@ fun ClientsScreen(
                     )
                 }
                 
-                if (filteredClientes.isEmpty()) {
+                if (clientes.isEmpty()) {
                     item {
                         Box(
                             modifier = Modifier
@@ -175,7 +124,10 @@ fun ClientsScreen(
                                 .padding(32.dp)
                         ) {
                             Text(
-                                text = "No se encontraron clientes",
+                                text = if (searchQuery.isBlank()) 
+                                    "No hay clientes registrados" 
+                                else 
+                                    "No se encontraron clientes",
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                             )
                         }
