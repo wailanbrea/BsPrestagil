@@ -14,52 +14,34 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.bsprestagil.components.LoanCard
 import com.example.bsprestagil.components.TopAppBarComponent
 import com.example.bsprestagil.data.models.EstadoPrestamo
-import com.example.bsprestagil.data.models.Prestamo
 import com.example.bsprestagil.navigation.Screen
 import com.example.bsprestagil.ui.theme.ErrorColor
 import com.example.bsprestagil.ui.theme.SuccessColor
 import com.example.bsprestagil.ui.theme.WarningColor
+import com.example.bsprestagil.viewmodels.ClientsViewModel
+import com.example.bsprestagil.viewmodels.LoansViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ClientDetailScreen(
     clientId: String,
-    navController: NavController
+    navController: NavController,
+    clientsViewModel: ClientsViewModel = viewModel(),
+    loansViewModel: LoansViewModel = viewModel()
 ) {
-    // Datos de ejemplo del cliente
-    val clienteNombre = "Juan Pérez González"
-    val clienteTelefono = "+52 999 123 4567"
-    val clienteEmail = "juan.perez@email.com"
-    val clienteDireccion = "Calle Principal #123, Col. Centro"
+    // Cargar datos del cliente
+    val cliente by clientsViewModel.getClienteById(clientId).collectAsState(initial = null)
+    val prestamosCliente by loansViewModel.getPrestamosByClienteId(clientId).collectAsState(initial = emptyList())
     
-    val prestamosCliente = remember {
-        listOf(
-            Prestamo(
-                id = "1",
-                clienteId = clientId,
-                clienteNombre = clienteNombre,
-                montoOriginal = 10000.0,
-                saldoPendiente = 6500.0,
-                cuotasPagadas = 4,
-                totalCuotas = 12,
-                estado = EstadoPrestamo.ACTIVO
-            ),
-            Prestamo(
-                id = "2",
-                clienteId = clientId,
-                clienteNombre = clienteNombre,
-                montoOriginal = 5000.0,
-                saldoPendiente = 0.0,
-                cuotasPagadas = 6,
-                totalCuotas = 6,
-                estado = EstadoPrestamo.COMPLETADO
-            )
-        )
-    }
+    val clienteNombre = cliente?.nombre ?: "Cargando..."
+    val clienteTelefono = cliente?.telefono ?: ""
+    val clienteEmail = cliente?.email ?: ""
+    val clienteDireccion = cliente?.direccion ?: ""
     
     Scaffold(
         topBar = {
@@ -187,7 +169,7 @@ fun ClientDetailScreen(
                 }
                 
                 LoanCard(
-                    clienteNombre = clienteNombre,
+                    clienteNombre = prestamo.clienteNombre,
                     montoOriginal = prestamo.montoOriginal,
                     saldoPendiente = prestamo.saldoPendiente,
                     cuotasPagadas = prestamo.cuotasPagadas,

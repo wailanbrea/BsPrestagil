@@ -13,15 +13,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.bsprestagil.components.TopAppBarComponent
 import com.example.bsprestagil.data.models.MetodoPago
+import com.example.bsprestagil.viewmodels.LoansViewModel
+import com.example.bsprestagil.viewmodels.PaymentsViewModel
+import com.google.firebase.auth.FirebaseAuth
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterPaymentScreen(
     loanId: String,
-    navController: NavController
+    navController: NavController,
+    loansViewModel: LoansViewModel = viewModel(),
+    paymentsViewModel: PaymentsViewModel = viewModel()
 ) {
     var monto by remember { mutableStateOf("") }
     var montoMora by remember { mutableStateOf("0") }
@@ -29,13 +35,20 @@ fun RegisterPaymentScreen(
     var metodoPago by remember { mutableStateOf(MetodoPago.EFECTIVO) }
     var notas by remember { mutableStateOf("") }
     var expandedMetodo by remember { mutableStateOf(false) }
+    var showSuccessDialog by remember { mutableStateOf(false) }
     
     val metodosDisponibles = MetodoPago.values().toList()
     
-    // Datos del préstamo (ejemplo)
-    val clienteNombre = "Juan Pérez González"
-    val montoCuota = 1000.0
-    val numeroCuota = 5
+    // Cargar datos del préstamo
+    val prestamo by loansViewModel.getPrestamoById(loanId).collectAsState(initial = null)
+    val clienteNombre = prestamo?.clienteNombre ?: "Cargando..."
+    val montoCuota = prestamo?.let {
+        it.totalAPagar / it.totalCuotas
+    } ?: 0.0
+    val numeroCuota = (prestamo?.cuotasPagadas ?: 0) + 1
+    
+    // Usuario actual
+    val usuarioActual = FirebaseAuth.getInstance().currentUser?.email ?: "Admin"
     
     Scaffold(
         topBar = {
@@ -300,13 +313,29 @@ fun RegisterPaymentScreen(
             // Botón de guardar
             Button(
                 onClick = {
-                    // TODO: Guardar pago
-                    navController.navigateUp()
+                    prestamo?.let { p ->
+                        val montoNum = monto.toDoubleOrNull() ?: 0.0
+                        val moraNum = if (cobrarMora) (montoMora.toDoubleOrNull() ?: 0.0) else 0.0
+                        
+                        paymentsViewModel.registrarPago(
+                            prestamoId = loanId,
+                            clienteId = p.clienteId,
+                            clienteNombre = p.clienteNombre,
+                            monto = montoNum,
+                            montoCuota = montoCuota,
+                            montoMora = moraNum,
+                            numeroCuota = numeroCuota,
+                            metodoPago = metodoPago,
+                            recibidoPor = usuarioActual,
+                            notas = notas
+                        )
+                        showSuccessDialog = true
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                enabled = monto.isNotBlank()
+                enabled = monto.isNotBlank() && prestamo != null
             ) {
                 Icon(Icons.Default.Save, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
@@ -319,6 +348,23 @@ fun RegisterPaymentScreen(
             
             Spacer(modifier = Modifier.height(16.dp))
         }
+    }
+    
+    // Diálogo de éxito
+    if (showSuccessDialog) {
+        AlertDialog(
+            onDismissRequest = { },
+            title = { Text("✅ Pago registrado") },
+            text = { Text("El pago se registró correctamente y se sincronizará con la nube.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showSuccessDialog = false
+                    navController.navigateUp()
+                }) {
+                    Text("OK")
+                }
+            }
+        )
     }
 }
 

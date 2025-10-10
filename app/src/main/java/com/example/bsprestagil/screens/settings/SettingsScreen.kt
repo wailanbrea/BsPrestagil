@@ -16,16 +16,27 @@ import com.example.bsprestagil.components.BottomNavigationBar
 import com.example.bsprestagil.components.SettingsCard
 import com.example.bsprestagil.navigation.Screen
 import com.example.bsprestagil.viewmodels.AuthViewModel
+import com.example.bsprestagil.viewmodels.ConfiguracionViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     navController: NavController,
-    authViewModel: AuthViewModel = viewModel()
+    authViewModel: AuthViewModel = viewModel(),
+    configuracionViewModel: ConfiguracionViewModel = viewModel()
 ) {
     var showInterestDialog by remember { mutableStateOf(false) }
     var tasaInteres by remember { mutableStateOf("10") }
     var showLogoutDialog by remember { mutableStateOf(false) }
+    
+    val configuracion by configuracionViewModel.configuracion.collectAsState()
+    
+    // Actualizar tasa de interés cuando cambie la configuración
+    LaunchedEffect(configuracion) {
+        configuracion?.let {
+            tasaInteres = it.tasaInteresBase.toString()
+        }
+    }
     
     Scaffold(
         topBar = {
@@ -213,11 +224,20 @@ fun SettingsScreen(
                     onValueChange = { tasaInteres = it },
                     label = { Text("Porcentaje") },
                     suffix = { Text("%") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
+                    )
                 )
             },
             confirmButton = {
-                TextButton(onClick = { showInterestDialog = false }) {
+                TextButton(onClick = {
+                    val nuevaTasa = tasaInteres.toDoubleOrNull()
+                    if (nuevaTasa != null) {
+                        configuracionViewModel.updateTasaInteres(nuevaTasa)
+                    }
+                    showInterestDialog = false
+                }) {
                     Text("Guardar")
                 }
             },

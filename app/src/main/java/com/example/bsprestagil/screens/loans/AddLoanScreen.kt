@@ -13,17 +13,23 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.bsprestagil.components.TopAppBarComponent
 import com.example.bsprestagil.data.models.FrecuenciaPago
+import com.example.bsprestagil.viewmodels.ClientsViewModel
+import com.example.bsprestagil.viewmodels.LoansViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddLoanScreen(
     clientId: String?,
-    navController: NavController
+    navController: NavController,
+    clientsViewModel: ClientsViewModel = viewModel(),
+    loansViewModel: LoansViewModel = viewModel()
 ) {
     var clienteSeleccionado by remember { mutableStateOf(clientId ?: "") }
+    var clienteNombre by remember { mutableStateOf("") }
     var monto by remember { mutableStateOf("") }
     var tasaInteres by remember { mutableStateOf("10") }
     var plazoMeses by remember { mutableStateOf("12") }
@@ -31,6 +37,18 @@ fun AddLoanScreen(
     var garantiaOpcional by remember { mutableStateOf("") }
     var notas by remember { mutableStateOf("") }
     var expandedFrecuencia by remember { mutableStateOf(false) }
+    var showSuccessDialog by remember { mutableStateOf(false) }
+    
+    // Si viene un clientId, cargar el nombre
+    if (clientId != null) {
+        val cliente by clientsViewModel.getClienteById(clientId).collectAsState(initial = null)
+        LaunchedEffect(cliente) {
+            cliente?.let {
+                clienteNombre = it.nombre
+                clienteSeleccionado = it.id
+            }
+        }
+    }
     
     val frecuenciasDisponibles = FrecuenciaPago.values().toList()
     
@@ -58,7 +76,7 @@ fun AddLoanScreen(
                 color = MaterialTheme.colorScheme.primary
             )
             
-            if (clientId != null) {
+            if (clienteSeleccionado.isNotBlank()) {
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Row(
                         modifier = Modifier
@@ -79,7 +97,7 @@ fun AddLoanScreen(
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                             )
                             Text(
-                                text = "Juan Pérez González", // TODO: Obtener nombre real
+                                text = clienteNombre.ifBlank { "Cargando..." },
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -87,13 +105,17 @@ fun AddLoanScreen(
                     }
                 }
             } else {
-                Button(
-                    onClick = { /* TODO: Abrir selector de cliente */ },
-                    modifier = Modifier.fillMaxWidth()
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+                    )
                 ) {
-                    Icon(Icons.Default.Search, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Seleccionar cliente")
+                    Text(
+                        text = "⚠️ Selecciona un cliente desde la pantalla de clientes",
+                        modifier = Modifier.padding(16.dp),
+                        color = MaterialTheme.colorScheme.onErrorContainer
+                    )
                 }
             }
             
@@ -299,8 +321,21 @@ fun AddLoanScreen(
             // Botón de guardar
             Button(
                 onClick = {
-                    // TODO: Guardar préstamo
-                    navController.navigateUp()
+                    val montoNum = monto.toDoubleOrNull() ?: 0.0
+                    val tasaNum = tasaInteres.toDoubleOrNull() ?: 0.0
+                    val plazoNum = plazoMeses.toIntOrNull() ?: 0
+                    
+                    loansViewModel.crearPrestamo(
+                        clienteId = clienteSeleccionado,
+                        clienteNombre = clienteNombre,
+                        monto = montoNum,
+                        tasaInteres = tasaNum,
+                        plazoMeses = plazoNum,
+                        frecuenciaPago = frecuenciaPago,
+                        garantiaId = null,
+                        notas = notas
+                    )
+                    showSuccessDialog = true
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -321,6 +356,23 @@ fun AddLoanScreen(
             
             Spacer(modifier = Modifier.height(16.dp))
         }
+    }
+    
+    // Diálogo de éxito
+    if (showSuccessDialog) {
+        AlertDialog(
+            onDismissRequest = { },
+            title = { Text("✅ Préstamo creado") },
+            text = { Text("El préstamo se creó correctamente y se sincronizará con la nube.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showSuccessDialog = false
+                    navController.navigateUp()
+                }) {
+                    Text("OK")
+                }
+            }
+        )
     }
 }
 

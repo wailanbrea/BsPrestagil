@@ -12,11 +12,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.bsprestagil.components.InfoCard
 import com.example.bsprestagil.components.TopAppBarComponent
+import com.example.bsprestagil.data.models.EstadoPrestamo
 import com.example.bsprestagil.navigation.Screen
 import com.example.bsprestagil.ui.theme.SuccessColor
+import com.example.bsprestagil.viewmodels.LoansViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -24,22 +27,26 @@ import java.util.*
 @Composable
 fun LoanDetailScreen(
     loanId: String,
-    navController: NavController
+    navController: NavController,
+    loansViewModel: LoansViewModel = viewModel()
 ) {
-    // Datos de ejemplo
-    val clienteNombre = "Juan Pérez González"
-    val montoOriginal = 10000.0
-    val tasaInteres = 10.0
-    val plazoMeses = 12
-    val cuotasPagadas = 4
-    val totalCuotas = 12
-    val saldoPendiente = 6500.0
-    val montoInteres = 1000.0
-    val totalAPagar = 11000.0
-    val fechaInicio = System.currentTimeMillis()
-    val fechaVencimiento = fechaInicio + (plazoMeses * 30L * 24 * 60 * 60 * 1000)
-    
     val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+    
+    // Cargar datos del préstamo
+    val prestamo by loansViewModel.getPrestamoById(loanId).collectAsState(initial = null)
+    
+    val clienteNombre = prestamo?.clienteNombre ?: "Cargando..."
+    val montoOriginal = prestamo?.montoOriginal ?: 0.0
+    val tasaInteres = prestamo?.tasaInteres ?: 0.0
+    val plazoMeses = prestamo?.plazoMeses ?: 0
+    val cuotasPagadas = prestamo?.cuotasPagadas ?: 0
+    val totalCuotas = prestamo?.totalCuotas ?: 1
+    val saldoPendiente = prestamo?.saldoPendiente ?: 0.0
+    val totalAPagar = prestamo?.totalAPagar ?: 0.0
+    val fechaInicio = prestamo?.fechaInicio ?: System.currentTimeMillis()
+    val fechaVencimiento = prestamo?.fechaVencimiento ?: System.currentTimeMillis()
+    val estado = prestamo?.estado ?: EstadoPrestamo.ACTIVO
+    val montoInteres = totalAPagar - montoOriginal
     
     Scaffold(
         topBar = {
@@ -58,10 +65,24 @@ fun LoanDetailScreen(
         ) {
             // Estado del préstamo
             item {
+                val estadoColor = when (estado) {
+                    EstadoPrestamo.ACTIVO -> SuccessColor
+                    EstadoPrestamo.ATRASADO -> com.example.bsprestagil.ui.theme.WarningColor
+                    EstadoPrestamo.COMPLETADO -> MaterialTheme.colorScheme.primary
+                    EstadoPrestamo.CANCELADO -> com.example.bsprestagil.ui.theme.ErrorColor
+                }
+                
+                val estadoTexto = when (estado) {
+                    EstadoPrestamo.ACTIVO -> "ACTIVO"
+                    EstadoPrestamo.ATRASADO -> "ATRASADO"
+                    EstadoPrestamo.COMPLETADO -> "COMPLETADO"
+                    EstadoPrestamo.CANCELADO -> "CANCELADO"
+                }
+                
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
-                        containerColor = SuccessColor.copy(alpha = 0.1f)
+                        containerColor = estadoColor.copy(alpha = 0.1f)
                     )
                 ) {
                     Row(
@@ -78,15 +99,15 @@ fun LoanDetailScreen(
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                             )
                             Text(
-                                text = "ACTIVO",
+                                text = estadoTexto,
                                 fontSize = 24.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = SuccessColor
+                                color = estadoColor
                             )
                         }
                         Surface(
                             shape = RoundedCornerShape(50),
-                            color = SuccessColor
+                            color = estadoColor
                         ) {
                             Icon(
                                 imageVector = Icons.Default.CheckCircle,
@@ -104,7 +125,11 @@ fun LoanDetailScreen(
             // Cliente
             item {
                 Card(
-                    onClick = { navController.navigate(Screen.ClientDetail.createRoute("c1")) },
+                    onClick = { 
+                        prestamo?.let {
+                            navController.navigate(Screen.ClientDetail.createRoute(it.clienteId))
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(

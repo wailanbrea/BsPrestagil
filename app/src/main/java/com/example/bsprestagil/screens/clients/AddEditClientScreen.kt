@@ -13,14 +13,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.bsprestagil.components.TopAppBarComponent
+import com.example.bsprestagil.viewmodels.ClientsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddEditClientScreen(
     clientId: String?,
-    navController: NavController
+    navController: NavController,
+    clientsViewModel: ClientsViewModel = viewModel()
 ) {
     val isEditing = clientId != null
     
@@ -34,6 +37,33 @@ fun AddEditClientScreen(
     var referencia2Nombre by remember { mutableStateOf("") }
     var referencia2Telefono by remember { mutableStateOf("") }
     var referencia2Relacion by remember { mutableStateOf("") }
+    var showSuccessDialog by remember { mutableStateOf(false) }
+    
+    // Si estamos editando, cargar datos del cliente
+    if (isEditing && clientId != null) {
+        val cliente by clientsViewModel.getClienteById(clientId).collectAsState(initial = null)
+        
+        LaunchedEffect(cliente) {
+            cliente?.let { c ->
+                nombre = c.nombre
+                telefono = c.telefono
+                email = c.email
+                direccion = c.direccion
+                
+                if (c.referencias.isNotEmpty()) {
+                    referencia1Nombre = c.referencias[0].nombre
+                    referencia1Telefono = c.referencias[0].telefono
+                    referencia1Relacion = c.referencias[0].relacion
+                }
+                
+                if (c.referencias.size > 1) {
+                    referencia2Nombre = c.referencias[1].nombre
+                    referencia2Telefono = c.referencias[1].telefono
+                    referencia2Relacion = c.referencias[1].relacion
+                }
+            }
+        }
+    }
     
     Scaffold(
         topBar = {
@@ -203,8 +233,19 @@ fun AddEditClientScreen(
             // Botón de guardar
             Button(
                 onClick = {
-                    // TODO: Guardar cliente
-                    navController.navigateUp()
+                    clientsViewModel.insertCliente(
+                        nombre = nombre,
+                        telefono = telefono,
+                        email = email,
+                        direccion = direccion,
+                        referencia1Nombre = referencia1Nombre,
+                        referencia1Telefono = referencia1Telefono,
+                        referencia1Relacion = referencia1Relacion,
+                        referencia2Nombre = referencia2Nombre,
+                        referencia2Telefono = referencia2Telefono,
+                        referencia2Relacion = referencia2Relacion
+                    )
+                    showSuccessDialog = true
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -222,6 +263,23 @@ fun AddEditClientScreen(
             
             Spacer(modifier = Modifier.height(16.dp))
         }
+    }
+    
+    // Diálogo de éxito
+    if (showSuccessDialog) {
+        AlertDialog(
+            onDismissRequest = { },
+            title = { Text("✅ Cliente guardado") },
+            text = { Text("El cliente se guardó correctamente y se sincronizará con la nube.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showSuccessDialog = false
+                    navController.navigateUp()
+                }) {
+                    Text("OK")
+                }
+            }
+        )
     }
 }
 
