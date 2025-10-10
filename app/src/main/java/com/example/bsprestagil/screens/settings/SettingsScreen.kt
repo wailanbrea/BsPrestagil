@@ -19,6 +19,7 @@ import com.example.bsprestagil.sync.SyncManager
 import com.example.bsprestagil.viewmodels.AuthViewModel
 import com.example.bsprestagil.viewmodels.ConfiguracionViewModel
 import com.example.bsprestagil.viewmodels.SyncViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,9 +30,11 @@ fun SettingsScreen(
     syncViewModel: SyncViewModel = viewModel()
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
+    val scope = rememberCoroutineScope()
     var showInterestDialog by remember { mutableStateOf(false) }
     var tasaInteres by remember { mutableStateOf("10") }
     var showLogoutDialog by remember { mutableStateOf(false) }
+    var syncing by remember { mutableStateOf(false) }
     
     val configuracion by configuracionViewModel.configuracion.collectAsState()
     val syncStatus by syncViewModel.syncStatus.collectAsState()
@@ -137,11 +140,26 @@ fun SettingsScreen(
                                 )
                             }
                         }
-                        IconButton(onClick = {
-                            SyncManager.forceSyncNow(context)
-                            syncViewModel.loadSyncStatus()
-                        }) {
-                            Icon(Icons.Default.Sync, contentDescription = "Sincronizar ahora")
+                        IconButton(
+                            onClick = {
+                                syncing = true
+                                SyncManager.forceSyncNow(context)
+                                scope.launch {
+                                    kotlinx.coroutines.delay(2000)
+                                    syncViewModel.loadSyncStatus()
+                                    syncing = false
+                                }
+                            },
+                            enabled = !syncing
+                        ) {
+                            if (syncing) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Icon(Icons.Default.Sync, contentDescription = "Sincronizar ahora")
+                            }
                         }
                     }
                 }
