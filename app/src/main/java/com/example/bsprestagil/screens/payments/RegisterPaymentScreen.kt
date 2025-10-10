@@ -25,6 +25,7 @@ fun RegisterPaymentScreen(
 ) {
     var monto by remember { mutableStateOf("") }
     var montoMora by remember { mutableStateOf("0") }
+    var cobrarMora by remember { mutableStateOf(false) }
     var metodoPago by remember { mutableStateOf(MetodoPago.EFECTIVO) }
     var notas by remember { mutableStateOf("") }
     var expandedMetodo by remember { mutableStateOf(false) }
@@ -112,16 +113,82 @@ fun RegisterPaymentScreen(
                 placeholder = { Text(String.format("%.2f", montoCuota)) }
             )
             
-            OutlinedTextField(
-                value = montoMora,
-                onValueChange = { montoMora = it },
-                label = { Text("Monto de mora") },
-                leadingIcon = { Icon(Icons.Default.Warning, contentDescription = null) },
+            // Switch para cobrar mora
+            Card(
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                prefix = { Text("$") }
-            )
+                colors = CardDefaults.cardColors(
+                    containerColor = if (cobrarMora) 
+                        MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+                    else 
+                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                )
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Warning,
+                                contentDescription = null,
+                                tint = if (cobrarMora) 
+                                    MaterialTheme.colorScheme.error
+                                else 
+                                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Cobrar mora",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = if (cobrarMora)
+                                    MaterialTheme.colorScheme.onErrorContainer
+                                else
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = if (cobrarMora) "Se aplicará mora al pago" else "Sin mora",
+                            fontSize = 13.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        )
+                    }
+                    Switch(
+                        checked = cobrarMora,
+                        onCheckedChange = { 
+                            cobrarMora = it
+                            if (!it) {
+                                montoMora = "0"
+                            }
+                        }
+                    )
+                }
+            }
+            
+            // Campo de monto de mora (solo visible si cobrarMora está activo)
+            if (cobrarMora) {
+                OutlinedTextField(
+                    value = montoMora,
+                    onValueChange = { montoMora = it },
+                    label = { Text("Monto de mora *") },
+                    leadingIcon = { Icon(Icons.Default.Warning, contentDescription = null) },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    prefix = { Text("$") },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.error,
+                        focusedLabelColor = MaterialTheme.colorScheme.error,
+                        focusedLeadingIconColor = MaterialTheme.colorScheme.error
+                    )
+                )
+            }
             
             // Método de pago
             ExposedDropdownMenuBox(
@@ -194,21 +261,36 @@ fun RegisterPaymentScreen(
                             .padding(16.dp)
                     ) {
                         val montoNum = monto.toDoubleOrNull() ?: 0.0
-                        val moraNum = montoMora.toDoubleOrNull() ?: 0.0
+                        val moraNum = if (cobrarMora) (montoMora.toDoubleOrNull() ?: 0.0) else 0.0
                         val total = montoNum + moraNum
                         
-                        Text(
-                            text = "Total a registrar",
-                            fontSize = 14.sp,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "$${String.format("%,.2f", total)}",
-                            fontSize = 32.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text(
+                                    text = "Total a registrar",
+                                    fontSize = 14.sp,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                                )
+                                if (cobrarMora && moraNum > 0) {
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "Incluye mora: $${String.format("%,.2f", moraNum)}",
+                                        fontSize = 12.sp,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            }
+                            Text(
+                                text = "$${String.format("%,.2f", total)}",
+                                fontSize = 32.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                        }
                     }
                 }
             }
