@@ -157,18 +157,17 @@ fun TestSyncScreen(
                                         clienteId = clienteIdCreado!!,
                                         clienteNombre = "Juan Pérez González",
                                         montoOriginal = 10000.0,
-                                        tasaInteres = 10.0,
-                                        plazoMeses = 12,
+                                        capitalPendiente = 10000.0,
+                                        tasaInteresPorPeriodo = 10.0,
                                         frecuenciaPago = "MENSUAL",
                                         garantiaId = null,
                                         fechaInicio = System.currentTimeMillis(),
-                                        fechaVencimiento = System.currentTimeMillis() + (365L * 24 * 60 * 60 * 1000),
+                                        ultimaFechaPago = System.currentTimeMillis(),
                                         estado = "ACTIVO",
-                                        saldoPendiente = 11000.0,
-                                        totalAPagar = 11000.0,
-                                        cuotasPagadas = 0,
-                                        totalCuotas = 12,
-                                        notas = "Préstamo de prueba"
+                                        totalInteresesPagados = 0.0,
+                                        totalCapitalPagado = 0.0,
+                                        totalMorasPagadas = 0.0,
+                                        notas = "Préstamo de prueba - 10% mensual"
                                     )
                                 )
                                 prestamoIdCreado = prestamoId
@@ -207,15 +206,18 @@ fun TestSyncScreen(
                                         prestamoId = prestamoIdCreado!!,
                                         clienteId = clienteIdCreado!!,
                                         clienteNombre = "Juan Pérez González",
-                                        monto = 1000.0,
-                                        montoCuota = 1000.0,
+                                        montoPagado = 1500.0,
+                                        montoAInteres = 1000.0,
+                                        montoACapital = 500.0,
                                         montoMora = 0.0,
                                         fechaPago = System.currentTimeMillis(),
-                                        fechaVencimiento = System.currentTimeMillis(),
-                                        numeroCuota = 1,
+                                        diasTranscurridos = 30,
+                                        interesCalculado = 1000.0,
+                                        capitalPendienteAntes = 10000.0,
+                                        capitalPendienteDespues = 9500.0,
                                         metodoPago = "EFECTIVO",
                                         recibidoPor = "Admin",
-                                        notas = "Pago de prueba",
+                                        notas = "Pago de prueba - $1000 interés + $500 capital",
                                         reciboUrl = ""
                                     )
                                 )
