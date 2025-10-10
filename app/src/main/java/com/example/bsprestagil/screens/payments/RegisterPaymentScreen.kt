@@ -17,6 +17,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.bsprestagil.components.TopAppBarComponent
 import com.example.bsprestagil.data.models.MetodoPago
+import com.example.bsprestagil.utils.CalculosUtils
+import com.example.bsprestagil.viewmodels.ConfiguracionViewModel
 import com.example.bsprestagil.viewmodels.LoansViewModel
 import com.example.bsprestagil.viewmodels.PaymentsViewModel
 import com.google.firebase.auth.FirebaseAuth
@@ -27,7 +29,8 @@ fun RegisterPaymentScreen(
     loanId: String,
     navController: NavController,
     loansViewModel: LoansViewModel = viewModel(),
-    paymentsViewModel: PaymentsViewModel = viewModel()
+    paymentsViewModel: PaymentsViewModel = viewModel(),
+    configuracionViewModel: ConfiguracionViewModel = viewModel()
 ) {
     var monto by remember { mutableStateOf("") }
     var montoMora by remember { mutableStateOf("0") }
@@ -39,6 +42,10 @@ fun RegisterPaymentScreen(
     
     val metodosDisponibles = MetodoPago.values().toList()
     
+    // Cargar configuración para tasa de mora
+    val configuracion by configuracionViewModel.configuracion.collectAsState()
+    val tasaMora = configuracion?.tasaMoraBase ?: 5.0
+    
     // Cargar datos del préstamo
     val prestamo by loansViewModel.getPrestamoById(loanId).collectAsState(initial = null)
     val clienteNombre = prestamo?.clienteNombre ?: "Cargando..."
@@ -46,6 +53,31 @@ fun RegisterPaymentScreen(
         it.totalAPagar / it.totalCuotas
     } ?: 0.0
     val numeroCuota = (prestamo?.cuotasPagadas ?: 0) + 1
+    
+    // Calcular fecha de vencimiento de la cuota
+    val fechaVencimientoCuota = prestamo?.let {
+        CalculosUtils.calcularProximaFechaVencimiento(
+            it.fechaInicio,
+            numeroCuota,
+            it.frecuenciaPago.name
+        )
+    } ?: System.currentTimeMillis()
+    
+    // Calcular mora automáticamente si hay retraso
+    val moraCalculada = CalculosUtils.calcularMora(
+        montoCuota = montoCuota,
+        tasaMora = tasaMora,
+        fechaVencimiento = fechaVencimientoCuota
+    )
+    
+    val diasRetraso = CalculosUtils.getDiasEntre(fechaVencimientoCuota, System.currentTimeMillis())
+    
+    // Actualizar mora calculada cuando se activa el switch
+    LaunchedEffect(cobrarMora, moraCalculada) {
+        if (cobrarMora && moraCalculada > 0) {
+            montoMora = String.format("%.2f", moraCalculada)
+        }
+    }
     
     // Usuario actual
     val usuarioActual = FirebaseAuth.getInstance().currentUser?.email ?: "Admin"
@@ -103,6 +135,43 @@ fun RegisterPaymentScreen(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
+                    }
+                }
+            }
+            
+            // Alerta de retraso si aplica
+            if (diasRetraso > 0 && moraCalculada > 0) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Warning,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                text = "⚠️ Pago con $diasRetraso día(s) de retraso",
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                            Text(
+                                text = "Mora sugerida: $${String.format("%.2f", moraCalculada)} ($tasaMora% de mora)",
+                                fontSize = 13.sp,
+                                color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f)
+                            )
+                        }
                     }
                 }
             }

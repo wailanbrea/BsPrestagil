@@ -10,19 +10,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.bsprestagil.components.InfoCard
 import com.example.bsprestagil.components.TopAppBarComponent
 import com.example.bsprestagil.ui.theme.ErrorColor
 import com.example.bsprestagil.ui.theme.SuccessColor
 import com.example.bsprestagil.ui.theme.WarningColor
+import com.example.bsprestagil.viewmodels.ReportsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReportsScreen(
-    navController: NavController
+    navController: NavController,
+    reportsViewModel: ReportsViewModel = viewModel()
 ) {
-    var periodoSeleccionado by remember { mutableStateOf("Mes actual") }
+    val stats by reportsViewModel.stats.collectAsState()
+    val periodoSeleccionado by reportsViewModel.periodo.collectAsState()
     var showMenu by remember { mutableStateOf(false) }
     
     Scaffold(
@@ -80,7 +84,7 @@ fun ReportsScreen(
                         DropdownMenuItem(
                             text = { Text(periodo) },
                             onClick = {
-                                periodoSeleccionado = periodo
+                                reportsViewModel.setPeriodo(periodo)
                                 showMenu = false
                             }
                         )
@@ -104,15 +108,15 @@ fun ReportsScreen(
                 ) {
                     InfoCard(
                         title = "Total cobrado",
-                        value = "$45,600",
-                        subtitle = "24 pagos",
+                        value = "$${String.format("%,.0f", stats.totalCobrado)}",
+                        subtitle = periodoSeleccionado,
                         color = SuccessColor,
                         modifier = Modifier.weight(1f)
                     )
                     InfoCard(
                         title = "Intereses",
-                        value = "$8,420",
-                        subtitle = "18.4%",
+                        value = "$${String.format("%,.0f", stats.totalIntereses)}",
+                        subtitle = periodoSeleccionado,
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.weight(1f)
                     )
@@ -137,10 +141,10 @@ fun ReportsScreen(
                             .padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        ReportRow("Préstamos activos", "12", SuccessColor)
-                        ReportRow("Préstamos atrasados", "3", WarningColor)
-                        ReportRow("Préstamos completados", "8", MaterialTheme.colorScheme.primary)
-                        ReportRow("Tasa de morosidad", "25%", ErrorColor)
+                        ReportRow("Préstamos activos", "${stats.prestamosActivos}", SuccessColor)
+                        ReportRow("Préstamos atrasados", "${stats.prestamosAtrasados}", WarningColor)
+                        ReportRow("Préstamos completados", "${stats.prestamosCompletados}", MaterialTheme.colorScheme.primary)
+                        ReportRow("Tasa de morosidad", "${String.format("%.1f", stats.tasaMorosidad)}%", ErrorColor)
                     }
                 }
             }
@@ -163,10 +167,10 @@ fun ReportsScreen(
                             .padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        ReportRow("Total clientes", "28", MaterialTheme.colorScheme.primary)
-                        ReportRow("Clientes al día", "20", SuccessColor)
-                        ReportRow("Clientes atrasados", "5", WarningColor)
-                        ReportRow("Clientes morosos", "3", ErrorColor)
+                        ReportRow("Total clientes", "${stats.totalClientes}", MaterialTheme.colorScheme.primary)
+                        ReportRow("Clientes al día", "${stats.clientesAlDia}", SuccessColor)
+                        ReportRow("Clientes atrasados", "${stats.clientesAtrasados}", WarningColor)
+                        ReportRow("Clientes morosos", "${stats.clientesMorosos}", ErrorColor)
                     }
                 }
             }
