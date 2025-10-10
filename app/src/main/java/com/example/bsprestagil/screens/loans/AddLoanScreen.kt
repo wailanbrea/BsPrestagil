@@ -76,15 +76,14 @@ fun AddLoanScreen(
             )
         }
     ) { paddingValues ->
-        Box(modifier = Modifier.fillMaxSize()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
             // Cliente
             Text(
                 text = "Información del cliente",
@@ -195,7 +194,7 @@ fun AddLoanScreen(
                         fontSize = 12.sp
                     )
                 }
-            }
+            )
             
             // Frecuencia de pago
             ExposedDropdownMenuBox(
@@ -412,167 +411,164 @@ fun AddLoanScreen(
                 )
             }
             
-                Spacer(modifier = Modifier.height(16.dp))
-            } // Column
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+    }
+    
+    // Diálogo de confirmación
+    if (showConfirmDialog) {
+        val montoNum = monto.toDoubleOrNull() ?: 0.0
+        val tasaNum = tasaInteres.toDoubleOrNull() ?: 0.0
+        val interesPorPeriodo = montoNum * (tasaNum / 100)
         
-            // Diálogos
-            // Diálogo de confirmación
-            if (showConfirmDialog) {
-                val montoNum = monto.toDoubleOrNull() ?: 0.0
-                val tasaNum = tasaInteres.toDoubleOrNull() ?: 0.0
-                val interesPorPeriodo = montoNum * (tasaNum / 100)
-                
-                val periodoTexto = when(frecuenciaPago) {
-                    FrecuenciaPago.DIARIO -> "diario"
-                    FrecuenciaPago.SEMANAL -> "semanal"
-                    FrecuenciaPago.QUINCENAL -> "quincenal"
-                    FrecuenciaPago.MENSUAL -> "mensual"
+        val periodoTexto = when(frecuenciaPago) {
+            FrecuenciaPago.DIARIO -> "diario"
+            FrecuenciaPago.SEMANAL -> "semanal"
+            FrecuenciaPago.QUINCENAL -> "quincenal"
+            FrecuenciaPago.MENSUAL -> "mensual"
+        }
+        
+        AlertDialog(
+            onDismissRequest = { showConfirmDialog = false },
+            title = { Text("Confirmar préstamo") },
+            text = {
+                Column {
+                    Text("¿Crear préstamo con los siguientes datos?", fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text("Cliente: $clienteNombre")
+                    Text("Capital: $${String.format("%,.2f", montoNum)}", fontWeight = FontWeight.Bold)
+                    Text("Tasa: $tasaNum% $periodoTexto")
+                    Text("Interés por período: $${String.format("%,.2f", interesPorPeriodo)}")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        "ℹ️ El cliente pagará el interés cada período. Cualquier monto extra reducirá el capital.",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    )
                 }
-                
-                AlertDialog(
-                    onDismissRequest = { showConfirmDialog = false },
-                    title = { Text("Confirmar préstamo") },
-                    text = {
-                        Column {
-                            Text("¿Crear préstamo con los siguientes datos?", fontWeight = FontWeight.Bold)
-                            Spacer(modifier = Modifier.height(12.dp))
-                            Text("Cliente: $clienteNombre")
-                            Text("Capital: $${String.format("%,.2f", montoNum)}", fontWeight = FontWeight.Bold)
-                            Text("Tasa: $tasaNum% $periodoTexto")
-                            Text("Interés por período: $${String.format("%,.2f", interesPorPeriodo)}")
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                "ℹ️ El cliente pagará el interés cada período. Cualquier monto extra reducirá el capital.",
-                                fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                            )
-                        }
-                    },
-                    confirmButton = {
-                        TextButton(onClick = {
-                            loansViewModel.crearPrestamo(
-                                clienteId = clienteSeleccionado,
-                                clienteNombre = clienteNombre,
-                                monto = montoNum,
-                                tasaInteresPorPeriodo = tasaNum,
-                                frecuenciaPago = frecuenciaPago,
-                                garantiaId = if (garantiaOpcional.isNotBlank()) garantiaOpcional else null,
-                                notas = notas
-                            )
-                            showConfirmDialog = false
-                            showSuccessDialog = true
-                        }) {
-                            Text("Confirmar")
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { showConfirmDialog = false }) {
-                            Text("Cancelar")
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    loansViewModel.crearPrestamo(
+                        clienteId = clienteSeleccionado,
+                        clienteNombre = clienteNombre,
+                        monto = montoNum,
+                        tasaInteresPorPeriodo = tasaNum,
+                        frecuenciaPago = frecuenciaPago,
+                        garantiaId = if (garantiaOpcional.isNotBlank()) garantiaOpcional else null,
+                        notas = notas
+                    )
+                    showConfirmDialog = false
+                    showSuccessDialog = true
+                }) {
+                    Text("Confirmar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showConfirmDialog = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+    
+    // Diálogo de éxito
+    if (showSuccessDialog) {
+        AlertDialog(
+            onDismissRequest = { },
+            title = { Text("✅ Préstamo creado") },
+            text = { Text("El préstamo se creó correctamente y se sincronizará con la nube.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showSuccessDialog = false
+                    navController.navigateUp()
+                }) {
+                    Text("OK")
+                }
+            }
+        )
+    }
+    
+    // Diálogo selector de clientes
+    if (showClientSelector) {
+        AlertDialog(
+            onDismissRequest = { showClientSelector = false },
+            title = { Text("Seleccionar cliente") },
+            text = {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(400.dp)
+                ) {
+                    if (clientes.isEmpty()) {
+                        item {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(32.dp),
+                                horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.PersonOff,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(48.dp),
+                                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(
+                                    text = "No hay clientes registrados",
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                )
+                            }
                         }
                     }
-                )
-            }
-            
-            // Diálogo de éxito
-            if (showSuccessDialog) {
-                AlertDialog(
-                    onDismissRequest = { },
-                    title = { Text("✅ Préstamo creado") },
-                    text = { Text("El préstamo se creó correctamente y se sincronizará con la nube.") },
-                    confirmButton = {
-                        TextButton(onClick = {
-                            showSuccessDialog = false
-                            navController.navigateUp()
-                        }) {
-                            Text("OK")
-                        }
-                    }
-                )
-            }
-            
-            // Diálogo selector de clientes
-            if (showClientSelector) {
-                AlertDialog(
-                    onDismissRequest = { showClientSelector = false },
-                    title = { Text("Seleccionar cliente") },
-                    text = {
-                        LazyColumn(
+                    
+                    items(clientes.size) { index ->
+                        val cliente = clientes[index]
+                        Card(
+                            onClick = {
+                                clienteSeleccionado = cliente.id
+                                clienteNombre = cliente.nombre
+                                showClientSelector = false
+                            },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(400.dp)
+                                .padding(vertical = 4.dp)
                         ) {
-                            if (clientes.isEmpty()) {
-                                item {
-                                    Column(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(32.dp),
-                                        horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.PersonOff,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(48.dp),
-                                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
-                                        )
-                                        Spacer(modifier = Modifier.height(16.dp))
-                                        Text(
-                                            text = "No hay clientes registrados",
-                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                                        )
-                                    }
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Person,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text(
+                                        text = cliente.nombre,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                    Text(
+                                        text = cliente.telefono,
+                                        fontSize = 13.sp,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                    )
                                 }
                             }
-                            
-                            items(clientes.size) { index ->
-                                val cliente = clientes[index]
-                                Card(
-                                    onClick = {
-                                        clienteSeleccionado = cliente.id
-                                        clienteNombre = cliente.nombre
-                                        showClientSelector = false
-                                    },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 4.dp)
-                                ) {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(12.dp),
-                                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Person,
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.primary
-                                        )
-                                        Spacer(modifier = Modifier.width(12.dp))
-                                        Column {
-                                            Text(
-                                                text = cliente.nombre,
-                                                fontWeight = FontWeight.SemiBold
-                                            )
-                                            Text(
-                                                text = cliente.telefono,
-                                                fontSize = 13.sp,
-                                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    confirmButton = {},
-                    dismissButton = {
-                        TextButton(onClick = { showClientSelector = false }) {
-                            Text("Cancelar")
                         }
                     }
-                )
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showClientSelector = false }) {
+                    Text("Cancelar")
+                }
             }
-        } // Box
-    } // Scaffold
-} // AddLoanScreen
-
+        )
+    }
+}
