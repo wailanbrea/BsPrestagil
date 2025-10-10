@@ -13,6 +13,7 @@ class FirebaseToRoomSync(
     private val clienteRepository: ClienteRepository,
     private val prestamoRepository: PrestamoRepository,
     private val pagoRepository: PagoRepository,
+    private val cuotaRepository: CuotaRepository,
     private val garantiaRepository: GarantiaRepository,
     private val configuracionRepository: ConfiguracionRepository
 ) {
@@ -79,6 +80,8 @@ class FirebaseToRoomSync(
                         capitalPendiente = (data["capitalPendiente"] as? Number)?.toDouble() ?: 0.0,
                         tasaInteresPorPeriodo = (data["tasaInteresPorPeriodo"] as? Number)?.toDouble() ?: 0.0,
                         frecuenciaPago = data["frecuenciaPago"] as? String ?: "MENSUAL",
+                        numeroCuotas = (data["numeroCuotas"] as? Long)?.toInt() ?: 0,
+                        cuotasPagadas = (data["cuotasPagadas"] as? Long)?.toInt() ?: 0,
                         garantiaId = data["garantiaId"] as? String,
                         fechaInicio = data["fechaInicio"] as? Long ?: System.currentTimeMillis(),
                         ultimaFechaPago = data["ultimaFechaPago"] as? Long ?: System.currentTimeMillis(),
@@ -115,6 +118,8 @@ class FirebaseToRoomSync(
                     PagoEntity(
                         id = data["id"] as? String ?: doc.id,
                         prestamoId = data["prestamoId"] as? String ?: "",
+                        cuotaId = data["cuotaId"] as? String,
+                        numeroCuota = (data["numeroCuota"] as? Long)?.toInt() ?: 0,
                         clienteId = data["clienteId"] as? String ?: "",
                         clienteNombre = data["clienteNombre"] as? String ?: "",
                         montoPagado = (data["montoPagado"] as? Number)?.toDouble() ?: 0.0,
@@ -148,6 +153,45 @@ class FirebaseToRoomSync(
     }
     
     /**
+     * Descarga cuotas de Firebase y actualiza Room
+     */
+    suspend fun syncCuotasFromFirebase(): Result<Unit> {
+        return try {
+            val snapshot = firestore.collection("cuotas").get().await()
+            val cuotasFirebase = snapshot.documents.map { doc ->
+                doc.data?.let { data ->
+                    CuotaEntity(
+                        id = data["id"] as? String ?: doc.id,
+                        prestamoId = data["prestamoId"] as? String ?: "",
+                        numeroCuota = (data["numeroCuota"] as? Long)?.toInt() ?: 0,
+                        fechaVencimiento = data["fechaVencimiento"] as? Long ?: System.currentTimeMillis(),
+                        montoCuotaMinimo = (data["montoCuotaMinimo"] as? Number)?.toDouble() ?: 0.0,
+                        capitalPendienteAlInicio = (data["capitalPendienteAlInicio"] as? Number)?.toDouble() ?: 0.0,
+                        montoPagado = (data["montoPagado"] as? Number)?.toDouble() ?: 0.0,
+                        montoAInteres = (data["montoAInteres"] as? Number)?.toDouble() ?: 0.0,
+                        montoACapital = (data["montoACapital"] as? Number)?.toDouble() ?: 0.0,
+                        montoMora = (data["montoMora"] as? Number)?.toDouble() ?: 0.0,
+                        fechaPago = data["fechaPago"] as? Long,
+                        estado = data["estado"] as? String ?: "PENDIENTE",
+                        notas = data["notas"] as? String ?: "",
+                        pendingSync = false,
+                        lastSyncTime = data["lastSyncTime"] as? Long ?: System.currentTimeMillis(),
+                        firebaseId = doc.id
+                    )
+                }
+            }.filterNotNull()
+            
+            cuotasFirebase.forEach { cuota ->
+                cuotaRepository.insertCuota(cuota.copy(pendingSync = false))
+            }
+            
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    /**
      * Sincronización completa bidireccional
      */
     suspend fun fullSync(): Result<Unit> {
@@ -155,6 +199,7 @@ class FirebaseToRoomSync(
             syncClientesFromFirebase()
             syncPrestamosFromFirebase()
             syncPagosFromFirebase()
+            syncCuotasFromFirebase()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

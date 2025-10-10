@@ -14,6 +14,7 @@ class FirebaseService {
         private const val COLLECTION_CLIENTES = "clientes"
         private const val COLLECTION_PRESTAMOS = "prestamos"
         private const val COLLECTION_PAGOS = "pagos"
+        private const val COLLECTION_CUOTAS = "cuotas"
         private const val COLLECTION_GARANTIAS = "garantias"
         private const val COLLECTION_USUARIOS = "usuarios"
         private const val COLLECTION_CONFIGURACION = "configuracion"
@@ -95,6 +96,8 @@ class FirebaseService {
                 "capitalPendiente" to prestamo.capitalPendiente,
                 "tasaInteresPorPeriodo" to prestamo.tasaInteresPorPeriodo,
                 "frecuenciaPago" to prestamo.frecuenciaPago,
+                "numeroCuotas" to prestamo.numeroCuotas,
+                "cuotasPagadas" to prestamo.cuotasPagadas,
                 "garantiaId" to prestamo.garantiaId,
                 "fechaInicio" to prestamo.fechaInicio,
                 "ultimaFechaPago" to prestamo.ultimaFechaPago,
@@ -136,6 +139,8 @@ class FirebaseService {
             val pagoMap = mapOf(
                 "id" to pago.id,
                 "prestamoId" to pago.prestamoId,
+                "cuotaId" to pago.cuotaId,
+                "numeroCuota" to pago.numeroCuota,
                 "clienteId" to pago.clienteId,
                 "clienteNombre" to pago.clienteNombre,
                 "montoPagado" to pago.montoPagado,
@@ -166,6 +171,50 @@ class FirebaseService {
             val snapshot = firestore.collection(COLLECTION_PAGOS).get().await()
             val pagos = snapshot.documents.mapNotNull { it.data }
             Result.success(pagos)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    // ==================== CUOTAS ====================
+    
+    suspend fun syncCuota(cuota: CuotaEntity): Result<String> {
+        return try {
+            val docRef = if (cuota.firebaseId != null) {
+                firestore.collection(COLLECTION_CUOTAS).document(cuota.firebaseId)
+            } else {
+                firestore.collection(COLLECTION_CUOTAS).document()
+            }
+            
+            val cuotaMap = mapOf(
+                "id" to cuota.id,
+                "prestamoId" to cuota.prestamoId,
+                "numeroCuota" to cuota.numeroCuota,
+                "fechaVencimiento" to cuota.fechaVencimiento,
+                "montoCuotaMinimo" to cuota.montoCuotaMinimo,
+                "capitalPendienteAlInicio" to cuota.capitalPendienteAlInicio,
+                "montoPagado" to cuota.montoPagado,
+                "montoAInteres" to cuota.montoAInteres,
+                "montoACapital" to cuota.montoACapital,
+                "montoMora" to cuota.montoMora,
+                "fechaPago" to cuota.fechaPago,
+                "estado" to cuota.estado,
+                "notas" to cuota.notas,
+                "lastSyncTime" to System.currentTimeMillis()
+            )
+            
+            docRef.set(cuotaMap, SetOptions.merge()).await()
+            Result.success(docRef.id)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    suspend fun getCuotas(): Result<List<Map<String, Any>>> {
+        return try {
+            val snapshot = firestore.collection(COLLECTION_CUOTAS).get().await()
+            val cuotas = snapshot.documents.mapNotNull { it.data }
+            Result.success(cuotas)
         } catch (e: Exception) {
             Result.failure(e)
         }

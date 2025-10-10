@@ -22,6 +22,7 @@ import com.example.bsprestagil.utils.InteresUtils
 import com.example.bsprestagil.viewmodels.ConfiguracionViewModel
 import com.example.bsprestagil.viewmodels.LoansViewModel
 import com.example.bsprestagil.viewmodels.PaymentsViewModel
+import com.example.bsprestagil.viewmodels.CuotasViewModel
 import com.google.firebase.auth.FirebaseAuth
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -31,7 +32,8 @@ fun RegisterPaymentScreen(
     navController: NavController,
     loansViewModel: LoansViewModel = viewModel(),
     paymentsViewModel: PaymentsViewModel = viewModel(),
-    configuracionViewModel: ConfiguracionViewModel = viewModel()
+    configuracionViewModel: ConfiguracionViewModel = viewModel(),
+    cuotasViewModel: CuotasViewModel = viewModel()
 ) {
     var montoPagado by remember { mutableStateOf("") }
     var montoMora by remember { mutableStateOf("0") }
@@ -45,11 +47,18 @@ fun RegisterPaymentScreen(
     
     // Cargar datos del préstamo
     val prestamo by loansViewModel.getPrestamoById(loanId).collectAsState(initial = null)
+    
+    // Cargar cuotas del préstamo
+    val cuotas by cuotasViewModel.getCuotasByPrestamoId(loanId).collectAsState(initial = emptyList())
+    val proximaCuota = cuotas.firstOrNull { it.estado == com.example.bsprestagil.data.models.EstadoCuota.PENDIENTE || it.estado == com.example.bsprestagil.data.models.EstadoCuota.VENCIDA }
+    
     val clienteNombre = prestamo?.clienteNombre ?: "Cargando..."
     val capitalPendiente = prestamo?.capitalPendiente ?: 0.0
     val tasaInteresPorPeriodo = prestamo?.tasaInteresPorPeriodo ?: 0.0
     val fechaUltimoPago = prestamo?.ultimaFechaPago ?: System.currentTimeMillis()
     val frecuenciaPago = prestamo?.frecuenciaPago ?: FrecuenciaPago.MENSUAL
+    val numeroCuotas = prestamo?.numeroCuotas ?: 0
+    val cuotaSeleccionada = proximaCuota
     
     // Calcular días transcurridos desde el último pago
     val diasTranscurridos = InteresUtils.calcularDiasTranscurridos(
@@ -119,6 +128,16 @@ fun RegisterPaymentScreen(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
+                    
+                    if (cuotaSeleccionada != null) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Cuota ${cuotaSeleccionada.numeroCuota} de $numeroCuotas",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
                     
                     Divider(color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.3f))
                     
@@ -427,6 +446,8 @@ fun RegisterPaymentScreen(
                         
                         paymentsViewModel.registrarPago(
                             prestamoId = loanId,
+                            cuotaId = cuotaSeleccionada?.id,
+                            numeroCuota = cuotaSeleccionada?.numeroCuota ?: (p.cuotasPagadas + 1),
                             clienteId = p.clienteId,
                             clienteNombre = p.clienteNombre,
                             montoPagado = montoNum,

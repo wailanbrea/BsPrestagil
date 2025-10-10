@@ -160,6 +160,8 @@ fun TestSyncScreen(
                                         capitalPendiente = 10000.0,
                                         tasaInteresPorPeriodo = 10.0,
                                         frecuenciaPago = "MENSUAL",
+                                        numeroCuotas = 12,
+                                        cuotasPagadas = 0,
                                         garantiaId = null,
                                         fechaInicio = System.currentTimeMillis(),
                                         ultimaFechaPago = System.currentTimeMillis(),
@@ -167,7 +169,7 @@ fun TestSyncScreen(
                                         totalInteresesPagados = 0.0,
                                         totalCapitalPagado = 0.0,
                                         totalMorasPagadas = 0.0,
-                                        notas = "Préstamo de prueba - 10% mensual"
+                                        notas = "Préstamo de prueba - 10% mensual x 12 cuotas"
                                     )
                                 )
                                 prestamoIdCreado = prestamoId
@@ -204,6 +206,8 @@ fun TestSyncScreen(
                                     PagoEntity(
                                         id = "",
                                         prestamoId = prestamoIdCreado!!,
+                                        cuotaId = null,
+                                        numeroCuota = 1,
                                         clienteId = clienteIdCreado!!,
                                         clienteNombre = "Juan Pérez González",
                                         montoPagado = 1500.0,
@@ -217,7 +221,7 @@ fun TestSyncScreen(
                                         capitalPendienteDespues = 9500.0,
                                         metodoPago = "EFECTIVO",
                                         recibidoPor = "Admin",
-                                        notas = "Pago de prueba - $1000 interés + $500 capital",
+                                        notas = "Pago cuota 1 - $1000 interés + $500 capital",
                                         reciboUrl = ""
                                     )
                                 )

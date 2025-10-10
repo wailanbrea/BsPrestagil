@@ -6,6 +6,7 @@ import androidx.work.WorkerParameters
 import com.example.bsprestagil.data.database.AppDatabase
 import com.example.bsprestagil.data.repository.*
 import com.example.bsprestagil.firebase.FirebaseService
+import com.example.bsprestagil.firebase.FirebaseToRoomSync
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -18,6 +19,7 @@ class SyncWorker(
     private val clienteRepository = ClienteRepository(database.clienteDao())
     private val prestamoRepository = PrestamoRepository(database.prestamoDao())
     private val pagoRepository = PagoRepository(database.pagoDao())
+    private val cuotaRepository = CuotaRepository(database.cuotaDao())
     private val garantiaRepository = GarantiaRepository(database.garantiaDao())
     private val configuracionRepository = ConfiguracionRepository(database.configuracionDao())
     private val firebaseService = FirebaseService()
@@ -33,6 +35,7 @@ class SyncWorker(
             syncClientes()
             syncPrestamos()
             syncPagos()
+            syncCuotas()
             syncGarantias()
             syncConfiguracion()
             
@@ -88,6 +91,20 @@ class SyncWorker(
         }
     }
     
+    private suspend fun syncCuotas() {
+        try {
+            val cuotasPending = cuotaRepository.getCuotasPendingSync()
+            cuotasPending.forEach { cuota ->
+                val result = firebaseService.syncCuota(cuota)
+                if (result.isSuccess) {
+                    cuotaRepository.markAsSynced(cuota.id)
+                }
+            }
+        } catch (e: Exception) {
+            // Log error pero continuar
+        }
+    }
+    
     private suspend fun syncGarantias() {
         try {
             val garantiasPending = garantiaRepository.getGarantiasPendingSync()
@@ -118,9 +135,15 @@ class SyncWorker(
     
     private suspend fun downloadFromFirebase() {
         try {
-            // Por ahora, esta función está preparada para futura implementación
-            // de sincronización bidireccional completa desde Firebase a Room
-            // TODO: Implementar descarga y merge de datos desde Firestore
+            val firebaseToRoomSync = FirebaseToRoomSync(
+                clienteRepository = clienteRepository,
+                prestamoRepository = prestamoRepository,
+                pagoRepository = pagoRepository,
+                cuotaRepository = cuotaRepository,
+                garantiaRepository = garantiaRepository,
+                configuracionRepository = configuracionRepository
+            )
+            firebaseToRoomSync.fullSync()
         } catch (e: Exception) {
             // Log error
         }
