@@ -1,6 +1,7 @@
 package com.example.bsprestagil.utils
 
 import com.example.bsprestagil.data.models.FrecuenciaPago
+import com.example.bsprestagil.data.models.TipoAmortizacion
 import kotlin.math.pow
 
 /**
@@ -135,6 +136,67 @@ object AmortizacionUtils {
             montoPagado - cuotaFija
         } else {
             0.0
+        }
+    }
+    
+    /**
+     * Genera tabla de amortización para Sistema Alemán (capital constante)
+     * 
+     * @return Lista de tuplas: (numeroCuota, cuota, capital, interes, balance)
+     */
+    fun generarTablaAmortizacionAleman(
+        capitalInicial: Double,
+        tasaInteresPorPeriodo: Double,
+        numeroCuotas: Int
+    ): List<FilaAmortizacion> {
+        val tabla = mutableListOf<FilaAmortizacion>()
+        
+        // Capital fijo por cuota
+        val capitalFijoPorCuota = capitalInicial / numeroCuotas
+        var balanceActual = capitalInicial
+        val i = tasaInteresPorPeriodo / 100.0
+        
+        for (numCuota in 1..numeroCuotas) {
+            // Interés sobre el balance actual
+            val interesCuota = balanceActual * i
+            
+            // Cuota = Capital fijo + Interés
+            val cuotaTotal = capitalFijoPorCuota + interesCuota
+            
+            // Nuevo balance
+            balanceActual -= capitalFijoPorCuota
+            
+            // Asegurar que en la última cuota el balance sea exactamente 0
+            if (numCuota == numeroCuotas) {
+                balanceActual = 0.0
+            }
+            
+            tabla.add(
+                FilaAmortizacion(
+                    numeroCuota = numCuota,
+                    cuotaFija = cuotaTotal, // En alemán, la cuota NO es fija
+                    capital = capitalFijoPorCuota,
+                    interes = interesCuota,
+                    balanceRestante = balanceActual.coerceAtLeast(0.0)
+                )
+            )
+        }
+        
+        return tabla
+    }
+    
+    /**
+     * Genera tabla según el tipo de sistema
+     */
+    fun generarTablaSegunSistema(
+        capitalInicial: Double,
+        tasaInteresPorPeriodo: Double,
+        numeroCuotas: Int,
+        tipoSistema: TipoAmortizacion
+    ): List<FilaAmortizacion> {
+        return when (tipoSistema) {
+            TipoAmortizacion.FRANCES -> generarTablaAmortizacion(capitalInicial, tasaInteresPorPeriodo, numeroCuotas)
+            TipoAmortizacion.ALEMAN -> generarTablaAmortizacionAleman(capitalInicial, tasaInteresPorPeriodo, numeroCuotas)
         }
     }
     

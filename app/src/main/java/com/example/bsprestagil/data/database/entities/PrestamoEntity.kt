@@ -26,8 +26,9 @@ data class PrestamoEntity(
     val capitalPendiente: Double,
     val tasaInteresPorPeriodo: Double,
     val frecuenciaPago: String, // DIARIO, QUINCENAL, MENSUAL
+    val tipoAmortizacion: String, // FRANCES, ALEMAN
     val numeroCuotas: Int, // Número de cuotas pactadas
-    val montoCuotaFija: Double, // Cuota fija calculada (Sistema Francés)
+    val montoCuotaFija: Double, // Cuota fija (Francés) o primera cuota (Alemán)
     val cuotasPagadas: Int, // Cuántas cuotas se han pagado completamente
     val garantiaId: String?,
     val fechaInicio: Long,

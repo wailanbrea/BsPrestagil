@@ -8,8 +8,9 @@ data class Prestamo(
     val capitalPendiente: Double = 0.0, // Capital que aún debe (se reduce con pagos)
     val tasaInteresPorPeriodo: Double = 0.0, // Ej: 20% mensual, 10% quincenal
     val frecuenciaPago: FrecuenciaPago = FrecuenciaPago.MENSUAL, // Define el período de la tasa
+    val tipoAmortizacion: TipoAmortizacion = TipoAmortizacion.FRANCES, // Sistema de amortización
     val numeroCuotas: Int = 0, // Número de cuotas pactadas (ej: 12 meses)
-    val montoCuotaFija: Double = 0.0, // Cuota fija calculada (Sistema Francés)
+    val montoCuotaFija: Double = 0.0, // Cuota fija (Francés) o primera cuota (Alemán)
     val cuotasPagadas: Int = 0, // Cuántas cuotas se han completado
     val garantiaId: String? = null,
     val fechaInicio: Long = System.currentTimeMillis(),
@@ -25,6 +26,11 @@ enum class FrecuenciaPago {
     DIARIO,
     QUINCENAL,
     MENSUAL
+}
+
+enum class TipoAmortizacion {
+    FRANCES,  // Cuota fija
+    ALEMAN    // Capital fijo (cuota decreciente)
 }
 
 enum class EstadoPrestamo {

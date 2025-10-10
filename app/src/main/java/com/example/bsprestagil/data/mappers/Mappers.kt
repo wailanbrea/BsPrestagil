@@ -61,6 +61,10 @@ fun PrestamoEntity.toPrestamo() = Prestamo(
         "MENSUAL" -> FrecuenciaPago.MENSUAL
         else -> FrecuenciaPago.MENSUAL
     },
+    tipoAmortizacion = when (tipoAmortizacion) {
+        "ALEMAN" -> TipoAmortizacion.ALEMAN
+        else -> TipoAmortizacion.FRANCES
+    },
     numeroCuotas = numeroCuotas,
     montoCuotaFija = montoCuotaFija,
     cuotasPagadas = cuotasPagadas,
@@ -88,6 +92,7 @@ fun Prestamo.toEntity() = PrestamoEntity(
     capitalPendiente = capitalPendiente,
     tasaInteresPorPeriodo = tasaInteresPorPeriodo,
     frecuenciaPago = frecuenciaPago.name,
+    tipoAmortizacion = tipoAmortizacion.name,
     numeroCuotas = numeroCuotas,
     montoCuotaFija = montoCuotaFija,
     cuotasPagadas = cuotasPagadas,
