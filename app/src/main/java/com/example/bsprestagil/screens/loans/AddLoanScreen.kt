@@ -19,6 +19,7 @@ import androidx.navigation.NavController
 import com.example.bsprestagil.components.TopAppBarComponent
 import com.example.bsprestagil.data.models.FrecuenciaPago
 import com.example.bsprestagil.navigation.Screen
+import com.example.bsprestagil.utils.InteresUtils
 import com.example.bsprestagil.viewmodels.ClientsViewModel
 import com.example.bsprestagil.viewmodels.ConfiguracionViewModel
 import com.example.bsprestagil.viewmodels.LoansViewModel
@@ -37,6 +38,7 @@ fun AddLoanScreen(
     var monto by remember { mutableStateOf("") }
     var tasaInteres by remember { mutableStateOf("10") }
     var frecuenciaPago by remember { mutableStateOf(FrecuenciaPago.MENSUAL) }
+    var numeroCuotas by remember { mutableStateOf("12") }
     var garantiaOpcional by remember { mutableStateOf("") }
     var notas by remember { mutableStateOf("") }
     var expandedFrecuencia by remember { mutableStateOf(false) }
@@ -243,6 +245,29 @@ fun AddLoanScreen(
                 }
             }
             
+            // Número de cuotas
+            OutlinedTextField(
+                value = numeroCuotas,
+                onValueChange = { numeroCuotas = it },
+                label = { Text("Número de cuotas *") },
+                leadingIcon = { Icon(Icons.Default.CalendarMonth, contentDescription = null) },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                supportingText = {
+                    val periodoTexto = when(frecuenciaPago) {
+                        FrecuenciaPago.DIARIO -> "días"
+                        FrecuenciaPago.SEMANAL -> "semanas"
+                        FrecuenciaPago.QUINCENAL -> "quincenas"
+                        FrecuenciaPago.MENSUAL -> "meses"
+                    }
+                    Text(
+                        text = "Pagos cada ${InteresUtils.frecuenciaATexto(frecuenciaPago).lowercase()}. Total: $numeroCuotas $periodoTexto",
+                        fontSize = 12.sp
+                    )
+                }
+            )
+            
             Spacer(modifier = Modifier.height(8.dp))
             
             // Garantía (opcional)
@@ -400,7 +425,8 @@ fun AddLoanScreen(
                     .height(56.dp),
                 enabled = clienteSeleccionado.isNotBlank() && 
                          monto.isNotBlank() && 
-                         tasaInteres.isNotBlank()
+                         tasaInteres.isNotBlank() &&
+                         numeroCuotas.isNotBlank()
             ) {
                 Icon(Icons.Default.Save, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
@@ -419,6 +445,7 @@ fun AddLoanScreen(
     if (showConfirmDialog) {
         val montoNum = monto.toDoubleOrNull() ?: 0.0
         val tasaNum = tasaInteres.toDoubleOrNull() ?: 0.0
+        val cuotasNum = numeroCuotas.toIntOrNull() ?: 0
         val interesPorPeriodo = montoNum * (tasaNum / 100)
         
         val periodoTexto = when(frecuenciaPago) {
@@ -438,10 +465,11 @@ fun AddLoanScreen(
                     Text("Cliente: $clienteNombre")
                     Text("Capital: $${String.format("%,.2f", montoNum)}", fontWeight = FontWeight.Bold)
                     Text("Tasa: $tasaNum% $periodoTexto")
-                    Text("Interés por período: $${String.format("%,.2f", interesPorPeriodo)}")
+                    Text("Cuotas: $cuotasNum pagos")
+                    Text("Cuota mínima inicial: $${String.format("%,.2f", interesPorPeriodo)}")
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        "ℹ️ El cliente pagará el interés cada período. Cualquier monto extra reducirá el capital.",
+                        "ℹ️ Se generará un cronograma de $cuotasNum cuotas. El cliente debe pagar el interés cada período. Cualquier monto extra reducirá el capital.",
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                     )
@@ -455,6 +483,7 @@ fun AddLoanScreen(
                         monto = montoNum,
                         tasaInteresPorPeriodo = tasaNum,
                         frecuenciaPago = frecuenciaPago,
+                        numeroCuotas = cuotasNum,
                         garantiaId = if (garantiaOpcional.isNotBlank()) garantiaOpcional else null,
                         notas = notas
                     )

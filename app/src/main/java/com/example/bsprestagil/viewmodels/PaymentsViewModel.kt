@@ -10,7 +10,9 @@ import com.example.bsprestagil.data.models.MetodoPago
 import com.example.bsprestagil.data.models.Pago
 import com.example.bsprestagil.data.repository.PagoRepository
 import com.example.bsprestagil.data.repository.PrestamoRepository
+import com.example.bsprestagil.data.repository.CuotaRepository
 import com.example.bsprestagil.utils.InteresUtils
+import com.example.bsprestagil.utils.CronogramaUtils
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -19,6 +21,7 @@ class PaymentsViewModel(application: Application) : AndroidViewModel(application
     private val database = AppDatabase.getDatabase(application)
     private val pagoRepository = PagoRepository(database.pagoDao())
     private val prestamoRepository = PrestamoRepository(database.prestamoDao())
+    private val cuotaRepository = CuotaRepository(database.cuotaDao())
     
     private val _pagos = MutableStateFlow<List<Pago>>(emptyList())
     val pagos: StateFlow<List<Pago>> = _pagos.asStateFlow()
@@ -72,9 +75,12 @@ class PaymentsViewModel(application: Application) : AndroidViewModel(application
     /**
      * Registra un pago usando el modelo de interés sobre saldo
      * El pago se distribuye: primero al interés, luego al capital
+     * Se vincula a la cuota correspondiente
      */
     fun registrarPago(
         prestamoId: String,
+        cuotaId: String?, // ID de la cuota que se está pagando
+        numeroCuota: Int, // Número de cuota para reporte
         clienteId: String,
         clienteNombre: String,
         montoPagado: Double,
@@ -119,6 +125,8 @@ class PaymentsViewModel(application: Application) : AndroidViewModel(application
                     val pago = PagoEntity(
                         id = "",
                         prestamoId = prestamoId,
+                        cuotaId = cuotaId,
+                        numeroCuota = numeroCuota,
                         clienteId = clienteId,
                         clienteNombre = clienteNombre,
                         montoPagado = montoPagado,
@@ -137,6 +145,21 @@ class PaymentsViewModel(application: Application) : AndroidViewModel(application
                     )
                     
                     pagoRepository.insertPago(pago)
+                    
+                    // Actualizar la cuota correspondiente si existe
+                    if (cuotaId != null) {
+                        cuotaRepository.getCuotaById(cuotaId).firstOrNull()?.let { cuota ->
+                            val cuotaActualizada = CronogramaUtils.actualizarCuotaConPago(
+                                cuota = cuota,
+                                montoPagado = montoPagado,
+                                montoAInteres = montoAInteres,
+                                montoACapital = montoACapital,
+                                montoMora = montoMora,
+                                fechaPago = fechaPagoActual
+                            )
+                            cuotaRepository.updateCuota(cuotaActualizada)
+                        }
+                    }
                     
                     // Actualizar el préstamo
                     actualizarPrestamoDespuesDePago(
@@ -168,9 +191,13 @@ class PaymentsViewModel(application: Application) : AndroidViewModel(application
         fechaPago: Long
     ) {
         try {
+            // Contar cuántas cuotas se han pagado completamente
+            val cuotasPagadas = cuotaRepository.countCuotasPagadas(prestamo.id)
+            
             // Determinar nuevo estado
             val nuevoEstado = when {
                 nuevoCapitalPendiente <= 0.0 -> "COMPLETADO"
+                cuotasPagadas >= prestamo.numeroCuotas -> "COMPLETADO"
                 else -> "ACTIVO" // Puede ser ATRASADO si hay mora, pero eso se maneja en otra parte
             }
             
@@ -178,6 +205,7 @@ class PaymentsViewModel(application: Application) : AndroidViewModel(application
             prestamoRepository.updatePrestamo(
                 prestamo.copy(
                     capitalPendiente = nuevoCapitalPendiente,
+                    cuotasPagadas = cuotasPagadas,
                     ultimaFechaPago = fechaPago,
                     totalInteresesPagados = prestamo.totalInteresesPagados + montoAInteres,
                     totalCapitalPagado = prestamo.totalCapitalPagado + montoACapital,

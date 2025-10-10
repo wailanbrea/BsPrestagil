@@ -1,5 +1,6 @@
 package com.example.bsprestagil.screens.loans
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,9 +20,13 @@ import com.example.bsprestagil.components.InfoCard
 import com.example.bsprestagil.components.TopAppBarComponent
 import com.example.bsprestagil.data.models.EstadoPrestamo
 import com.example.bsprestagil.navigation.Screen
+import com.example.bsprestagil.data.models.EstadoCuota
 import com.example.bsprestagil.ui.theme.SuccessColor
+import com.example.bsprestagil.ui.theme.WarningColor
+import com.example.bsprestagil.ui.theme.ErrorColor
 import com.example.bsprestagil.utils.ShareUtils
 import com.example.bsprestagil.viewmodels.LoansViewModel
+import com.example.bsprestagil.viewmodels.CuotasViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -30,7 +35,8 @@ import java.util.*
 fun LoanDetailScreen(
     loanId: String,
     navController: NavController,
-    loansViewModel: LoansViewModel = viewModel()
+    loansViewModel: LoansViewModel = viewModel(),
+    cuotasViewModel: CuotasViewModel = viewModel()
 ) {
     val context = LocalContext.current
     val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
@@ -38,10 +44,15 @@ fun LoanDetailScreen(
     // Cargar datos del préstamo
     val prestamo by loansViewModel.getPrestamoById(loanId).collectAsState(initial = null)
     
+    // Cargar cronograma de cuotas
+    val cuotas by cuotasViewModel.getCuotasByPrestamoId(loanId).collectAsState(initial = emptyList())
+    
     val clienteNombre = prestamo?.clienteNombre ?: "Cargando..."
     val montoOriginal = prestamo?.montoOriginal ?: 0.0
     val capitalPendiente = prestamo?.capitalPendiente ?: 0.0
     val tasaInteresPorPeriodo = prestamo?.tasaInteresPorPeriodo ?: 0.0
+    val numeroCuotas = prestamo?.numeroCuotas ?: 0
+    val cuotasPagadas = prestamo?.cuotasPagadas ?: 0
     val fechaInicio = prestamo?.fechaInicio ?: System.currentTimeMillis()
     val ultimaFechaPago = prestamo?.ultimaFechaPago ?: System.currentTimeMillis()
     val estado = prestamo?.estado ?: EstadoPrestamo.ACTIVO
@@ -379,8 +390,98 @@ fun LoanDetailScreen(
                 }
             }
             
+            // Cronograma de cuotas
+            item {
+                Text(
+                    text = "Cronograma de cuotas",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+            
+            items(cuotas.size) { index ->
+                val cuota = cuotas[index]
+                val estadoCuotaColor = when(cuota.estado) {
+                    EstadoCuota.PAGADA -> SuccessColor
+                    EstadoCuota.PENDIENTE -> com.example.bsprestagil.ui.theme.WarningColor
+                    EstadoCuota.VENCIDA -> com.example.bsprestagil.ui.theme.ErrorColor
+                    EstadoCuota.PARCIAL -> MaterialTheme.colorScheme.primary
+                }
+                
+                val estadoTexto = when(cuota.estado) {
+                    EstadoCuota.PAGADA -> "✅ Pagada"
+                    EstadoCuota.PENDIENTE -> "⏳ Pendiente"
+                    EstadoCuota.VENCIDA -> "⚠️ Vencida"
+                    EstadoCuota.PARCIAL -> "🔄 Parcial"
+                }
+                
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (cuota.estado == EstadoCuota.PAGADA)
+                            estadoCuotaColor.copy(alpha = 0.1f)
+                        else
+                            MaterialTheme.colorScheme.surface
+                    ),
+                    border = BorderStroke(
+                        width = 1.dp,
+                        color = estadoCuotaColor.copy(alpha = 0.3f)
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "Cuota ${cuota.numeroCuota}",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "Vence: ${dateFormat.format(Date(cuota.fechaVencimiento))}",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            )
+                            Text(
+                                text = "Mínimo: $${String.format("%,.0f", cuota.montoCuotaMinimo)}",
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            )
+                            if (cuota.montoPagado > 0) {
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "Pagado: $${String.format("%,.0f", cuota.montoPagado)}",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = SuccessColor
+                                )
+                            }
+                        }
+                        
+                        Surface(
+                            shape = RoundedCornerShape(4.dp),
+                            color = estadoCuotaColor.copy(alpha = 0.1f)
+                        ) {
+                            Text(
+                                text = estadoTexto,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = estadoCuotaColor
+                            )
+                        }
+                    }
+                }
+            }
+            
             // Acciones
             item {
+                Spacer(modifier = Modifier.height(8.dp))
                 Button(
                     onClick = {
                         navController.navigate(Screen.RegisterPayment.createRoute(loanId))
