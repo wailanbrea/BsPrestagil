@@ -97,6 +97,7 @@ class FirebaseService {
                 "tasaInteresPorPeriodo" to prestamo.tasaInteresPorPeriodo,
                 "frecuenciaPago" to prestamo.frecuenciaPago,
                 "numeroCuotas" to prestamo.numeroCuotas,
+                "montoCuotaFija" to prestamo.montoCuotaFija,
                 "cuotasPagadas" to prestamo.cuotasPagadas,
                 "garantiaId" to prestamo.garantiaId,
                 "fechaInicio" to prestamo.fechaInicio,

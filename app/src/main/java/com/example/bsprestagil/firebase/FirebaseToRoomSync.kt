@@ -81,6 +81,7 @@ class FirebaseToRoomSync(
                         tasaInteresPorPeriodo = (data["tasaInteresPorPeriodo"] as? Number)?.toDouble() ?: 0.0,
                         frecuenciaPago = data["frecuenciaPago"] as? String ?: "MENSUAL",
                         numeroCuotas = (data["numeroCuotas"] as? Long)?.toInt() ?: 0,
+                        montoCuotaFija = (data["montoCuotaFija"] as? Number)?.toDouble() ?: 0.0,
                         cuotasPagadas = (data["cuotasPagadas"] as? Long)?.toInt() ?: 0,
                         garantiaId = data["garantiaId"] as? String,
                         fechaInicio = data["fechaInicio"] as? Long ?: System.currentTimeMillis(),

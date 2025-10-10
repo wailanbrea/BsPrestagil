@@ -56,6 +56,17 @@ fun DashboardScreen(
                     }
                 },
                 actions = {
+                    // Botón de pruebas (temporal para testing)
+                    IconButton(onClick = {
+                        navController.navigate(Screen.TestSync.route)
+                    }) {
+                        Icon(
+                            Icons.Default.BugReport, 
+                            contentDescription = "Prueba de datos",
+                            tint = WarningColor
+                        )
+                    }
+                    
                     IconButton(onClick = {
                         navController.navigate(Screen.Notifications.route)
                     }) {

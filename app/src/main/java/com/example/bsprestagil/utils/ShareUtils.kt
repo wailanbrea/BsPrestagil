@@ -102,7 +102,6 @@ object ShareUtils {
         
         val periodoTexto = when(frecuenciaPago) {
             "DIARIO" -> "diario"
-            "SEMANAL" -> "semanal"
             "QUINCENAL" -> "quincenal"
             "MENSUAL" -> "mensual"
             else -> "mensual"

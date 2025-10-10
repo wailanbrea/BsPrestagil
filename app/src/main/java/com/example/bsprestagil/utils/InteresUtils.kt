@@ -73,7 +73,6 @@ object InteresUtils {
     ): Double {
         val diasDelPeriodo = when (frecuenciaPago) {
             FrecuenciaPago.DIARIO -> 1
-            FrecuenciaPago.SEMANAL -> 7
             FrecuenciaPago.QUINCENAL -> 15
             FrecuenciaPago.MENSUAL -> 30
         }
@@ -90,7 +89,6 @@ object InteresUtils {
     fun frecuenciaATexto(frecuencia: FrecuenciaPago): String {
         return when (frecuencia) {
             FrecuenciaPago.DIARIO -> "Diario"
-            FrecuenciaPago.SEMANAL -> "Semanal"
             FrecuenciaPago.QUINCENAL -> "Quincenal"
             FrecuenciaPago.MENSUAL -> "Mensual"
         }

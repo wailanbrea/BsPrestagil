@@ -15,7 +15,10 @@ import com.example.bsprestagil.components.TopAppBarComponent
 import com.example.bsprestagil.data.database.AppDatabase
 import com.example.bsprestagil.data.database.entities.*
 import com.example.bsprestagil.data.repository.*
+import com.example.bsprestagil.data.models.FrecuenciaPago
 import com.example.bsprestagil.sync.SyncManager
+import com.example.bsprestagil.utils.AmortizacionUtils
+import com.example.bsprestagil.utils.CronogramaUtils
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -30,6 +33,7 @@ fun TestSyncScreen(
     val clienteRepository = remember { ClienteRepository(database.clienteDao()) }
     val prestamoRepository = remember { PrestamoRepository(database.prestamoDao()) }
     val pagoRepository = remember { PagoRepository(database.pagoDao()) }
+    val cuotaRepository = remember { CuotaRepository(database.cuotaDao()) }
     
     var mensaje by remember { mutableStateOf("Listo para probar sincronización") }
     var loading by remember { mutableStateOf(false) }
@@ -151,6 +155,15 @@ fun TestSyncScreen(
                         loading = true
                         scope.launch {
                             try {
+                                // Calcular cuota fija con Sistema Francés
+                                val montoCuotaFija = AmortizacionUtils.calcularCuotaFija(
+                                    capital = 10000.0,
+                                    tasaInteresPorPeriodo = 10.0,
+                                    numeroCuotas = 12
+                                )
+                                
+                                val fechaInicio = System.currentTimeMillis()
+                                
                                 val prestamoId = prestamoRepository.insertPrestamo(
                                     PrestamoEntity(
                                         id = "",
@@ -161,19 +174,34 @@ fun TestSyncScreen(
                                         tasaInteresPorPeriodo = 10.0,
                                         frecuenciaPago = "MENSUAL",
                                         numeroCuotas = 12,
+                                        montoCuotaFija = montoCuotaFija,
                                         cuotasPagadas = 0,
                                         garantiaId = null,
-                                        fechaInicio = System.currentTimeMillis(),
-                                        ultimaFechaPago = System.currentTimeMillis(),
+                                        fechaInicio = fechaInicio,
+                                        ultimaFechaPago = fechaInicio,
                                         estado = "ACTIVO",
                                         totalInteresesPagados = 0.0,
                                         totalCapitalPagado = 0.0,
                                         totalMorasPagadas = 0.0,
-                                        notas = "Préstamo de prueba - 10% mensual x 12 cuotas"
+                                        notas = "Préstamo de prueba - 10% mensual x 12 cuotas - Sistema Francés"
                                     )
                                 )
+                                
+                                // Generar cronograma de cuotas (Sistema Francés)
+                                val cronograma = CronogramaUtils.generarCronograma(
+                                    prestamoId = prestamoId,
+                                    montoOriginal = 10000.0,
+                                    tasaInteresPorPeriodo = 10.0,
+                                    frecuenciaPago = FrecuenciaPago.MENSUAL,
+                                    numeroCuotas = 12,
+                                    fechaInicio = fechaInicio
+                                )
+                                
+                                // Insertar todas las cuotas
+                                cuotaRepository.insertCuotas(cronograma)
+                                
                                 prestamoIdCreado = prestamoId
-                                mensaje = "✅ Préstamo creado con ID: $prestamoId"
+                                mensaje = "✅ Préstamo creado: $${String.format("%.2f", montoCuotaFija)}/mes x 12 cuotas + cronograma completo"
                                 loading = false
                             } catch (e: Exception) {
                                 mensaje = "❌ Error: ${e.message}"
@@ -316,4 +344,5 @@ fun TestSyncScreen(
         }
     }
 }
+
 

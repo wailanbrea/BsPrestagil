@@ -20,6 +20,7 @@ import com.example.bsprestagil.components.TopAppBarComponent
 import com.example.bsprestagil.data.models.FrecuenciaPago
 import com.example.bsprestagil.navigation.Screen
 import com.example.bsprestagil.utils.InteresUtils
+import com.example.bsprestagil.utils.AmortizacionUtils
 import com.example.bsprestagil.viewmodels.ClientsViewModel
 import com.example.bsprestagil.viewmodels.ConfiguracionViewModel
 import com.example.bsprestagil.viewmodels.LoansViewModel
@@ -173,7 +174,6 @@ fun AddLoanScreen(
                 label = { 
                     val periodoTexto = when(frecuenciaPago) {
                         FrecuenciaPago.DIARIO -> "Diaria"
-                        FrecuenciaPago.SEMANAL -> "Semanal"
                         FrecuenciaPago.QUINCENAL -> "Quincenal"
                         FrecuenciaPago.MENSUAL -> "Mensual"
                     }
@@ -187,7 +187,6 @@ fun AddLoanScreen(
                 supportingText = {
                     val periodoDescripcion = when(frecuenciaPago) {
                         FrecuenciaPago.DIARIO -> "cada día"
-                        FrecuenciaPago.SEMANAL -> "cada semana"
                         FrecuenciaPago.QUINCENAL -> "cada 15 días"
                         FrecuenciaPago.MENSUAL -> "cada mes"
                     }
@@ -206,7 +205,6 @@ fun AddLoanScreen(
                 OutlinedTextField(
                     value = when(frecuenciaPago) {
                         FrecuenciaPago.DIARIO -> "Diario"
-                        FrecuenciaPago.SEMANAL -> "Semanal"
                         FrecuenciaPago.QUINCENAL -> "Quincenal"
                         FrecuenciaPago.MENSUAL -> "Mensual"
                     },
@@ -231,7 +229,6 @@ fun AddLoanScreen(
                             text = {
                                 Text(when(frecuencia) {
                                     FrecuenciaPago.DIARIO -> "Diario"
-                                    FrecuenciaPago.SEMANAL -> "Semanal"
                                     FrecuenciaPago.QUINCENAL -> "Quincenal"
                                     FrecuenciaPago.MENSUAL -> "Mensual"
                                 })
@@ -257,7 +254,6 @@ fun AddLoanScreen(
                 supportingText = {
                     val periodoTexto = when(frecuenciaPago) {
                         FrecuenciaPago.DIARIO -> "días"
-                        FrecuenciaPago.SEMANAL -> "semanas"
                         FrecuenciaPago.QUINCENAL -> "quincenas"
                         FrecuenciaPago.MENSUAL -> "meses"
                     }
@@ -386,7 +382,6 @@ fun AddLoanScreen(
                         
                         val periodoTexto = when(frecuenciaPago) {
                             FrecuenciaPago.DIARIO -> "día"
-                            FrecuenciaPago.SEMANAL -> "semana"
                             FrecuenciaPago.QUINCENAL -> "quincena"
                             FrecuenciaPago.MENSUAL -> "mes"
                         }
@@ -450,10 +445,27 @@ fun AddLoanScreen(
         
         val periodoTexto = when(frecuenciaPago) {
             FrecuenciaPago.DIARIO -> "diario"
-            FrecuenciaPago.SEMANAL -> "semanal"
             FrecuenciaPago.QUINCENAL -> "quincenal"
             FrecuenciaPago.MENSUAL -> "mensual"
         }
+        
+        val cuotaFijaCalculada = AmortizacionUtils.calcularCuotaFija(
+            capital = montoNum,
+            tasaInteresPorPeriodo = tasaNum,
+            numeroCuotas = cuotasNum
+        )
+        
+        val totalAPagar = AmortizacionUtils.calcularTotalAPagar(
+            capitalInicial = montoNum,
+            tasaInteresPorPeriodo = tasaNum,
+            numeroCuotas = cuotasNum
+        )
+        
+        val totalIntereses = AmortizacionUtils.calcularTotalIntereses(
+            capitalInicial = montoNum,
+            tasaInteresPorPeriodo = tasaNum,
+            numeroCuotas = cuotasNum
+        )
         
         AlertDialog(
             onDismissRequest = { showConfirmDialog = false },
@@ -465,11 +477,20 @@ fun AddLoanScreen(
                     Text("Cliente: $clienteNombre")
                     Text("Capital: $${String.format("%,.2f", montoNum)}", fontWeight = FontWeight.Bold)
                     Text("Tasa: $tasaNum% $periodoTexto")
-                    Text("Cuotas: $cuotasNum pagos")
-                    Text("Cuota mínima inicial: $${String.format("%,.2f", interesPorPeriodo)}")
+                    Text("Número de cuotas: $cuotasNum")
+                    Divider(modifier = Modifier.padding(vertical = 8.dp))
+                    Text(
+                        "CUOTA FIJA: $${String.format("%,.2f", cuotaFijaCalculada)}",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("Total a pagar: $${String.format("%,.2f", totalAPagar)}")
+                    Text("Total intereses: $${String.format("%,.2f", totalIntereses)}")
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        "ℹ️ Se generará un cronograma de $cuotasNum cuotas. El cliente debe pagar el interés cada período. Cualquier monto extra reducirá el capital.",
+                        "ℹ️ Sistema Francés: Cuota fija de $${String.format("%,.0f", cuotaFijaCalculada)} cada $periodoTexto. Se generará cronograma completo.",
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                     )

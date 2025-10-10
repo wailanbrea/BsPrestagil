@@ -12,6 +12,7 @@ import com.example.bsprestagil.data.models.Prestamo
 import com.example.bsprestagil.data.repository.PrestamoRepository
 import com.example.bsprestagil.data.repository.CuotaRepository
 import com.example.bsprestagil.utils.CronogramaUtils
+import com.example.bsprestagil.utils.AmortizacionUtils
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -82,6 +83,13 @@ class LoansViewModel(application: Application) : AndroidViewModel(application) {
                 
                 val fechaInicio = System.currentTimeMillis()
                 
+                // Calcular cuota fija usando Sistema Francés
+                val montoCuotaFija = AmortizacionUtils.calcularCuotaFija(
+                    capital = monto,
+                    tasaInteresPorPeriodo = tasaInteresPorPeriodo,
+                    numeroCuotas = numeroCuotas
+                )
+                
                 val prestamo = PrestamoEntity(
                     id = "",
                     clienteId = clienteId,
@@ -91,6 +99,7 @@ class LoansViewModel(application: Application) : AndroidViewModel(application) {
                     tasaInteresPorPeriodo = tasaInteresPorPeriodo,
                     frecuenciaPago = frecuenciaPago.name,
                     numeroCuotas = numeroCuotas,
+                    montoCuotaFija = montoCuotaFija,
                     cuotasPagadas = 0,
                     garantiaId = garantiaId,
                     fechaInicio = fechaInicio,

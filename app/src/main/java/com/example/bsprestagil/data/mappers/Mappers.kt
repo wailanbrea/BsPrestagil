@@ -57,12 +57,12 @@ fun PrestamoEntity.toPrestamo() = Prestamo(
     tasaInteresPorPeriodo = tasaInteresPorPeriodo,
     frecuenciaPago = when (frecuenciaPago) {
         "DIARIO" -> FrecuenciaPago.DIARIO
-        "SEMANAL" -> FrecuenciaPago.SEMANAL
         "QUINCENAL" -> FrecuenciaPago.QUINCENAL
         "MENSUAL" -> FrecuenciaPago.MENSUAL
         else -> FrecuenciaPago.MENSUAL
     },
     numeroCuotas = numeroCuotas,
+    montoCuotaFija = montoCuotaFija,
     cuotasPagadas = cuotasPagadas,
     garantiaId = garantiaId,
     fechaInicio = fechaInicio,
@@ -89,6 +89,7 @@ fun Prestamo.toEntity() = PrestamoEntity(
     tasaInteresPorPeriodo = tasaInteresPorPeriodo,
     frecuenciaPago = frecuenciaPago.name,
     numeroCuotas = numeroCuotas,
+    montoCuotaFija = montoCuotaFija,
     cuotasPagadas = cuotasPagadas,
     garantiaId = garantiaId,
     fechaInicio = fechaInicio,

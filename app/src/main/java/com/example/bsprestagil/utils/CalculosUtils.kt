@@ -46,7 +46,6 @@ object CalculosUtils {
     fun calcularNumeroCuotas(plazoMeses: Int, frecuencia: String): Int {
         return when (frecuencia) {
             "DIARIO" -> plazoMeses * 30
-            "SEMANAL" -> plazoMeses * 4
             "QUINCENAL" -> plazoMeses * 2
             "MENSUAL" -> plazoMeses
             else -> plazoMeses
@@ -66,7 +65,6 @@ object CalculosUtils {
         
         when (frecuencia) {
             "DIARIO" -> calendar.add(Calendar.DAY_OF_MONTH, numeroCuota)
-            "SEMANAL" -> calendar.add(Calendar.WEEK_OF_YEAR, numeroCuota)
             "QUINCENAL" -> calendar.add(Calendar.DAY_OF_MONTH, numeroCuota * 15)
             "MENSUAL" -> calendar.add(Calendar.MONTH, numeroCuota)
         }

@@ -232,7 +232,6 @@ fun LoanDetailScreen(
                 ) {
                     val periodoTexto = when(frecuenciaPago) {
                         com.example.bsprestagil.data.models.FrecuenciaPago.DIARIO -> "día"
-                        com.example.bsprestagil.data.models.FrecuenciaPago.SEMANAL -> "semana"
                         com.example.bsprestagil.data.models.FrecuenciaPago.QUINCENAL -> "quincena"
                         com.example.bsprestagil.data.models.FrecuenciaPago.MENSUAL -> "mes"
                     }
@@ -373,7 +372,6 @@ fun LoanDetailScreen(
                         ) {
                             val periodoTexto = when(frecuenciaPago) {
                                 com.example.bsprestagil.data.models.FrecuenciaPago.DIARIO -> "Diaria"
-                                com.example.bsprestagil.data.models.FrecuenciaPago.SEMANAL -> "Semanal"
                                 com.example.bsprestagil.data.models.FrecuenciaPago.QUINCENAL -> "Quincenal"
                                 com.example.bsprestagil.data.models.FrecuenciaPago.MENSUAL -> "Mensual"
                             }
