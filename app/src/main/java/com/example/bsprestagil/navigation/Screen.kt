@@ -52,6 +52,8 @@ sealed class Screen(val route: String) {
             fechaRegistro: Long
         ) = "qr_garantia/$garantiaId/${android.net.Uri.encode(clienteNombre)}/${android.net.Uri.encode(descripcion)}/$valorEstimado/$tipo/$fechaRegistro"
     }
+    object QRScanner : Screen("qr_scanner")
+    object HistorialGarantias : Screen("historial_garantias")
     
     // Pagos
     object RegisterPayment : Screen("register_payment/{loanId}") {

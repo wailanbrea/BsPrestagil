@@ -14,7 +14,9 @@ import com.example.bsprestagil.screens.clients.ClientsScreen
 import com.example.bsprestagil.screens.collaterals.AddEditCollateralScreen
 import com.example.bsprestagil.screens.collaterals.CollateralDetailScreen
 import com.example.bsprestagil.screens.collaterals.CollateralsScreen
+import com.example.bsprestagil.screens.collaterals.HistorialGarantiasScreen
 import com.example.bsprestagil.screens.collaterals.QRGarantiaScreen
+import com.example.bsprestagil.screens.collaterals.QRScannerScreen
 import com.example.bsprestagil.screens.dashboard.DashboardScreen
 import com.example.bsprestagil.screens.loans.AddLoanScreen
 import com.example.bsprestagil.screens.loans.LoanDetailScreen
@@ -189,6 +191,14 @@ fun NavGraph(
                 fechaRegistro = backStackEntry.arguments?.getLong("fechaRegistro") ?: 0L,
                 navController = navController
             )
+        }
+        
+        composable(Screen.QRScanner.route) {
+            QRScannerScreen(navController = navController)
+        }
+        
+        composable(Screen.HistorialGarantias.route) {
+            HistorialGarantiasScreen(navController = navController)
         }
         
         // Payments

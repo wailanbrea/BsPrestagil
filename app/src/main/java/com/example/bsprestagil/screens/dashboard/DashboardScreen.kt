@@ -183,6 +183,27 @@ fun DashboardScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     QuickAccessCard(
+                        icon = Icons.Default.QrCodeScanner,
+                        label = "Escanear QR",
+                        modifier = Modifier.weight(1f),
+                        onClick = { navController.navigate(Screen.QRScanner.route) }
+                    )
+                    
+                    QuickAccessCard(
+                        icon = Icons.Default.History,
+                        label = "Historial",
+                        modifier = Modifier.weight(1f),
+                        onClick = { navController.navigate(Screen.HistorialGarantias.route) }
+                    )
+                }
+            }
+            
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    QuickAccessCard(
                         icon = Icons.Default.Assessment,
                         label = "Reportes",
                         modifier = Modifier.weight(1f),

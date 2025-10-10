@@ -61,6 +61,16 @@ fun CollateralsScreen(
                 onNavigateBack = { navController.navigateUp() },
                 actions = {
                     IconButton(onClick = {
+                        navController.navigate(Screen.QRScanner.route)
+                    }) {
+                        Icon(Icons.Default.QrCodeScanner, contentDescription = "Escanear QR")
+                    }
+                    IconButton(onClick = {
+                        navController.navigate(Screen.HistorialGarantias.route)
+                    }) {
+                        Icon(Icons.Default.History, contentDescription = "Historial")
+                    }
+                    IconButton(onClick = {
                         navController.navigate(Screen.AddEditCollateral.createRoute())
                     }) {
                         Icon(Icons.Default.Add, contentDescription = "Agregar")
