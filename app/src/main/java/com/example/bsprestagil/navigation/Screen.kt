@@ -56,5 +56,8 @@ sealed class Screen(val route: String) {
     
     // Notificaciones
     object Notifications : Screen("notifications")
+    
+    // Pantalla de prueba de sincronización
+    object TestSync : Screen("test_sync")
 }
 

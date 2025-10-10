@@ -88,6 +88,12 @@ fun DashboardScreen(
                     }
                 },
                 actions = {
+                    // Botón de prueba de sincronización (temporal)
+                    IconButton(onClick = {
+                        navController.navigate(Screen.TestSync.route)
+                    }) {
+                        Icon(Icons.Default.BugReport, contentDescription = "Prueba de Sync", tint = WarningColor)
+                    }
                     IconButton(onClick = {
                         navController.navigate(Screen.Notifications.route)
                     }) {

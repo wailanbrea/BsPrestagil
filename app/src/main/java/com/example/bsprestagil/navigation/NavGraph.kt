@@ -24,6 +24,7 @@ import com.example.bsprestagil.screens.payments.PaymentsScreen
 import com.example.bsprestagil.screens.payments.RegisterPaymentScreen
 import com.example.bsprestagil.screens.reports.ReportsScreen
 import com.example.bsprestagil.screens.settings.SettingsScreen
+import com.example.bsprestagil.screens.test.TestSyncScreen
 
 @Composable
 fun NavGraph(
@@ -198,6 +199,13 @@ fun NavGraph(
         // Notifications
         composable(Screen.Notifications.route) {
             NotificationsScreen(navController = navController)
+        }
+        
+        // Test Sync
+        composable(Screen.TestSync.route) {
+            TestSyncScreen(
+                onNavigateBack = { navController.navigateUp() }
+            )
         }
     }
 }
