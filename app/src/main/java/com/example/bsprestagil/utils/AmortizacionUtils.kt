@@ -247,5 +247,46 @@ object AmortizacionUtils {
             appendLine("• Total intereses: $${String.format("%,.2f", totalIntereses)}")
         }
     }
+    
+    /**
+     * Calcula cuántas cuotas son necesarias para pagar un capital con una cuota fija dada
+     * Usado para recalcular el plazo después de un abono extraordinario
+     * 
+     * Fórmula: n = log(C / (C - P*i)) / log(1 + i)
+     * Donde: C = cuota fija, P = capital pendiente, i = tasa, n = número de cuotas
+     * 
+     * @param capitalPendiente Capital que queda por pagar
+     * @param cuotaFija Monto de la cuota fija
+     * @param tasaInteresPorPeriodo Tasa de interés (ej: 10% = 10.0)
+     * @return Número de cuotas necesarias (redondeado hacia arriba)
+     */
+    fun calcularNumeroCuotasNecesarias(
+        capitalPendiente: Double,
+        cuotaFija: Double,
+        tasaInteresPorPeriodo: Double
+    ): Int {
+        if (capitalPendiente <= 0.0) return 0
+        if (cuotaFija <= 0.0) return Int.MAX_VALUE
+        
+        val i = tasaInteresPorPeriodo / 100.0
+        
+        // Si la tasa es 0, es simple división
+        if (i <= 0.0) {
+            return kotlin.math.ceil(capitalPendiente / cuotaFija).toInt()
+        }
+        
+        // Verificar que la cuota sea suficiente para cubrir al menos el interés
+        val interesMinimo = capitalPendiente * i
+        if (cuotaFija <= interesMinimo) {
+            return Int.MAX_VALUE // Nunca se terminará de pagar
+        }
+        
+        // Aplicar fórmula logarítmica
+        val numerador = kotlin.math.ln(cuotaFija / (cuotaFija - capitalPendiente * i))
+        val denominador = kotlin.math.ln(1 + i)
+        val numeroCuotas = numerador / denominador
+        
+        return kotlin.math.ceil(numeroCuotas).toInt().coerceAtLeast(1)
+    }
 }
 

@@ -511,6 +511,7 @@ fun LoanDetailScreen(
                     EstadoCuota.PENDIENTE -> MaterialTheme.colorScheme.onSurface
                     EstadoCuota.VENCIDA -> com.example.bsprestagil.ui.theme.ErrorColor
                     EstadoCuota.PARCIAL -> MaterialTheme.colorScheme.primary
+                    EstadoCuota.CANCELADA -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
                 }
                 
                 Card(
@@ -589,6 +590,7 @@ fun LoanDetailScreen(
                                 EstadoCuota.PENDIENTE -> if (index == cuotas.indexOfFirst { it.estado == EstadoCuota.PENDIENTE }) "⏭️ Próxima" else "⏳ Pendiente"
                                 EstadoCuota.VENCIDA -> "⚠️ Vencida"
                                 EstadoCuota.PARCIAL -> "🔄 Parcial"
+                                EstadoCuota.CANCELADA -> "🚫 Cancelada"
                             }
                             
                             Surface(

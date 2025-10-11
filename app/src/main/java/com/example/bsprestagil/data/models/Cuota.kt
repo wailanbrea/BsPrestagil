@@ -20,6 +20,7 @@ enum class EstadoCuota {
     PENDIENTE,    // No ha vencido y no se ha pagado
     PAGADA,       // Pagada completamente
     PARCIAL,      // Pagada parcialmente (cubrió solo interés)
-    VENCIDA       // Pasó la fecha y no se ha pagado
+    VENCIDA,      // Pasó la fecha y no se ha pagado
+    CANCELADA     // Cancelada por abono extraordinario (Sistema Francés)
 }
 

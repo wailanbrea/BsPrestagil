@@ -196,6 +196,7 @@ class PaymentsViewModel(application: Application) : AndroidViewModel(application
                     pagoRepository.insertPago(pago)
                     
                     // Actualizar la cuota correspondiente si existe
+                    var huboAbonoExtraordinario = false
                     if (cuotaId != null) {
                         cuotaRepository.getCuotaById(cuotaId).firstOrNull()?.let { cuota ->
                             val cuotaActualizada = CronogramaUtils.actualizarCuotaConPago(
@@ -207,7 +208,20 @@ class PaymentsViewModel(application: Application) : AndroidViewModel(application
                                 fechaPago = fechaPagoActual
                             )
                             cuotaRepository.updateCuota(cuotaActualizada)
+                            
+                            // Detectar si pagó más que la cuota mínima (abono extraordinario)
+                            huboAbonoExtraordinario = montoPagado > cuota.montoCuotaMinimo
                         }
+                    }
+                    
+                    // Si hubo abono extraordinario, recalcular cuotas futuras
+                    if (huboAbonoExtraordinario) {
+                        recalcularCuotasFuturasPorAbono(
+                            prestamoId = prestamoId,
+                            nuevoCapitalPendiente = nuevoCapitalPendiente,
+                            tasaInteresPorPeriodo = prestamo.tasaInteresPorPeriodo,
+                            tipoAmortizacion = prestamo.tipoAmortizacion
+                        )
                     }
                     
                     // Actualizar el préstamo
@@ -270,6 +284,52 @@ class PaymentsViewModel(application: Application) : AndroidViewModel(application
     fun refresh() {
         loadPagos()
         loadEstadisticasHoy()
+    }
+    
+    /**
+     * Recalcula las cuotas futuras después de un abono extraordinario al capital
+     * 
+     * Sistema ALEMÁN: Recalcula el interés (capital se mantiene fijo)
+     * Sistema FRANCÉS: Reduce el plazo (elimina cuotas finales)
+     */
+    private suspend fun recalcularCuotasFuturasPorAbono(
+        prestamoId: String,
+        nuevoCapitalPendiente: Double,
+        tasaInteresPorPeriodo: Double,
+        tipoAmortizacion: String
+    ) {
+        try {
+            // Obtener todas las cuotas del préstamo
+            val todasLasCuotas = cuotaRepository.getCuotasByPrestamoId(prestamoId).firstOrNull() ?: return
+            
+            // Convertir String a TipoAmortizacion
+            val tipoEnum = when (tipoAmortizacion.uppercase()) {
+                "ALEMAN" -> com.example.bsprestagil.data.models.TipoAmortizacion.ALEMAN
+                "FRANCES" -> com.example.bsprestagil.data.models.TipoAmortizacion.FRANCES
+                else -> return
+            }
+            
+            // Recalcular cuotas según el sistema
+            val cuotasRecalculadas = CronogramaUtils.recalcularCuotasFuturas(
+                todasLasCuotas = todasLasCuotas,
+                capitalPendienteActual = nuevoCapitalPendiente,
+                tasaInteresPorPeriodo = tasaInteresPorPeriodo,
+                tipoAmortizacion = tipoEnum
+            )
+            
+            // Actualizar solo las cuotas que cambiaron (PENDIENTES y CANCELADAS)
+            cuotasRecalculadas.forEach { cuotaRecalculada ->
+                val cuotaOriginal = todasLasCuotas.find { it.id == cuotaRecalculada.id }
+                if (cuotaOriginal != null && 
+                    (cuotaRecalculada.montoCuotaMinimo != cuotaOriginal.montoCuotaMinimo || 
+                     cuotaRecalculada.estado != cuotaOriginal.estado)) {
+                    cuotaRepository.updateCuota(cuotaRecalculada)
+                }
+            }
+        } catch (e: Exception) {
+            // Log error pero no fallar el pago
+            println("Error al recalcular cuotas futuras: ${e.message}")
+        }
     }
 }
 
