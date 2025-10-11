@@ -1,6 +1,7 @@
 package com.example.bsprestagil.viewmodels
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.bsprestagil.data.database.AppDatabase
@@ -24,6 +25,7 @@ data class SyncStatus(
 
 class SyncViewModel(application: Application) : AndroidViewModel(application) {
     
+    private val TAG = "SyncViewModel"
     private val database = AppDatabase.getDatabase(application)
     private val clienteRepository = ClienteRepository(database.clienteDao())
     private val prestamoRepository = PrestamoRepository(database.prestamoDao())
@@ -35,17 +37,37 @@ class SyncViewModel(application: Application) : AndroidViewModel(application) {
     val syncStatus: StateFlow<SyncStatus> = _syncStatus.asStateFlow()
     
     init {
+        Log.d(TAG, "🔧 SyncViewModel inicializado")
         loadSyncStatus()
     }
     
     fun loadSyncStatus() {
+        Log.d(TAG, "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        Log.d(TAG, "🔄 loadSyncStatus() INICIADO")
+        
         viewModelScope.launch {
             try {
+                Log.d(TAG, "📥 Obteniendo contadores de base de datos...")
+                
                 val clientesPendientes = clienteRepository.getClientesPendingSync().size
+                Log.d(TAG, "  📝 Clientes pendientes: $clientesPendientes")
+                
                 val prestamosPendientes = prestamoRepository.getPrestamosPendingSync().size
+                Log.d(TAG, "  💰 Préstamos pendientes: $prestamosPendientes")
+                
                 val pagosPendientes = pagoRepository.getPagosPendingSync().size
+                Log.d(TAG, "  💵 Pagos pendientes: $pagosPendientes")
+                
                 val garantiasPendientes = garantiaRepository.getGarantiasPendingSync().size
+                Log.d(TAG, "  🔐 Garantías pendientes: $garantiasPendientes")
+                
                 val cuotasPendientes = cuotaRepository.getCuotasPendingSync().size
+                Log.d(TAG, "  📅 Cuotas pendientes: $cuotasPendientes")
+                
+                val total = clientesPendientes + prestamosPendientes + pagosPendientes + 
+                            garantiasPendientes + cuotasPendientes
+                
+                Log.d(TAG, "📊 TOTAL PENDIENTES: $total")
                 
                 _syncStatus.value = _syncStatus.value.copy(
                     clientesPendientes = clientesPendientes,
@@ -56,13 +78,18 @@ class SyncViewModel(application: Application) : AndroidViewModel(application) {
                     ultimaSync = System.currentTimeMillis(),
                     enSincronizacion = false
                 )
+                
+                Log.d(TAG, "✅ Estado actualizado: ${_syncStatus.value}")
+                Log.d(TAG, "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
             } catch (e: Exception) {
+                Log.e(TAG, "❌ Error en loadSyncStatus: ${e.message}", e)
                 _syncStatus.value = _syncStatus.value.copy(enSincronizacion = false)
             }
         }
     }
     
     fun iniciarSincronizacion() {
+        Log.d(TAG, "🚀 iniciarSincronizacion() - Cambiando estado a 'en sincronización'")
         _syncStatus.value = _syncStatus.value.copy(enSincronizacion = true)
     }
 }

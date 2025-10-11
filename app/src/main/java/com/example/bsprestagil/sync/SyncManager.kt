@@ -1,11 +1,13 @@
 package com.example.bsprestagil.sync
 
 import android.content.Context
+import android.util.Log
 import androidx.work.*
 import java.util.concurrent.TimeUnit
 
 object SyncManager {
     
+    private const val TAG = "SyncManager"
     private const val SYNC_WORK_NAME = "BsPrestagilSync"
     
     /**
@@ -40,6 +42,10 @@ object SyncManager {
      * @return ID del trabajo para poder observarlo
      */
     fun forceSyncNow(context: Context): java.util.UUID {
+        Log.d(TAG, "═══════════════════════════════════════════")
+        Log.d(TAG, "🔄 INICIANDO SINCRONIZACIÓN MANUAL")
+        Log.d(TAG, "═══════════════════════════════════════════")
+        
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
@@ -50,6 +56,9 @@ object SyncManager {
             .build()
         
         WorkManager.getInstance(context).enqueue(syncRequest)
+        
+        Log.d(TAG, "✅ Trabajo de sincronización encolado")
+        Log.d(TAG, "📋 Work ID: ${syncRequest.id}")
         
         return syncRequest.id
     }

@@ -1,5 +1,6 @@
 package com.example.bsprestagil.screens.settings
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -153,25 +154,56 @@ fun SettingsScreen(
                             }
                             IconButton(
                                 onClick = {
+                                    Log.d("SettingsScreen", "═══════════════════════════════════════════")
+                                    Log.d("SettingsScreen", "👆 Usuario tocó botón de sincronización")
+                                    Log.d("SettingsScreen", "📊 Estado actual: ${syncStatus.totalPendientes} pendientes")
+                                    Log.d("SettingsScreen", "═══════════════════════════════════════════")
+                                    
                                     syncViewModel.iniciarSincronizacion()
                                     val workId = SyncManager.forceSyncNow(context)
+                                    
+                                    Log.d("SettingsScreen", "🎯 Work ID recibido: $workId")
                                     
                                     // Observar el trabajo hasta que termine
                                     scope.launch {
                                         val workManager = WorkManager.getInstance(context)
+                                        Log.d("SettingsScreen", "👀 Iniciando observación del trabajo...")
+                                        
                                         workManager.getWorkInfoByIdFlow(workId).collect { workInfo ->
-                                            when (workInfo?.state) {
+                                            val state = workInfo?.state
+                                            Log.d("SettingsScreen", "📡 Estado del trabajo: $state")
+                                            
+                                            when (state) {
                                                 WorkInfo.State.SUCCEEDED -> {
+                                                    Log.d("SettingsScreen", "✅ Trabajo COMPLETADO exitosamente")
+                                                    Log.d("SettingsScreen", "⏳ Esperando 500ms antes de recargar...")
+                                                    
                                                     // Esperar un momento y recargar
                                                     kotlinx.coroutines.delay(500)
+                                                    
+                                                    Log.d("SettingsScreen", "🔄 Recargando estado de sincronización...")
+                                                    syncViewModel.loadSyncStatus()
+                                                    Log.d("SettingsScreen", "✅ Estado recargado")
+                                                }
+                                                WorkInfo.State.FAILED -> {
+                                                    Log.e("SettingsScreen", "❌ Trabajo FALLÓ")
                                                     syncViewModel.loadSyncStatus()
                                                 }
-                                                WorkInfo.State.FAILED, WorkInfo.State.CANCELLED -> {
-                                                    // Recargar igualmente para actualizar UI
+                                                WorkInfo.State.CANCELLED -> {
+                                                    Log.w("SettingsScreen", "⚠️ Trabajo CANCELADO")
                                                     syncViewModel.loadSyncStatus()
                                                 }
-                                                else -> {
-                                                    // Trabajando, mantener estado de sincronización
+                                                WorkInfo.State.RUNNING -> {
+                                                    Log.d("SettingsScreen", "⏳ Trabajo en ejecución...")
+                                                }
+                                                WorkInfo.State.ENQUEUED -> {
+                                                    Log.d("SettingsScreen", "📥 Trabajo encolado, esperando...")
+                                                }
+                                                WorkInfo.State.BLOCKED -> {
+                                                    Log.w("SettingsScreen", "🚫 Trabajo bloqueado")
+                                                }
+                                                null -> {
+                                                    Log.w("SettingsScreen", "⚠️ WorkInfo es null")
                                                 }
                                             }
                                         }
