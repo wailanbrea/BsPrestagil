@@ -176,14 +176,15 @@ fun SettingsScreen(
                                             when (state) {
                                                 WorkInfo.State.SUCCEEDED -> {
                                                     Log.d("SettingsScreen", "✅ Trabajo COMPLETADO exitosamente")
-                                                    Log.d("SettingsScreen", "⏳ Esperando 500ms antes de recargar...")
+                                                    Log.d("SettingsScreen", "⏳ Esperando 1 segundo antes de recargar...")
                                                     
-                                                    // Esperar un momento y recargar
-                                                    kotlinx.coroutines.delay(500)
+                                                    // Esperar un momento para que Room termine de escribir
+                                                    kotlinx.coroutines.delay(1000)
                                                     
                                                     Log.d("SettingsScreen", "🔄 Recargando estado de sincronización...")
+                                                    Log.d("SettingsScreen", "📍 Timestamp antes de recargar: ${System.currentTimeMillis()}")
                                                     syncViewModel.loadSyncStatus()
-                                                    Log.d("SettingsScreen", "✅ Estado recargado")
+                                                    Log.d("SettingsScreen", "✅ Estado recargado solicitado")
                                                 }
                                                 WorkInfo.State.FAILED -> {
                                                     Log.e("SettingsScreen", "❌ Trabajo FALLÓ")

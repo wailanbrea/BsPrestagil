@@ -79,9 +79,10 @@ class SyncWorker(
                 try {
                     val result = firebaseService.syncCliente(cliente)
                     if (result.isSuccess) {
+                        Log.d(TAG, "  🔄 Marcando cliente ${cliente.id.take(8)} como sincronizado...")
                         clienteRepository.markAsSynced(cliente.id)
                         sincronizados++
-                        Log.d(TAG, "  ✅ Cliente ${cliente.nombre} sincronizado")
+                        Log.d(TAG, "  ✅ Cliente ${cliente.nombre} sincronizado y marcado en BD")
                     } else {
                         fallidos++
                         Log.w(TAG, "  ⚠️ Cliente ${cliente.nombre} falló: ${result.exceptionOrNull()?.message}")

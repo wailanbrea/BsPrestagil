@@ -44,25 +44,43 @@ class SyncViewModel(application: Application) : AndroidViewModel(application) {
     fun loadSyncStatus() {
         Log.d(TAG, "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
         Log.d(TAG, "🔄 loadSyncStatus() INICIADO")
+        Log.d(TAG, "⏰ Timestamp: ${System.currentTimeMillis()}")
         
         viewModelScope.launch {
             try {
                 Log.d(TAG, "📥 Obteniendo contadores de base de datos...")
                 
-                val clientesPendientes = clienteRepository.getClientesPendingSync().size
+                val clientesPendientesList = clienteRepository.getClientesPendingSync()
+                val clientesPendientes = clientesPendientesList.size
                 Log.d(TAG, "  📝 Clientes pendientes: $clientesPendientes")
+                if (clientesPendientes > 0) {
+                    Log.d(TAG, "     IDs: ${clientesPendientesList.map { it.id.take(8) }}")
+                }
                 
-                val prestamosPendientes = prestamoRepository.getPrestamosPendingSync().size
+                val prestamosPendientesList = prestamoRepository.getPrestamosPendingSync()
+                val prestamosPendientes = prestamosPendientesList.size
                 Log.d(TAG, "  💰 Préstamos pendientes: $prestamosPendientes")
+                if (prestamosPendientes > 0) {
+                    Log.d(TAG, "     IDs: ${prestamosPendientesList.map { it.id.take(8) }}")
+                }
                 
-                val pagosPendientes = pagoRepository.getPagosPendingSync().size
+                val pagosPendientesList = pagoRepository.getPagosPendingSync()
+                val pagosPendientes = pagosPendientesList.size
                 Log.d(TAG, "  💵 Pagos pendientes: $pagosPendientes")
+                if (pagosPendientes > 0) {
+                    Log.d(TAG, "     IDs: ${pagosPendientesList.map { it.id.take(8) }}")
+                }
                 
-                val garantiasPendientes = garantiaRepository.getGarantiasPendingSync().size
+                val garantiasPendientesList = garantiaRepository.getGarantiasPendingSync()
+                val garantiasPendientes = garantiasPendientesList.size
                 Log.d(TAG, "  🔐 Garantías pendientes: $garantiasPendientes")
                 
-                val cuotasPendientes = cuotaRepository.getCuotasPendingSync().size
+                val cuotasPendientesList = cuotaRepository.getCuotasPendingSync()
+                val cuotasPendientes = cuotasPendientesList.size
                 Log.d(TAG, "  📅 Cuotas pendientes: $cuotasPendientes")
+                if (cuotasPendientes > 0) {
+                    Log.d(TAG, "     IDs: ${cuotasPendientesList.map { it.id.take(8) }}")
+                }
                 
                 val total = clientesPendientes + prestamosPendientes + pagosPendientes + 
                             garantiasPendientes + cuotasPendientes
