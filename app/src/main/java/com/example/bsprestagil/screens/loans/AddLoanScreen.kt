@@ -20,6 +20,7 @@ import androidx.navigation.NavController
 import com.example.bsprestagil.components.TopAppBarComponent
 import com.example.bsprestagil.data.models.FrecuenciaPago
 import com.example.bsprestagil.navigation.Screen
+import com.example.bsprestagil.ui.theme.SuccessColor
 import com.example.bsprestagil.utils.InteresUtils
 import com.example.bsprestagil.utils.AmortizacionUtils
 import com.example.bsprestagil.viewmodels.ClientsViewModel

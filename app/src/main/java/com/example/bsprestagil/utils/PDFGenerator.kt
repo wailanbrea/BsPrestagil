@@ -218,7 +218,7 @@ object PDFGenerator {
         backgroundColor: BaseColor? = null
     ) {
         val cell = PdfPCell(Phrase(text, font))
-        cell.padding = 8f
+        cell.setPadding(8f)
         cell.border = Rectangle.NO_BORDER
         if (backgroundColor != null) {
             cell.backgroundColor = backgroundColor
@@ -235,7 +235,7 @@ object PDFGenerator {
         val cell = PdfPCell(Phrase(text, font))
         cell.backgroundColor = backgroundColor
         cell.horizontalAlignment = Element.ALIGN_CENTER
-        cell.padding = 10f
+        cell.setPadding(10f)
         cell.border = Rectangle.NO_BORDER
         table.addCell(cell)
     }
@@ -249,7 +249,7 @@ object PDFGenerator {
     ) {
         val cell = PdfPCell(Phrase(text, font))
         cell.horizontalAlignment = alignment
-        cell.padding = 6f
+        cell.setPadding(6f)
         cell.borderColor = BaseColor(220, 220, 220)
         cell.borderWidth = 0.5f
         if (backgroundColor != null) {
@@ -266,7 +266,7 @@ object PDFGenerator {
     ) {
         val cell = PdfPCell(Phrase(text, font))
         cell.backgroundColor = backgroundColor
-        cell.padding = 10f
+        cell.setPadding(10f)
         cell.border = Rectangle.NO_BORDER
         table.addCell(cell)
     }
