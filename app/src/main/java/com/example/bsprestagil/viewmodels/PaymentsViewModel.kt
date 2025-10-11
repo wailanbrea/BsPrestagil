@@ -110,10 +110,28 @@ class PaymentsViewModel(application: Application) : AndroidViewModel(application
                     
                     // Calcular interés y capital según el cronograma
                     val (interesCalculado, montoAInteres, montoACapital) = if (cuotaCronograma != null) {
-                        // Usar distribución del cronograma (Sistema Francés o Alemán)
-                        val notasParts = cuotaCronograma.notas.split(",")
-                        val interesProyectado = notasParts.getOrNull(0)?.substringAfter("$")?.trim()?.toDoubleOrNull() ?: 0.0
-                        val capitalProyectado = notasParts.getOrNull(1)?.substringAfter("$")?.trim()?.toDoubleOrNull() ?: 0.0
+                        // Extraer distribución del cronograma desde las notas
+                        // Formato: "Interés proyectado: $5000.00, Capital: $2346.59"
+                        val interesProyectado = try {
+                            cuotaCronograma.notas
+                                .substringAfter("Interés proyectado: $")
+                                .substringBefore(",")
+                                .replace(",", "")
+                                .trim()
+                                .toDoubleOrNull() ?: 0.0
+                        } catch (e: Exception) {
+                            0.0
+                        }
+                        
+                        val capitalProyectado = try {
+                            cuotaCronograma.notas
+                                .substringAfter("Capital: $")
+                                .replace(",", "")
+                                .trim()
+                                .toDoubleOrNull() ?: 0.0
+                        } catch (e: Exception) {
+                            0.0
+                        }
                         
                         // Si paga exactamente la cuota o más, usa la distribución del cronograma
                         if (montoPagado >= cuotaCronograma.montoCuotaMinimo) {

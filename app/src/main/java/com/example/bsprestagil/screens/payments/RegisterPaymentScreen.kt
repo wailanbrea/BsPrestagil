@@ -66,23 +66,68 @@ fun RegisterPaymentScreen(
         System.currentTimeMillis()
     )
     
-    // Calcular interés del período (proporcional a días transcurridos)
-    val interesCalculado = prestamo?.let {
-        InteresUtils.calcularInteresProporcional(
-            capitalPendiente = it.capitalPendiente,
-            tasaInteresPorPeriodo = it.tasaInteresPorPeriodo,
-            frecuenciaPago = it.frecuenciaPago,
-            diasTranscurridos = diasTranscurridos
-        )
-    } ?: 0.0
+    // Extraer distribución EXACTA del cronograma
+    val (interesProyectado, capitalProyectado) = if (cuotaSeleccionada != null) {
+        try {
+            val interesExtract = cuotaSeleccionada.notas
+                .substringAfter("Interés proyectado: $")
+                .substringBefore(",")
+                .replace(",", "")
+                .trim()
+                .toDoubleOrNull() ?: 0.0
+            
+            val capitalExtract = cuotaSeleccionada.notas
+                .substringAfter("Capital: $")
+                .replace(",", "")
+                .trim()
+                .toDoubleOrNull() ?: 0.0
+            
+            Pair(interesExtract, capitalExtract)
+        } catch (e: Exception) {
+            Pair(0.0, 0.0)
+        }
+    } else {
+        Pair(0.0, 0.0)
+    }
     
-    // Calcular distribución del pago (interés vs capital)
+    // Calcular interés (usar cronograma si está disponible)
+    val interesCalculado = if (interesProyectado > 0) {
+        interesProyectado
+    } else {
+        prestamo?.let {
+            InteresUtils.calcularInteresProporcional(
+                capitalPendiente = it.capitalPendiente,
+                tasaInteresPorPeriodo = it.tasaInteresPorPeriodo,
+                frecuenciaPago = it.frecuenciaPago,
+                diasTranscurridos = diasTranscurridos
+            )
+        } ?: 0.0
+    }
+    
+    // Calcular distribución del pago usando cronograma
     val montoPagadoNum = montoPagado.toDoubleOrNull() ?: 0.0
-    val (montoAInteres, montoACapital) = InteresUtils.distribuirPago(
-        montoPagado = montoPagadoNum,
-        interesDelPeriodo = interesCalculado,
-        capitalPendiente = capitalPendiente
-    )
+    val (montoAInteres, montoACapital) = if (cuotaSeleccionada != null && montoPagadoNum >= cuotaSeleccionada.montoCuotaMinimo) {
+        // Paga cuota completa o más: usar distribución exacta del cronograma
+        val excedente = montoPagadoNum - cuotaSeleccionada.montoCuotaMinimo
+        Pair(
+            interesProyectado,
+            capitalProyectado + excedente
+        )
+    } else if (cuotaSeleccionada != null && montoPagadoNum > 0 && interesProyectado > 0) {
+        // Pago parcial: distribución proporcional del cronograma
+        val proporcion = montoPagadoNum / cuotaSeleccionada.montoCuotaMinimo
+        Pair(
+            interesProyectado * proporcion,
+            capitalProyectado * proporcion
+        )
+    } else {
+        // Fallback: cálculo tradicional
+        InteresUtils.distribuirPago(
+            montoPagado = montoPagadoNum,
+            interesDelPeriodo = interesCalculado,
+            capitalPendiente = capitalPendiente
+        )
+    }
     val nuevoCapitalPendiente = (capitalPendiente - montoACapital).coerceAtLeast(0.0)
     
     // Usuario actual
@@ -172,19 +217,182 @@ fun RegisterPaymentScreen(
                         )
                     }
                     
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                    if (cuotaSeleccionada != null) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "Cuota mínima:",
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            Text(
+                                text = "$${String.format("%,.2f", cuotaSeleccionada.montoCuotaMinimo)}",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 15.sp,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+                        
+                        if (interesProyectado > 0 && capitalProyectado > 0) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Distribución del cronograma:",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = "  → Interés:",
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                                )
+                                Text(
+                                    text = "$${String.format("%,.2f", interesProyectado)}",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            }
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = "  → Capital:",
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                                )
+                                Text(
+                                    text = "$${String.format("%,.2f", capitalProyectado)}",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = com.example.bsprestagil.ui.theme.SuccessColor
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Mostrar distribución del pago en tiempo real
+            if (montoPagadoNum > 0) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = "Interés del período:",
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                            text = "📊 Distribución de su pago:",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
                         )
-                        Text(
-                            text = "$${String.format("%,.2f", interesCalculado)}",
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.error
-                        )
+                        
+                        Divider()
+                        
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "Monto total:",
+                                fontSize = 13.sp,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                            Text(
+                                text = "$${String.format("%,.2f", montoPagadoNum)}",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                        }
+                        
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "→ A interés:",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
+                            )
+                            Text(
+                                text = "$${String.format("%,.2f", montoAInteres)}",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = com.example.bsprestagil.ui.theme.WarningColor
+                            )
+                        }
+                        
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "→ A capital:",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
+                            )
+                            Text(
+                                text = "$${String.format("%,.2f", montoACapital)}",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = com.example.bsprestagil.ui.theme.SuccessColor
+                            )
+                        }
+                        
+                        if (montoPagadoNum > (cuotaSeleccionada?.montoCuotaMinimo ?: 0.0)) {
+                            val excedente = montoPagadoNum - (cuotaSeleccionada?.montoCuotaMinimo ?: 0.0)
+                            Divider()
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = "✨ Abono extraordinario:",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = com.example.bsprestagil.ui.theme.SuccessColor
+                                )
+                                Text(
+                                    text = "$${String.format("%,.2f", excedente)}",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = com.example.bsprestagil.ui.theme.SuccessColor
+                                )
+                            }
+                        }
+                        
+                        Divider()
+                        
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "Nuevo saldo:",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                            Text(
+                                text = "$${String.format("%,.2f", nuevoCapitalPendiente)}",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (nuevoCapitalPendiente > 0) MaterialTheme.colorScheme.error else com.example.bsprestagil.ui.theme.SuccessColor
+                            )
+                        }
                     }
                 }
             }

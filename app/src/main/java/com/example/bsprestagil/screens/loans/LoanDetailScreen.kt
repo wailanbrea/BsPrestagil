@@ -490,8 +490,21 @@ fun LoanDetailScreen(
                 val interesProyectado = notasParts.getOrNull(0)?.substringAfter("$")?.trim()?.toDoubleOrNull() ?: 0.0
                 val capitalProyectado = notasParts.getOrNull(1)?.substringAfter("$")?.trim()?.toDoubleOrNull() ?: 0.0
                 
-                // Calcular balance (capital pendiente después de esta cuota)
-                val balanceProyectado = cuota.capitalPendienteAlInicio - capitalProyectado
+                // Si la cuota está PAGADA, usar valores REALES, sino usar proyectados
+                val cuotaMostrar = if (cuota.estado == EstadoCuota.PAGADA) cuota.montoPagado else cuota.montoCuotaMinimo
+                val interesMostrar = if (cuota.estado == EstadoCuota.PAGADA) cuota.montoAInteres else interesProyectado
+                val capitalMostrar = if (cuota.estado == EstadoCuota.PAGADA) cuota.montoACapital else capitalProyectado
+                
+                // Calcular balance acumulado real
+                val balanceMostrar = if (index == 0) {
+                    montoOriginal - capitalMostrar
+                } else {
+                    // Sumar capital pagado de todas las cuotas anteriores
+                    val capitalAcumulado = cuotas.take(index + 1).sumOf { 
+                        if (it.estado == EstadoCuota.PAGADA) it.montoACapital else capitalProyectado 
+                    }
+                    (montoOriginal - capitalAcumulado).coerceAtLeast(0.0)
+                }
                 
                 val estadoCuotaColor = when(cuota.estado) {
                     EstadoCuota.PAGADA -> SuccessColor
@@ -528,25 +541,31 @@ fun LoanDetailScreen(
                                 modifier = Modifier.weight(0.5f)
                             )
                             Text(
-                                text = "$${String.format("%,.0f", cuota.montoCuotaMinimo)}",
+                                text = "$${String.format("%,.0f", cuotaMostrar)}",
                                 fontSize = 11.sp,
+                                fontWeight = if (cuota.estado == EstadoCuota.PAGADA) FontWeight.Bold else FontWeight.Normal,
+                                color = if (cuota.estado == EstadoCuota.PAGADA) SuccessColor else MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.weight(1f)
                             )
                             Text(
-                                text = "$${String.format("%,.0f", capitalProyectado)}",
+                                text = "$${String.format("%,.0f", capitalMostrar)}",
                                 fontSize = 11.sp,
+                                fontWeight = if (cuota.estado == EstadoCuota.PAGADA) FontWeight.Bold else FontWeight.Normal,
+                                color = if (cuota.estado == EstadoCuota.PAGADA) SuccessColor else MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.weight(1f)
                             )
                             Text(
-                                text = "$${String.format("%,.0f", interesProyectado)}",
+                                text = "$${String.format("%,.0f", interesMostrar)}",
                                 fontSize = 11.sp,
+                                fontWeight = if (cuota.estado == EstadoCuota.PAGADA) FontWeight.Bold else FontWeight.Normal,
+                                color = if (cuota.estado == EstadoCuota.PAGADA) com.example.bsprestagil.ui.theme.WarningColor else MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.weight(1f)
                             )
                             Text(
-                                text = "$${String.format("%,.0f", balanceProyectado)}",
+                                text = "$${String.format("%,.0f", balanceMostrar)}",
                                 fontSize = 11.sp,
-                                fontWeight = if (balanceProyectado <= 0) FontWeight.Bold else FontWeight.Normal,
-                                color = if (balanceProyectado <= 0) SuccessColor else MaterialTheme.colorScheme.onSurface,
+                                fontWeight = if (balanceMostrar <= 0) FontWeight.Bold else FontWeight.Normal,
+                                color = if (balanceMostrar <= 0) SuccessColor else MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.weight(1f)
                             )
                         }
