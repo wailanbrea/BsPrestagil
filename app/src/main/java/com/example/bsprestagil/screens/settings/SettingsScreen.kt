@@ -38,7 +38,6 @@ fun SettingsScreen(
     
     val configuracion by configuracionViewModel.configuracion.collectAsState()
     val syncStatus by syncViewModel.syncStatus.collectAsState()
-    val totalPendientes = syncViewModel.getTotalPendientes()
     
     // Actualizar tasa de interés cuando cambie la configuración
     LaunchedEffect(configuracion) {
@@ -112,54 +111,117 @@ fun SettingsScreen(
             
             item {
                 Card(modifier = Modifier.fillMaxWidth()) {
-                    Row(
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Estado de sincronización",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Medium
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            if (totalPendientes > 0) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "$totalPendientes elementos pendientes",
-                                    fontSize = 14.sp,
-                                    color = MaterialTheme.colorScheme.error
+                                    text = "Estado de sincronización",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Medium
                                 )
-                            } else {
-                                Text(
-                                    text = "Todo sincronizado ✓",
-                                    fontSize = 14.sp,
-                                    color = com.example.bsprestagil.ui.theme.SuccessColor
-                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                if (syncStatus.enSincronizacion) {
+                                    Text(
+                                        text = "Sincronizando...",
+                                        fontSize = 14.sp,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                } else if (syncStatus.totalPendientes > 0) {
+                                    Text(
+                                        text = "${syncStatus.totalPendientes} elementos pendientes",
+                                        fontSize = 14.sp,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                } else {
+                                    Text(
+                                        text = "Todo sincronizado ✓",
+                                        fontSize = 14.sp,
+                                        color = com.example.bsprestagil.ui.theme.SuccessColor
+                                    )
+                                }
+                            }
+                            IconButton(
+                                onClick = {
+                                    syncViewModel.iniciarSincronizacion()
+                                    SyncManager.forceSyncNow(context)
+                                    scope.launch {
+                                        kotlinx.coroutines.delay(2000)
+                                        syncViewModel.loadSyncStatus()
+                                    }
+                                },
+                                enabled = !syncStatus.enSincronizacion
+                            ) {
+                                if (syncStatus.enSincronizacion) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(24.dp),
+                                        strokeWidth = 2.dp
+                                    )
+                                } else {
+                                    Icon(Icons.Default.Sync, contentDescription = "Sincronizar ahora")
+                                }
                             }
                         }
-                        IconButton(
-                            onClick = {
-                                syncing = true
-                                SyncManager.forceSyncNow(context)
-                                scope.launch {
-                                    kotlinx.coroutines.delay(2000)
-                                    syncViewModel.loadSyncStatus()
-                                    syncing = false
-                                }
-                            },
-                            enabled = !syncing
-                        ) {
-                            if (syncing) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(24.dp),
-                                    strokeWidth = 2.dp
+                        
+                        // Detalles de elementos pendientes
+                        if (syncStatus.totalPendientes > 0) {
+                            Divider()
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Text(
+                                    text = "Pendientes de sincronizar:",
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                                 )
-                            } else {
-                                Icon(Icons.Default.Sync, contentDescription = "Sincronizar ahora")
+                                if (syncStatus.clientesPendientes > 0) {
+                                    Text(
+                                        text = "• ${syncStatus.clientesPendientes} Clientes",
+                                        fontSize = 12.sp
+                                    )
+                                }
+                                if (syncStatus.prestamosPendientes > 0) {
+                                    Text(
+                                        text = "• ${syncStatus.prestamosPendientes} Préstamos",
+                                        fontSize = 12.sp
+                                    )
+                                }
+                                if (syncStatus.pagosPendientes > 0) {
+                                    Text(
+                                        text = "• ${syncStatus.pagosPendientes} Pagos",
+                                        fontSize = 12.sp
+                                    )
+                                }
+                                if (syncStatus.cuotasPendientes > 0) {
+                                    Text(
+                                        text = "• ${syncStatus.cuotasPendientes} Cuotas",
+                                        fontSize = 12.sp
+                                    )
+                                }
+                                if (syncStatus.garantiasPendientes > 0) {
+                                    Text(
+                                        text = "• ${syncStatus.garantiasPendientes} Garantías",
+                                        fontSize = 12.sp
+                                    )
+                                }
                             }
+                        }
+                        
+                        // Última sincronización
+                        if (syncStatus.ultimaSync > 0) {
+                            Divider()
+                            val dateFormat = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault())
+                            Text(
+                                text = "Última sincronización: ${dateFormat.format(java.util.Date(syncStatus.ultimaSync))}",
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            )
                         }
                     }
                 }

@@ -13,8 +13,14 @@ data class SyncStatus(
     val prestamosPendientes: Int = 0,
     val pagosPendientes: Int = 0,
     val garantiasPendientes: Int = 0,
-    val ultimaSync: Long = 0L
-)
+    val cuotasPendientes: Int = 0,
+    val ultimaSync: Long = 0L,
+    val enSincronizacion: Boolean = false
+) {
+    val totalPendientes: Int
+        get() = clientesPendientes + prestamosPendientes + pagosPendientes + 
+                garantiasPendientes + cuotasPendientes
+}
 
 class SyncViewModel(application: Application) : AndroidViewModel(application) {
     
@@ -23,6 +29,7 @@ class SyncViewModel(application: Application) : AndroidViewModel(application) {
     private val prestamoRepository = PrestamoRepository(database.prestamoDao())
     private val pagoRepository = PagoRepository(database.pagoDao())
     private val garantiaRepository = GarantiaRepository(database.garantiaDao())
+    private val cuotaRepository = CuotaRepository(database.cuotaDao())
     
     private val _syncStatus = MutableStateFlow(SyncStatus())
     val syncStatus: StateFlow<SyncStatus> = _syncStatus.asStateFlow()
@@ -38,25 +45,25 @@ class SyncViewModel(application: Application) : AndroidViewModel(application) {
                 val prestamosPendientes = prestamoRepository.getPrestamosPendingSync().size
                 val pagosPendientes = pagoRepository.getPagosPendingSync().size
                 val garantiasPendientes = garantiaRepository.getGarantiasPendingSync().size
+                val cuotasPendientes = cuotaRepository.getCuotasPendingSync().size
                 
-                _syncStatus.value = SyncStatus(
+                _syncStatus.value = _syncStatus.value.copy(
                     clientesPendientes = clientesPendientes,
                     prestamosPendientes = prestamosPendientes,
                     pagosPendientes = pagosPendientes,
                     garantiasPendientes = garantiasPendientes,
-                    ultimaSync = System.currentTimeMillis()
+                    cuotasPendientes = cuotasPendientes,
+                    ultimaSync = System.currentTimeMillis(),
+                    enSincronizacion = false
                 )
             } catch (e: Exception) {
-                // Manejar error
+                _syncStatus.value = _syncStatus.value.copy(enSincronizacion = false)
             }
         }
     }
     
-    fun getTotalPendientes(): Int {
-        return _syncStatus.value.let {
-            it.clientesPendientes + it.prestamosPendientes + 
-            it.pagosPendientes + it.garantiasPendientes
-        }
+    fun iniciarSincronizacion() {
+        _syncStatus.value = _syncStatus.value.copy(enSincronizacion = true)
     }
 }
 
