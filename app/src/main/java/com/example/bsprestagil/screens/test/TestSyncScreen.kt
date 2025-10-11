@@ -16,6 +16,7 @@ import com.example.bsprestagil.data.database.AppDatabase
 import com.example.bsprestagil.data.database.entities.*
 import com.example.bsprestagil.data.repository.*
 import com.example.bsprestagil.data.models.FrecuenciaPago
+import com.example.bsprestagil.data.models.TipoAmortizacion
 import com.example.bsprestagil.sync.SyncManager
 import com.example.bsprestagil.utils.AmortizacionUtils
 import com.example.bsprestagil.utils.CronogramaUtils
@@ -173,6 +174,7 @@ fun TestSyncScreen(
                                         capitalPendiente = 10000.0,
                                         tasaInteresPorPeriodo = 10.0,
                                         frecuenciaPago = "MENSUAL",
+                                        tipoAmortizacion = "FRANCES",
                                         numeroCuotas = 12,
                                         montoCuotaFija = montoCuotaFija,
                                         cuotasPagadas = 0,
@@ -193,6 +195,7 @@ fun TestSyncScreen(
                                     montoOriginal = 10000.0,
                                     tasaInteresPorPeriodo = 10.0,
                                     frecuenciaPago = FrecuenciaPago.MENSUAL,
+                                    tipoAmortizacion = TipoAmortizacion.FRANCES,
                                     numeroCuotas = 12,
                                     fechaInicio = fechaInicio
                                 )

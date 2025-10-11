@@ -2,6 +2,7 @@
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
     <cache-path name="images" path="images/" />
     <cache-path name="qr_codes" path="." />
+    <cache-path name="pdfs" path="pdfs/" />
     <files-path name="garantias_fotos" path="garantias/" />
     <external-files-path name="external_garantias" path="garantias/" />
 </paths>

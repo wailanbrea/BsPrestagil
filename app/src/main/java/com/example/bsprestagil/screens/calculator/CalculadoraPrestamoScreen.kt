@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.bsprestagil.components.TopAppBarComponent
 import com.example.bsprestagil.data.models.FrecuenciaPago
+import com.example.bsprestagil.data.models.TipoAmortizacion
 import com.example.bsprestagil.navigation.Screen
 import com.example.bsprestagil.ui.theme.SuccessColor
 import com.example.bsprestagil.ui.theme.WarningColor
@@ -31,7 +32,9 @@ fun CalculadoraPrestamoScreen(
     var tasaInteres by remember { mutableStateOf("10") }
     var numeroCuotas by remember { mutableStateOf("12") }
     var frecuenciaPago by remember { mutableStateOf(FrecuenciaPago.MENSUAL) }
+    var tipoAmortizacion by remember { mutableStateOf(TipoAmortizacion.FRANCES) }
     var expandedFrecuencia by remember { mutableStateOf(false) }
+    var expandedSistema by remember { mutableStateOf(false) }
     var mostrarTabla by remember { mutableStateOf(false) }
     
     val frecuenciasDisponibles = listOf(
@@ -45,24 +48,18 @@ fun CalculadoraPrestamoScreen(
     val tasaNum = tasaInteres.toDoubleOrNull() ?: 0.0
     val cuotasNum = numeroCuotas.toIntOrNull() ?: 0
     
-    val cuotaFija = if (montoNum > 0 && tasaNum > 0 && cuotasNum > 0) {
-        AmortizacionUtils.calcularCuotaFija(
-            capital = montoNum,
-            tasaInteresPorPeriodo = tasaNum,
-            numeroCuotas = cuotasNum
-        )
-    } else 0.0
-    
-    val totalAPagar = if (cuotaFija > 0) cuotaFija * cuotasNum else 0.0
-    val totalIntereses = totalAPagar - montoNum
-    
     val tablaAmortizacion = if (montoNum > 0 && tasaNum > 0 && cuotasNum > 0) {
-        AmortizacionUtils.generarTablaAmortizacion(
+        AmortizacionUtils.generarTablaSegunSistema(
             capitalInicial = montoNum,
             tasaInteresPorPeriodo = tasaNum,
-            numeroCuotas = cuotasNum
+            numeroCuotas = cuotasNum,
+            tipoSistema = tipoAmortizacion
         )
     } else emptyList()
+    
+    val cuotaFija = tablaAmortizacion.firstOrNull()?.cuotaFija ?: 0.0
+    val totalAPagar = tablaAmortizacion.sumOf { it.cuotaFija }
+    val totalIntereses = totalAPagar - montoNum
     
     Scaffold(
         topBar = {
@@ -203,6 +200,50 @@ fun CalculadoraPrestamoScreen(
             }
             
             item {
+                ExposedDropdownMenuBox(
+                    expanded = expandedSistema,
+                    onExpandedChange = { expandedSistema = it }
+                ) {
+                    OutlinedTextField(
+                        value = when(tipoAmortizacion) {
+                            TipoAmortizacion.FRANCES -> "Sistema Francés (Cuota Fija)"
+                            TipoAmortizacion.ALEMAN -> "Sistema Alemán (Capital Fijo)"
+                        },
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Sistema de amortización") },
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedSistema)
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor(),
+                        leadingIcon = { Icon(Icons.Default.AccountTree, contentDescription = null) }
+                    )
+                    
+                    ExposedDropdownMenu(
+                        expanded = expandedSistema,
+                        onDismissRequest = { expandedSistema = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Sistema Francés (Cuota Fija)") },
+                            onClick = {
+                                tipoAmortizacion = TipoAmortizacion.FRANCES
+                                expandedSistema = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Sistema Alemán (Capital Fijo)") },
+                            onClick = {
+                                tipoAmortizacion = TipoAmortizacion.ALEMAN
+                                expandedSistema = false
+                            }
+                        )
+                    }
+                }
+            }
+            
+            item {
                 OutlinedTextField(
                     value = numeroCuotas,
                     onValueChange = { numeroCuotas = it },
@@ -249,23 +290,52 @@ fun CalculadoraPrestamoScreen(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Text(
-                                text = "CUOTA FIJA",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                            )
-                            Text(
-                                text = "$${String.format("%,.2f", cuotaFija)}",
-                                fontSize = 36.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                            Text(
-                                text = "cada ${InteresUtils.frecuenciaATexto(frecuenciaPago).lowercase()}",
-                                fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
-                            )
+                            when(tipoAmortizacion) {
+                                TipoAmortizacion.FRANCES -> {
+                                    Text(
+                                        text = "CUOTA FIJA",
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                                    )
+                                    Text(
+                                        text = "$${String.format("%,.2f", cuotaFija)}",
+                                        fontSize = 36.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                    Text(
+                                        text = "cada ${InteresUtils.frecuenciaATexto(frecuenciaPago).lowercase()}",
+                                        fontSize = 12.sp,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
+                                    )
+                                }
+                                TipoAmortizacion.ALEMAN -> {
+                                    Text(
+                                        text = "CUOTA VARIABLE",
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                                    )
+                                    Text(
+                                        text = "$${String.format("%,.2f", cuotaFija)}",
+                                        fontSize = 36.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                    Text(
+                                        text = "Primera cuota (decreciente)",
+                                        fontSize = 12.sp,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "Última: $${String.format("%,.2f", tablaAmortizacion.lastOrNull()?.cuotaFija ?: 0.0)}",
+                                        fontSize = 14.sp,
+                                        color = SuccessColor
+                                    )
+                                }
+                            }
                         }
                     }
                 }

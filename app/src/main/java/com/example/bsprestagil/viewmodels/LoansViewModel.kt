@@ -73,6 +73,7 @@ class LoansViewModel(application: Application) : AndroidViewModel(application) {
         monto: Double,
         tasaInteresPorPeriodo: Double, // Ej: 20% mensual
         frecuenciaPago: FrecuenciaPago,
+        tipoAmortizacion: com.example.bsprestagil.data.models.TipoAmortizacion, // Sistema Francés o Alemán
         numeroCuotas: Int, // NUEVO: número de cuotas
         garantiaId: String? = null,
         notas: String = ""
@@ -83,12 +84,16 @@ class LoansViewModel(application: Application) : AndroidViewModel(application) {
                 
                 val fechaInicio = System.currentTimeMillis()
                 
-                // Calcular cuota fija usando Sistema Francés
-                val montoCuotaFija = AmortizacionUtils.calcularCuotaFija(
-                    capital = monto,
+                // Calcular cuota según el sistema seleccionado
+                val tablaAmortizacion = AmortizacionUtils.generarTablaSegunSistema(
+                    capitalInicial = monto,
                     tasaInteresPorPeriodo = tasaInteresPorPeriodo,
-                    numeroCuotas = numeroCuotas
+                    numeroCuotas = numeroCuotas,
+                    tipoSistema = tipoAmortizacion
                 )
+                
+                // Primera cuota (en Francés es fija, en Alemán es la mayor)
+                val montoCuotaFija = tablaAmortizacion.firstOrNull()?.cuotaFija ?: 0.0
                 
                 val prestamo = PrestamoEntity(
                     id = "",
@@ -98,7 +103,7 @@ class LoansViewModel(application: Application) : AndroidViewModel(application) {
                     capitalPendiente = monto, // Al inicio, el capital pendiente es el monto completo
                     tasaInteresPorPeriodo = tasaInteresPorPeriodo,
                     frecuenciaPago = frecuenciaPago.name,
-                    tipoAmortizacion = "FRANCES", // Por defecto Sistema Francés
+                    tipoAmortizacion = tipoAmortizacion.name,
                     numeroCuotas = numeroCuotas,
                     montoCuotaFija = montoCuotaFija,
                     cuotasPagadas = 0,
@@ -121,6 +126,7 @@ class LoansViewModel(application: Application) : AndroidViewModel(application) {
                     montoOriginal = monto,
                     tasaInteresPorPeriodo = tasaInteresPorPeriodo,
                     frecuenciaPago = frecuenciaPago,
+                    tipoAmortizacion = tipoAmortizacion,
                     numeroCuotas = numeroCuotas,
                     fechaInicio = fechaInicio
                 )

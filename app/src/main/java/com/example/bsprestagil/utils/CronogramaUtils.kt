@@ -8,12 +8,13 @@ object CronogramaUtils {
     
     /**
      * Genera el cronograma completo de cuotas al crear un préstamo
-     * Usa el Sistema Francés de Amortización (cuota fija)
+     * Soporta Sistema Francés (cuota fija) y Alemán (capital fijo)
      * 
      * @param prestamoId ID del préstamo
      * @param montoOriginal Capital prestado
      * @param tasaInteresPorPeriodo Tasa de interés (ej: 20% mensual)
      * @param frecuenciaPago Frecuencia de pago
+     * @param tipoAmortizacion Sistema de amortización (Francés o Alemán)
      * @param numeroCuotas Número total de cuotas
      * @param fechaInicio Fecha de inicio del préstamo
      * @return Lista de cuotas generadas con distribución exacta
@@ -23,16 +24,18 @@ object CronogramaUtils {
         montoOriginal: Double,
         tasaInteresPorPeriodo: Double,
         frecuenciaPago: FrecuenciaPago,
+        tipoAmortizacion: com.example.bsprestagil.data.models.TipoAmortizacion,
         numeroCuotas: Int,
         fechaInicio: Long
     ): List<CuotaEntity> {
         val cuotas = mutableListOf<CuotaEntity>()
         
-        // Generar tabla de amortización profesional
-        val tablaAmortizacion = AmortizacionUtils.generarTablaAmortizacion(
+        // Generar tabla según el sistema seleccionado
+        val tablaAmortizacion = AmortizacionUtils.generarTablaSegunSistema(
             capitalInicial = montoOriginal,
             tasaInteresPorPeriodo = tasaInteresPorPeriodo,
-            numeroCuotas = numeroCuotas
+            numeroCuotas = numeroCuotas,
+            tipoSistema = tipoAmortizacion
         )
         
         // Convertir cada fila de la tabla en una CuotaEntity

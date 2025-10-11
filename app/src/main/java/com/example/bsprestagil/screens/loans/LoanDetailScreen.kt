@@ -25,8 +25,12 @@ import com.example.bsprestagil.ui.theme.SuccessColor
 import com.example.bsprestagil.ui.theme.WarningColor
 import com.example.bsprestagil.ui.theme.ErrorColor
 import com.example.bsprestagil.utils.ShareUtils
+import com.example.bsprestagil.utils.PDFGenerator
 import com.example.bsprestagil.viewmodels.LoansViewModel
 import com.example.bsprestagil.viewmodels.CuotasViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -39,7 +43,9 @@ fun LoanDetailScreen(
     cuotasViewModel: CuotasViewModel = viewModel()
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+    var generandoPDF by remember { mutableStateOf(false) }
     
     // Cargar datos del préstamo
     val prestamo by loansViewModel.getPrestamoById(loanId).collectAsState(initial = null)
@@ -67,25 +73,51 @@ fun LoanDetailScreen(
                 title = "Detalles del préstamo",
                 onNavigateBack = { navController.navigateUp() },
                 actions = {
-                    IconButton(onClick = {
-                        prestamo?.let { p ->
-                            ShareUtils.compartirResumenPrestamo(
-                                context = context,
-                                clienteNombre = p.clienteNombre,
-                                montoOriginal = p.montoOriginal,
-                                capitalPendiente = p.capitalPendiente,
-                                tasaInteresPorPeriodo = p.tasaInteresPorPeriodo,
-                                frecuenciaPago = p.frecuenciaPago.name,
-                                numeroCuotas = p.numeroCuotas,
-                                montoCuotaFija = p.montoCuotaFija,
-                                totalCapitalPagado = p.totalCapitalPagado,
-                                totalInteresesPagados = p.totalInteresesPagados,
-                                fechaInicio = p.fechaInicio,
-                                incluirTablaAmortizacion = true
+                    IconButton(
+                        onClick = {
+                            prestamo?.let { p ->
+                                generandoPDF = true
+                                scope.launch {
+                                    try {
+                                        val pdfUri = withContext(Dispatchers.IO) {
+                                            PDFGenerator.generarPDFTablaAmortizacion(
+                                                context = context,
+                                                clienteNombre = p.clienteNombre,
+                                                montoOriginal = p.montoOriginal,
+                                                capitalPendiente = p.capitalPendiente,
+                                                tasaInteresPorPeriodo = p.tasaInteresPorPeriodo,
+                                                frecuenciaPago = p.frecuenciaPago.name,
+                                                tipoAmortizacion = p.tipoAmortizacion.name,
+                                                numeroCuotas = p.numeroCuotas,
+                                                montoCuotaFija = p.montoCuotaFija,
+                                                totalCapitalPagado = p.totalCapitalPagado,
+                                                totalInteresesPagados = p.totalInteresesPagados,
+                                                fechaInicio = p.fechaInicio
+                                            )
+                                        }
+                                        
+                                        generandoPDF = false
+                                        
+                                        pdfUri?.let { uri ->
+                                            PDFGenerator.compartirPDF(context, uri, p.clienteNombre)
+                                        }
+                                    } catch (e: Exception) {
+                                        generandoPDF = false
+                                        e.printStackTrace()
+                                    }
+                                }
+                            }
+                        },
+                        enabled = !generandoPDF
+                    ) {
+                        if (generandoPDF) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp
                             )
+                        } else {
+                            Icon(Icons.Default.PictureAsPdf, contentDescription = "Compartir PDF")
                         }
-                    }) {
-                        Icon(Icons.Default.Share, contentDescription = "Compartir")
                     }
                 }
             )

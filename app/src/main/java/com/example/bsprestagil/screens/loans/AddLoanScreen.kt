@@ -40,10 +40,12 @@ fun AddLoanScreen(
     var monto by remember { mutableStateOf("") }
     var tasaInteres by remember { mutableStateOf("10") }
     var frecuenciaPago by remember { mutableStateOf(FrecuenciaPago.MENSUAL) }
+    var tipoAmortizacion by remember { mutableStateOf(com.example.bsprestagil.data.models.TipoAmortizacion.FRANCES) }
     var numeroCuotas by remember { mutableStateOf("12") }
     var garantiaOpcional by remember { mutableStateOf("") }
     var notas by remember { mutableStateOf("") }
     var expandedFrecuencia by remember { mutableStateOf(false) }
+    var expandedSistema by remember { mutableStateOf(false) }
     var showSuccessDialog by remember { mutableStateOf(false) }
     var showConfirmDialog by remember { mutableStateOf(false) }
     var showClientSelector by remember { mutableStateOf(false) }
@@ -241,6 +243,75 @@ fun AddLoanScreen(
                             }
                         )
                     }
+                }
+            }
+            
+            // Sistema de amortización
+            ExposedDropdownMenuBox(
+                expanded = expandedSistema,
+                onExpandedChange = { expandedSistema = it }
+            ) {
+                OutlinedTextField(
+                    value = when(tipoAmortizacion) {
+                        com.example.bsprestagil.data.models.TipoAmortizacion.FRANCES -> "Sistema Francés (Cuota Fija)"
+                        com.example.bsprestagil.data.models.TipoAmortizacion.ALEMAN -> "Sistema Alemán (Capital Fijo)"
+                    },
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Sistema de amortización *") },
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedSistema)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor(),
+                    leadingIcon = { Icon(Icons.Default.AccountTree, contentDescription = null) },
+                    supportingText = {
+                        val descripcion = when(tipoAmortizacion) {
+                            com.example.bsprestagil.data.models.TipoAmortizacion.FRANCES -> "Cuota fija, interés decreciente"
+                            com.example.bsprestagil.data.models.TipoAmortizacion.ALEMAN -> "Capital fijo, cuota decreciente"
+                        }
+                        Text(descripcion, fontSize = 12.sp)
+                    }
+                )
+                
+                ExposedDropdownMenu(
+                    expanded = expandedSistema,
+                    onDismissRequest = { expandedSistema = false }
+                ) {
+                    DropdownMenuItem(
+                        text = {
+                            Column {
+                                Text("Sistema Francés (Cuota Fija)", fontWeight = FontWeight.Bold)
+                                Text(
+                                    "Cuota fija, interés decreciente - Más común",
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                )
+                            }
+                        },
+                        onClick = {
+                            tipoAmortizacion = com.example.bsprestagil.data.models.TipoAmortizacion.FRANCES
+                            expandedSistema = false
+                        }
+                    )
+                    
+                    DropdownMenuItem(
+                        text = {
+                            Column {
+                                Text("Sistema Alemán (Capital Fijo)", fontWeight = FontWeight.Bold)
+                                Text(
+                                    "Capital fijo, cuota decreciente - Menor interés total",
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                )
+                            }
+                        },
+                        onClick = {
+                            tipoAmortizacion = com.example.bsprestagil.data.models.TipoAmortizacion.ALEMAN
+                            expandedSistema = false
+                        }
+                    )
                 }
             }
             
@@ -451,23 +522,17 @@ fun AddLoanScreen(
             FrecuenciaPago.MENSUAL -> "mensual"
         }
         
-        val cuotaFijaCalculada = AmortizacionUtils.calcularCuotaFija(
-            capital = montoNum,
-            tasaInteresPorPeriodo = tasaNum,
-            numeroCuotas = cuotasNum
-        )
-        
-        val totalAPagar = AmortizacionUtils.calcularTotalAPagar(
+        // Generar tabla según el sistema seleccionado
+        val tablaCalculada = AmortizacionUtils.generarTablaSegunSistema(
             capitalInicial = montoNum,
             tasaInteresPorPeriodo = tasaNum,
-            numeroCuotas = cuotasNum
+            numeroCuotas = cuotasNum,
+            tipoSistema = tipoAmortizacion
         )
         
-        val totalIntereses = AmortizacionUtils.calcularTotalIntereses(
-            capitalInicial = montoNum,
-            tasaInteresPorPeriodo = tasaNum,
-            numeroCuotas = cuotasNum
-        )
+        val cuotaFijaCalculada = tablaCalculada.firstOrNull()?.cuotaFija ?: 0.0
+        val totalAPagar = tablaCalculada.sumOf { it.cuotaFija }
+        val totalIntereses = totalAPagar - montoNum
         
         AlertDialog(
             onDismissRequest = { showConfirmDialog = false },
@@ -482,13 +547,42 @@ fun AddLoanScreen(
                     Text("Capital: $${String.format("%,.2f", montoNum)}", fontWeight = FontWeight.Bold)
                     Text("Tasa: $tasaNum% $periodoTexto")
                     Text("Número de cuotas: $cuotasNum")
+                    Text("Sistema: ${when(tipoAmortizacion) {
+                        com.example.bsprestagil.data.models.TipoAmortizacion.FRANCES -> "Francés (Cuota Fija)"
+                        com.example.bsprestagil.data.models.TipoAmortizacion.ALEMAN -> "Alemán (Capital Fijo)"
+                    }}")
                     Divider(modifier = Modifier.padding(vertical = 8.dp))
-                    Text(
-                        "CUOTA FIJA: $${String.format("%,.2f", cuotaFijaCalculada)}",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    
+                    when(tipoAmortizacion) {
+                        com.example.bsprestagil.data.models.TipoAmortizacion.FRANCES -> {
+                            Text(
+                                "CUOTA FIJA: $${String.format("%,.2f", cuotaFijaCalculada)}",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        com.example.bsprestagil.data.models.TipoAmortizacion.ALEMAN -> {
+                            Column {
+                                Text(
+                                    "PRIMERA CUOTA: $${String.format("%,.2f", cuotaFijaCalculada)}",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Text(
+                                    "Última cuota: $${String.format("%,.2f", tablaCalculada.lastOrNull()?.cuotaFija ?: 0.0)}",
+                                    fontSize = 12.sp,
+                                    color = SuccessColor
+                                )
+                                Text(
+                                    "(Cuota decreciente)",
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                )
+                            }
+                        }
+                    }
                     Spacer(modifier = Modifier.height(8.dp))
                     Text("Total a pagar: $${String.format("%,.2f", totalAPagar)}")
                     Text("Total intereses: $${String.format("%,.2f", totalIntereses)}")
@@ -512,13 +606,6 @@ fun AddLoanScreen(
                     if (mostrarTablaEnConfirmacion) {
                         Spacer(modifier = Modifier.height(12.dp))
                         
-                        // Generar tabla
-                        val tablaAmortizacion = AmortizacionUtils.generarTablaAmortizacion(
-                            capitalInicial = montoNum,
-                            tasaInteresPorPeriodo = tasaNum,
-                            numeroCuotas = cuotasNum
-                        )
-                        
                         // Encabezado
                         Text(
                             text = "Cronograma de pagos:",
@@ -528,10 +615,10 @@ fun AddLoanScreen(
                         )
                         
                         // Filas de la tabla (mostrar solo primeras 3 y últimas 2)
-                        val filasAMostrar = if (tablaAmortizacion.size > 5) {
-                            tablaAmortizacion.take(3) + listOf(null) + tablaAmortizacion.takeLast(2)
+                        val filasAMostrar = if (tablaCalculada.size > 5) {
+                            tablaCalculada.take(3) + listOf(null) + tablaCalculada.takeLast(2)
                         } else {
-                            tablaAmortizacion
+                            tablaCalculada
                         }
                         
                         filasAMostrar.forEach { fila ->
@@ -577,8 +664,16 @@ fun AddLoanScreen(
                     }
                     
                     Spacer(modifier = Modifier.height(8.dp))
+                    
+                    val infoTexto = when(tipoAmortizacion) {
+                        com.example.bsprestagil.data.models.TipoAmortizacion.FRANCES -> 
+                            "ℹ️ Sistema Francés: Cuota fija de $${String.format("%,.0f", cuotaFijaCalculada)} cada $periodoTexto."
+                        com.example.bsprestagil.data.models.TipoAmortizacion.ALEMAN -> 
+                            "ℹ️ Sistema Alemán: Cuota inicial $${String.format("%,.0f", cuotaFijaCalculada)}, última cuota $${String.format("%,.0f", tablaCalculada.lastOrNull()?.cuotaFija ?: 0.0)}. Cuota decreciente."
+                    }
+                    
                     Text(
-                        "ℹ️ Sistema Francés: Cuota fija de $${String.format("%,.0f", cuotaFijaCalculada)} cada $periodoTexto.",
+                        infoTexto,
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                     )
@@ -592,6 +687,7 @@ fun AddLoanScreen(
                         monto = montoNum,
                         tasaInteresPorPeriodo = tasaNum,
                         frecuenciaPago = frecuenciaPago,
+                        tipoAmortizacion = tipoAmortizacion,
                         numeroCuotas = cuotasNum,
                         garantiaId = if (garantiaOpcional.isNotBlank()) garantiaOpcional else null,
                         notas = notas
