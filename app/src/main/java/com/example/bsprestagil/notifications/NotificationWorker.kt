@@ -32,7 +32,7 @@ class NotificationWorker(
     }
     
     private suspend fun verificarPagosVencidos() {
-        val prestamosActivos = prestamoRepository.getPrestamosPorEstado("ACTIVO").firstOrNull() ?: return
+        val prestamosActivos = prestamoRepository.getPrestamosByEstado("ACTIVO").firstOrNull() ?: return
         val ahora = System.currentTimeMillis()
         
         prestamosActivos.forEach { prestamo ->
@@ -73,7 +73,7 @@ class NotificationWorker(
     }
     
     private suspend fun verificarPagosProximos() {
-        val prestamosActivos = prestamoRepository.getPrestamosPorEstado("ACTIVO").firstOrNull() ?: return
+        val prestamosActivos = prestamoRepository.getPrestamosByEstado("ACTIVO").firstOrNull() ?: return
         val ahora = System.currentTimeMillis()
         val tresDiasFuturo = ahora + (3 * 24 * 60 * 60 * 1000L)
         
