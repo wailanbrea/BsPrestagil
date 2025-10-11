@@ -9,7 +9,9 @@ data class UsuarioEntity(
     val id: String,
     val nombre: String,
     val email: String,
-    val rol: String, // PRESTAMISTA, COBRADOR
+    val telefono: String = "",
+    val rol: String, // ADMIN, COBRADOR, SUPERVISOR
+    val activo: Boolean = true,
     val fechaCreacion: Long,
     
     // Campos de sincronización

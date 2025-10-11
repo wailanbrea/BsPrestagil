@@ -242,7 +242,7 @@ fun SettingsScreen(
                 SettingsCard(
                     title = "Gestionar cobradores",
                     subtitle = "Agregar o eliminar usuarios",
-                    onClick = { /* TODO: Abrir pantalla de cobradores */ }
+                    onClick = { navController.navigate(Screen.GestionCobradores.route) }
                 )
             }
             
@@ -332,7 +332,7 @@ fun SettingsScreen(
                 SettingsCard(
                     title = "Perfil",
                     subtitle = "Editar información personal",
-                    onClick = { /* TODO: Abrir pantalla de perfil */ }
+                    onClick = { navController.navigate(Screen.Perfil.route) }
                 )
             }
             

@@ -72,6 +72,8 @@ sealed class Screen(val route: String) {
     
     // Configuración
     object PersonalizacionRecibo : Screen("personalizacion_recibo")
+    object GestionCobradores : Screen("gestion_cobradores")
+    object Perfil : Screen("perfil")
     
     // Pantalla de prueba de sincronización
     object TestSync : Screen("test_sync")

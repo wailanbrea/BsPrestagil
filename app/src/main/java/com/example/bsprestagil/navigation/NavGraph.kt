@@ -93,6 +93,18 @@ fun NavGraph(
             )
         }
         
+        composable(Screen.GestionCobradores.route) {
+            com.example.bsprestagil.screens.settings.GestionCobradoresScreen(
+                navController = navController
+            )
+        }
+        
+        composable(Screen.Perfil.route) {
+            com.example.bsprestagil.screens.settings.PerfilScreen(
+                navController = navController
+            )
+        }
+        
         // Clients
         composable(
             route = Screen.ClientDetail.route,
