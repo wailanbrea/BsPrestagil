@@ -87,6 +87,12 @@ fun NavGraph(
             SettingsScreen(navController = navController)
         }
         
+        composable(Screen.PersonalizacionRecibo.route) {
+            com.example.bsprestagil.screens.settings.PersonalizacionReciboScreen(
+                navController = navController
+            )
+        }
+        
         // Clients
         composable(
             route = Screen.ClientDetail.route,

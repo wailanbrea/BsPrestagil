@@ -70,6 +70,9 @@ sealed class Screen(val route: String) {
     // Notificaciones
     object Notifications : Screen("notifications")
     
+    // Configuración
+    object PersonalizacionRecibo : Screen("personalizacion_recibo")
+    
     // Pantalla de prueba de sincronización
     object TestSync : Screen("test_sync")
 }

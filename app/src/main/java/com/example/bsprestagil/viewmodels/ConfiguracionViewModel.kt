@@ -79,5 +79,34 @@ class ConfiguracionViewModel(application: Application) : AndroidViewModel(applic
             }
         }
     }
+    
+    fun updateDatosNegocio(
+        nombreNegocio: String,
+        direccion: String,
+        telefono: String,
+        mensajeRecibo: String,
+        logoUri: String?
+    ) {
+        viewModelScope.launch {
+            try {
+                _isLoading.value = true
+                val config = configuracionRepository.getConfiguracionSync()
+                if (config != null) {
+                    configuracionRepository.updateConfiguracion(
+                        config.copy(
+                            nombreNegocio = nombreNegocio,
+                            direccionNegocio = direccion,
+                            telefonoNegocio = telefono,
+                            mensajeRecibo = mensajeRecibo,
+                            logoUrl = logoUri ?: config.logoUrl
+                        )
+                    )
+                }
+                _isLoading.value = false
+            } catch (e: Exception) {
+                _isLoading.value = false
+            }
+        }
+    }
 }
 

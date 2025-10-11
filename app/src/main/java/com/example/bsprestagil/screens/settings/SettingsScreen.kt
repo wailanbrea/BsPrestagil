@@ -95,7 +95,7 @@ fun SettingsScreen(
                 SettingsCard(
                     title = "Personalización de recibos",
                     subtitle = "Logo, datos del negocio",
-                    onClick = { /* TODO: Abrir pantalla de personalización */ }
+                    onClick = { navController.navigate(Screen.PersonalizacionRecibo.route) }
                 )
             }
             
