@@ -103,20 +103,51 @@ class PaymentsViewModel(application: Application) : AndroidViewModel(application
                         fechaPagoActual
                     )
                     
-                    // Calcular el interés del período (proporcional a días transcurridos)
-                    val interesCalculado = InteresUtils.calcularInteresProporcional(
-                        capitalPendiente = prestamo.capitalPendiente,
-                        tasaInteresPorPeriodo = prestamo.tasaInteresPorPeriodo,
-                        frecuenciaPago = com.example.bsprestagil.data.models.FrecuenciaPago.valueOf(prestamo.frecuenciaPago),
-                        diasTranscurridos = diasTranscurridos
-                    )
+                    // Obtener la cuota correspondiente del cronograma (si existe)
+                    val cuotaCronograma = if (cuotaId != null) {
+                        cuotaRepository.getCuotaById(cuotaId).firstOrNull()
+                    } else null
                     
-                    // Distribuir el pago entre interés y capital
-                    val (montoAInteres, montoACapital) = InteresUtils.distribuirPago(
-                        montoPagado = montoPagado,
-                        interesDelPeriodo = interesCalculado,
-                        capitalPendiente = prestamo.capitalPendiente
-                    )
+                    // Calcular interés y capital según el cronograma
+                    val (interesCalculado, montoAInteres, montoACapital) = if (cuotaCronograma != null) {
+                        // Usar distribución del cronograma (Sistema Francés o Alemán)
+                        val notasParts = cuotaCronograma.notas.split(",")
+                        val interesProyectado = notasParts.getOrNull(0)?.substringAfter("$")?.trim()?.toDoubleOrNull() ?: 0.0
+                        val capitalProyectado = notasParts.getOrNull(1)?.substringAfter("$")?.trim()?.toDoubleOrNull() ?: 0.0
+                        
+                        // Si paga exactamente la cuota o más, usa la distribución del cronograma
+                        if (montoPagado >= cuotaCronograma.montoCuotaMinimo) {
+                            // Pago normal o con excedente
+                            val excedente = montoPagado - cuotaCronograma.montoCuotaMinimo
+                            Triple(
+                                interesProyectado, // Interés del cronograma
+                                interesProyectado, // A interés
+                                capitalProyectado + excedente // A capital (incluye excedente)
+                            )
+                        } else {
+                            // Pago parcial: distribución proporcional
+                            val proporcion = montoPagado / cuotaCronograma.montoCuotaMinimo
+                            Triple(
+                                interesProyectado,
+                                interesProyectado * proporcion,
+                                capitalProyectado * proporcion
+                            )
+                        }
+                    } else {
+                        // Fallback al cálculo manual (si no hay cronograma)
+                        val interesCalc = InteresUtils.calcularInteresProporcional(
+                            capitalPendiente = prestamo.capitalPendiente,
+                            tasaInteresPorPeriodo = prestamo.tasaInteresPorPeriodo,
+                            frecuenciaPago = com.example.bsprestagil.data.models.FrecuenciaPago.valueOf(prestamo.frecuenciaPago),
+                            diasTranscurridos = diasTranscurridos
+                        )
+                        val (interes, capital) = InteresUtils.distribuirPago(
+                            montoPagado = montoPagado,
+                            interesDelPeriodo = interesCalc,
+                            capitalPendiente = prestamo.capitalPendiente
+                        )
+                        Triple(interesCalc, interes, capital)
+                    }
                     
                     // Calcular el nuevo capital pendiente
                     val nuevoCapitalPendiente = (prestamo.capitalPendiente - montoACapital).coerceAtLeast(0.0)
