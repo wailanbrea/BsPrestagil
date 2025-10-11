@@ -13,61 +13,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.bsprestagil.components.TopAppBarComponent
+import com.example.bsprestagil.data.database.entities.NotificacionEntity
 import com.example.bsprestagil.ui.theme.ErrorColor
 import com.example.bsprestagil.ui.theme.WarningColor
+import com.example.bsprestagil.viewmodels.NotificationsViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
-data class Notificacion(
-    val id: String,
-    val titulo: String,
-    val mensaje: String,
-    val tipo: TipoNotificacion,
-    val fecha: Long,
-    val leida: Boolean = false
-)
-
-enum class TipoNotificacion {
-    PAGO_VENCIDO,
-    PAGO_PROXIMO,
-    PAGO_RECIBIDO,
-    NUEVO_CLIENTE
-}
-
 @Composable
 fun NotificationsScreen(
-    navController: NavController
+    navController: NavController,
+    viewModel: NotificationsViewModel = viewModel()
 ) {
     val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
-    
-    val notificaciones = remember {
-        listOf(
-            Notificacion(
-                id = "1",
-                titulo = "Pago vencido",
-                mensaje = "El cliente María González tiene un pago vencido desde hace 3 días",
-                tipo = TipoNotificacion.PAGO_VENCIDO,
-                fecha = System.currentTimeMillis()
-            ),
-            Notificacion(
-                id = "2",
-                titulo = "Pago próximo a vencer",
-                mensaje = "El cliente Juan Pérez tiene un pago que vence mañana",
-                tipo = TipoNotificacion.PAGO_PROXIMO,
-                fecha = System.currentTimeMillis() - (60 * 60 * 1000)
-            ),
-            Notificacion(
-                id = "3",
-                titulo = "Pago recibido",
-                mensaje = "Se registró un pago de $1,000 de Carlos Ramírez",
-                tipo = TipoNotificacion.PAGO_RECIBIDO,
-                fecha = System.currentTimeMillis() - (2 * 60 * 60 * 1000),
-                leida = true
-            )
-        )
-    }
+    val notificaciones by viewModel.notificaciones.collectAsState()
     
     Scaffold(
         topBar = {
@@ -75,7 +37,7 @@ fun NotificationsScreen(
                 title = "Notificaciones",
                 onNavigateBack = { navController.navigateUp() },
                 actions = {
-                    IconButton(onClick = { /* TODO: Marcar todas como leídas */ }) {
+                    IconButton(onClick = { viewModel.marcarTodasComoLeidas() }) {
                         Icon(Icons.Default.DoneAll, contentDescription = "Marcar todas como leídas")
                     }
                 }
@@ -93,7 +55,10 @@ fun NotificationsScreen(
                 NotificationCard(
                     notificacion = notificacion,
                     dateFormat = dateFormat,
-                    onClick = { /* TODO: Marcar como leída y navegar */ }
+                    onClick = { 
+                        viewModel.marcarComoLeida(notificacion.id)
+                        // TODO: Navegar según el tipo de notificación
+                    }
                 )
             }
             
@@ -125,15 +90,16 @@ fun NotificationsScreen(
 
 @Composable
 fun NotificationCard(
-    notificacion: Notificacion,
+    notificacion: NotificacionEntity,
     dateFormat: SimpleDateFormat,
     onClick: () -> Unit
 ) {
     val (icon, color) = when (notificacion.tipo) {
-        TipoNotificacion.PAGO_VENCIDO -> Icons.Default.Error to ErrorColor
-        TipoNotificacion.PAGO_PROXIMO -> Icons.Default.Warning to WarningColor
-        TipoNotificacion.PAGO_RECIBIDO -> Icons.Default.CheckCircle to MaterialTheme.colorScheme.primary
-        TipoNotificacion.NUEVO_CLIENTE -> Icons.Default.PersonAdd to MaterialTheme.colorScheme.primary
+        "PAGO_VENCIDO" -> Icons.Default.Error to ErrorColor
+        "PAGO_PROXIMO" -> Icons.Default.Warning to WarningColor
+        "PAGO_RECIBIDO" -> Icons.Default.CheckCircle to MaterialTheme.colorScheme.primary
+        "NUEVO_CLIENTE" -> Icons.Default.PersonAdd to MaterialTheme.colorScheme.primary
+        else -> Icons.Default.Notifications to MaterialTheme.colorScheme.primary
     }
     
     Card(

@@ -17,9 +17,10 @@ import com.example.bsprestagil.data.database.entities.*
         CuotaEntity::class,
         GarantiaEntity::class,
         UsuarioEntity::class,
-        ConfiguracionEntity::class
+        ConfiguracionEntity::class,
+        NotificacionEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -32,6 +33,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun garantiaDao(): GarantiaDao
     abstract fun usuarioDao(): UsuarioDao
     abstract fun configuracionDao(): ConfiguracionDao
+    abstract fun notificacionDao(): NotificacionDao
     
     companion object {
         @Volatile
