@@ -29,6 +29,20 @@ fun PerfilScreen(
     var telefono by remember { mutableStateOf(currentUser?.phoneNumber ?: "") }
     var showEditDialog by remember { mutableStateOf(false) }
     var showSuccessMessage by remember { mutableStateOf(false) }
+    var showVerificationMessage by remember { mutableStateOf(false) }
+    var verificationError by remember { mutableStateOf<String?>(null) }
+    var enviandoVerificacion by remember { mutableStateOf(false) }
+    var isEmailVerified by remember { mutableStateOf(currentUser?.isEmailVerified ?: false) }
+    
+    // Recargar estado de verificación periódicamente
+    LaunchedEffect(Unit) {
+        while (true) {
+            kotlinx.coroutines.delay(5000) // Cada 5 segundos
+            currentUser?.reload()?.addOnCompleteListener {
+                isEmailVerified = currentUser?.isEmailVerified ?: false
+            }
+        }
+    }
     
     Scaffold(
         topBar = {
@@ -166,8 +180,82 @@ fun PerfilScreen(
                 InfoCard(
                     icon = Icons.Default.VerifiedUser,
                     label = "Estado de la cuenta",
-                    value = if (currentUser?.isEmailVerified == true) "Verificada ✓" else "No verificada"
+                    value = if (isEmailVerified) "Verificada ✓" else "No verificada"
                 )
+            }
+            
+            // Banner de verificación si no está verificada
+            if (!isEmailVerified && currentUser != null) {
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = com.example.bsprestagil.ui.theme.WarningColor.copy(alpha = 0.1f)
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Default.Warning,
+                                    contentDescription = null,
+                                    tint = com.example.bsprestagil.ui.theme.WarningColor,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "Cuenta no verificada",
+                                        fontWeight = FontWeight.Bold,
+                                        color = com.example.bsprestagil.ui.theme.WarningColor
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "Verifica tu email para mayor seguridad y acceso completo.",
+                                        fontSize = 12.sp,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                    )
+                                }
+                            }
+                            
+                            Button(
+                                onClick = {
+                                    enviandoVerificacion = true
+                                    verificationError = null
+                                    currentUser.sendEmailVerification()
+                                        .addOnCompleteListener { task ->
+                                            enviandoVerificacion = false
+                                            if (task.isSuccessful) {
+                                                showVerificationMessage = true
+                                            } else {
+                                                verificationError = task.exception?.message ?: "Error desconocido"
+                                            }
+                                        }
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                enabled = !enviandoVerificacion
+                            ) {
+                                if (enviandoVerificacion) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(20.dp),
+                                        strokeWidth = 2.dp,
+                                        color = MaterialTheme.colorScheme.onPrimary
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                }
+                                Icon(Icons.Default.Email, contentDescription = null)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(if (enviandoVerificacion) "Enviando..." else "Enviar email de verificación")
+                            }
+                        }
+                    }
+                }
             }
             
             item {
@@ -183,7 +271,7 @@ fun PerfilScreen(
                 )
             }
             
-            // Mensaje de éxito
+            // Mensaje de éxito de perfil
             if (showSuccessMessage) {
                 item {
                     Card(
@@ -215,6 +303,94 @@ fun PerfilScreen(
                     LaunchedEffect(Unit) {
                         kotlinx.coroutines.delay(3000)
                         showSuccessMessage = false
+                    }
+                }
+            }
+            
+            // Mensaje de verificación enviada
+            if (showVerificationMessage) {
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = com.example.bsprestagil.ui.theme.SuccessColor.copy(alpha = 0.1f)
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.MarkEmailRead,
+                                contentDescription = null,
+                                tint = com.example.bsprestagil.ui.theme.SuccessColor
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "¡Email enviado!",
+                                    color = com.example.bsprestagil.ui.theme.SuccessColor,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "Revisa tu bandeja de entrada y haz clic en el enlace de verificación.",
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                )
+                            }
+                        }
+                    }
+                    
+                    LaunchedEffect(Unit) {
+                        kotlinx.coroutines.delay(5000)
+                        showVerificationMessage = false
+                    }
+                }
+            }
+            
+            // Mensaje de error
+            verificationError?.let { error ->
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.Error,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Error al enviar email",
+                                    color = MaterialTheme.colorScheme.error,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = error,
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f)
+                                )
+                            }
+                        }
+                    }
+                    
+                    LaunchedEffect(Unit) {
+                        kotlinx.coroutines.delay(5000)
+                        verificationError = null
                     }
                 }
             }

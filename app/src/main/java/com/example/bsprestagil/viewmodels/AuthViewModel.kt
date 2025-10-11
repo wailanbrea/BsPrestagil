@@ -79,6 +79,16 @@ class AuthViewModel : ViewModel() {
                         .setDisplayName(nombre)
                         .build()
                     user.updateProfile(profileUpdates).await()
+                    
+                    // Enviar email de verificación automáticamente
+                    try {
+                        user.sendEmailVerification().await()
+                        // Email enviado exitosamente (no bloqueamos el login)
+                    } catch (e: Exception) {
+                        // Si falla el envío del email, no bloqueamos el registro
+                        // El usuario podrá enviarlo después desde su perfil
+                    }
+                    
                     _authState.value = AuthState.Success(user)
                 } ?: run {
                     _authState.value = AuthState.Error("Error al crear la cuenta")

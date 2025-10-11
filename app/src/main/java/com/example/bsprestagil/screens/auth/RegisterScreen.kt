@@ -37,13 +37,23 @@ fun RegisterScreen(
     var confirmPasswordVisible by remember { mutableStateOf(false) }
     
     val authState by authViewModel.authState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
     
     // Observar el estado de autenticación
     LaunchedEffect(authState) {
         when (authState) {
             is AuthState.Success -> {
-                onRegisterSuccess()
-                authViewModel.resetState()
+                // Mostrar mensaje de verificación antes de navegar
+                scope.launch {
+                    snackbarHostState.showSnackbar(
+                        message = "📧 Revisa tu email para verificar tu cuenta",
+                        duration = SnackbarDuration.Long
+                    )
+                    kotlinx.coroutines.delay(2000)
+                    onRegisterSuccess()
+                    authViewModel.resetState()
+                }
             }
             else -> {}
         }
@@ -55,7 +65,8 @@ fun RegisterScreen(
                 title = "Crear cuenta",
                 onNavigateBack = onNavigateBack
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         Column(
             modifier = Modifier
