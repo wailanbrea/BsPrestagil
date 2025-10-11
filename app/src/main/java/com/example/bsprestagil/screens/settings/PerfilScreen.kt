@@ -15,6 +15,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.bsprestagil.viewmodels.AuthViewModel
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -23,6 +25,7 @@ fun PerfilScreen(
     authViewModel: AuthViewModel = viewModel()
 ) {
     val currentUser = FirebaseAuth.getInstance().currentUser
+    val scope = rememberCoroutineScope()
     
     var nombre by remember { mutableStateOf(currentUser?.displayName ?: "") }
     var email by remember { mutableStateOf(currentUser?.email ?: "") }
@@ -33,6 +36,7 @@ fun PerfilScreen(
     var verificationError by remember { mutableStateOf<String?>(null) }
     var enviandoVerificacion by remember { mutableStateOf(false) }
     var isEmailVerified by remember { mutableStateOf(currentUser?.isEmailVerified ?: false) }
+    var updateError by remember { mutableStateOf<String?>(null) }
     
     // Recargar estado de verificación periódicamente
     LaunchedEffect(Unit) {
@@ -351,7 +355,7 @@ fun PerfilScreen(
                 }
             }
             
-            // Mensaje de error
+            // Mensaje de error de verificación
             verificationError?.let { error ->
                 item {
                     Card(
@@ -395,6 +399,50 @@ fun PerfilScreen(
                 }
             }
             
+            // Mensaje de error de actualización
+            updateError?.let { error ->
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.Error,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Error al actualizar perfil",
+                                    color = MaterialTheme.colorScheme.error,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = error,
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f)
+                                )
+                            }
+                        }
+                    }
+                    
+                    LaunchedEffect(Unit) {
+                        kotlinx.coroutines.delay(5000)
+                        updateError = null
+                    }
+                }
+            }
+            
             item {
                 Spacer(modifier = Modifier.height(16.dp))
             }
@@ -409,12 +457,42 @@ fun PerfilScreen(
             telefonoActual = telefono,
             onDismiss = { showEditDialog = false },
             onConfirm = { nuevoNombre, nuevoEmail, nuevoTelefono ->
-                nombre = nuevoNombre
-                email = nuevoEmail
-                telefono = nuevoTelefono
                 showEditDialog = false
-                showSuccessMessage = true
-                // TODO: Actualizar en Firebase
+                updateError = null
+                
+                // Actualizar en Firebase
+                scope.launch {
+                    try {
+                        currentUser?.let { user ->
+                            // Actualizar nombre si cambió
+                            if (nuevoNombre != nombre && nuevoNombre.isNotBlank()) {
+                                val profileUpdates = com.google.firebase.auth.UserProfileChangeRequest.Builder()
+                                    .setDisplayName(nuevoNombre)
+                                    .build()
+                                user.updateProfile(profileUpdates)
+                                    .addOnCompleteListener { task ->
+                                        if (task.isSuccessful) {
+                                            nombre = nuevoNombre
+                                        }
+                                    }
+                                    .await()
+                            }
+                            
+                            // Nota: Cambiar email requiere reautenticación
+                            // Por ahora solo actualizamos nombre y teléfono
+                            telefono = nuevoTelefono
+                            
+                            // Recargar usuario para obtener cambios
+                            user.reload().await()
+                            nombre = user.displayName ?: nombre
+                            email = user.email ?: email
+                            
+                            showSuccessMessage = true
+                        }
+                    } catch (e: Exception) {
+                        updateError = e.message ?: "Error al actualizar perfil"
+                    }
+                }
             }
         )
     }

@@ -37,17 +37,21 @@ object SyncManager {
     
     /**
      * Fuerza una sincronización inmediata
+     * @return ID del trabajo para poder observarlo
      */
-    fun forceSyncNow(context: Context) {
+    fun forceSyncNow(context: Context): java.util.UUID {
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
         
         val syncRequest = OneTimeWorkRequestBuilder<SyncWorker>()
             .setConstraints(constraints)
+            .addTag("manual_sync")
             .build()
         
         WorkManager.getInstance(context).enqueue(syncRequest)
+        
+        return syncRequest.id
     }
     
     /**

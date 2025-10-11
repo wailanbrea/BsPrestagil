@@ -12,6 +12,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
 import com.example.bsprestagil.components.BottomNavigationBar
 import com.example.bsprestagil.components.SettingsCard
 import com.example.bsprestagil.navigation.Screen
@@ -152,10 +154,27 @@ fun SettingsScreen(
                             IconButton(
                                 onClick = {
                                     syncViewModel.iniciarSincronizacion()
-                                    SyncManager.forceSyncNow(context)
+                                    val workId = SyncManager.forceSyncNow(context)
+                                    
+                                    // Observar el trabajo hasta que termine
                                     scope.launch {
-                                        kotlinx.coroutines.delay(2000)
-                                        syncViewModel.loadSyncStatus()
+                                        val workManager = WorkManager.getInstance(context)
+                                        workManager.getWorkInfoByIdFlow(workId).collect { workInfo ->
+                                            when (workInfo?.state) {
+                                                WorkInfo.State.SUCCEEDED -> {
+                                                    // Esperar un momento y recargar
+                                                    kotlinx.coroutines.delay(500)
+                                                    syncViewModel.loadSyncStatus()
+                                                }
+                                                WorkInfo.State.FAILED, WorkInfo.State.CANCELLED -> {
+                                                    // Recargar igualmente para actualizar UI
+                                                    syncViewModel.loadSyncStatus()
+                                                }
+                                                else -> {
+                                                    // Trabajando, mantener estado de sincronización
+                                                }
+                                            }
+                                        }
                                     }
                                 },
                                 enabled = !syncStatus.enSincronizacion
