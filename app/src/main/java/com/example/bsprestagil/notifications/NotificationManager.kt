@@ -104,7 +104,7 @@ object AppNotificationManager {
             context,
             notificationId,
             intent,
-            PendingIntent.FLAG_IMMUTABLE or Intent.FLAG_UPDATE_CURRENT
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
         
         val notification = NotificationCompat.Builder(context, CHANNEL_ID_PAGOS)
@@ -140,7 +140,7 @@ object AppNotificationManager {
             context,
             notificationId,
             intent,
-            PendingIntent.FLAG_IMMUTABLE or Intent.FLAG_UPDATE_CURRENT
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
         
         val notification = NotificationCompat.Builder(context, CHANNEL_ID_GENERAL)
@@ -173,7 +173,7 @@ object AppNotificationManager {
             context,
             notificationId,
             intent,
-            PendingIntent.FLAG_IMMUTABLE or Intent.FLAG_UPDATE_CURRENT
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
         
         val notification = NotificationCompat.Builder(context, CHANNEL_ID_GENERAL)
