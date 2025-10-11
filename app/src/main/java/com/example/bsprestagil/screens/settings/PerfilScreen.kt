@@ -15,6 +15,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.bsprestagil.viewmodels.AuthViewModel
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
@@ -25,11 +26,13 @@ fun PerfilScreen(
     authViewModel: AuthViewModel = viewModel()
 ) {
     val currentUser = FirebaseAuth.getInstance().currentUser
+    val firestore = FirebaseFirestore.getInstance()
     val scope = rememberCoroutineScope()
     
     var nombre by remember { mutableStateOf(currentUser?.displayName ?: "") }
     var email by remember { mutableStateOf(currentUser?.email ?: "") }
-    var telefono by remember { mutableStateOf(currentUser?.phoneNumber ?: "") }
+    var telefono by remember { mutableStateOf("") }
+    var rol by remember { mutableStateOf("ADMIN") }
     var showEditDialog by remember { mutableStateOf(false) }
     var showSuccessMessage by remember { mutableStateOf(false) }
     var showVerificationMessage by remember { mutableStateOf(false) }
@@ -37,6 +40,36 @@ fun PerfilScreen(
     var enviandoVerificacion by remember { mutableStateOf(false) }
     var isEmailVerified by remember { mutableStateOf(currentUser?.isEmailVerified ?: false) }
     var updateError by remember { mutableStateOf<String?>(null) }
+    var cargandoDatos by remember { mutableStateOf(true) }
+    
+    // Cargar datos completos desde Firestore
+    LaunchedEffect(currentUser?.uid) {
+        currentUser?.uid?.let { uid ->
+            try {
+                val doc = firestore.collection("usuarios").document(uid).get().await()
+                if (doc.exists()) {
+                    nombre = doc.getString("nombre") ?: currentUser.displayName ?: ""
+                    telefono = doc.getString("telefono") ?: ""
+                    rol = doc.getString("rol") ?: "ADMIN"
+                } else {
+                    // Crear documento en Firestore si no existe
+                    firestore.collection("usuarios").document(uid).set(
+                        hashMapOf(
+                            "nombre" to (currentUser.displayName ?: ""),
+                            "email" to (currentUser.email ?: ""),
+                            "telefono" to "",
+                            "rol" to "ADMIN",
+                            "fechaCreacion" to System.currentTimeMillis(),
+                            "activo" to true
+                        )
+                    ).await()
+                }
+                cargandoDatos = false
+            } catch (e: Exception) {
+                cargandoDatos = false
+            }
+        }
+    }
     
     // Recargar estado de verificación periódicamente
     LaunchedEffect(Unit) {
@@ -173,11 +206,31 @@ fun PerfilScreen(
             }
             
             item {
-                InfoCard(
-                    icon = Icons.Default.Badge,
-                    label = "Tipo de cuenta",
-                    value = "Administrador"
-                )
+                if (cargandoDatos) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Text("Cargando datos...")
+                        }
+                    }
+                } else {
+                    InfoCard(
+                        icon = Icons.Default.Badge,
+                        label = "Tipo de cuenta",
+                        value = rol
+                    )
+                }
             }
             
             item {
@@ -464,27 +517,34 @@ fun PerfilScreen(
                 scope.launch {
                     try {
                         currentUser?.let { user ->
-                            // Actualizar nombre si cambió
+                            // 1. Actualizar displayName en Firebase Auth
                             if (nuevoNombre != nombre && nuevoNombre.isNotBlank()) {
                                 val profileUpdates = com.google.firebase.auth.UserProfileChangeRequest.Builder()
                                     .setDisplayName(nuevoNombre)
                                     .build()
-                                user.updateProfile(profileUpdates)
-                                    .addOnCompleteListener { task ->
-                                        if (task.isSuccessful) {
-                                            nombre = nuevoNombre
-                                        }
-                                    }
-                                    .await()
+                                user.updateProfile(profileUpdates).await()
                             }
                             
-                            // Nota: Cambiar email requiere reautenticación
-                            // Por ahora solo actualizamos nombre y teléfono
-                            telefono = nuevoTelefono
+                            // 2. Actualizar TODOS los datos en Firestore
+                            val datosActualizados = hashMapOf(
+                                "nombre" to nuevoNombre,
+                                "email" to (user.email ?: ""),
+                                "telefono" to nuevoTelefono,
+                                "rol" to rol,
+                                "ultimaActualizacion" to System.currentTimeMillis()
+                            )
                             
-                            // Recargar usuario para obtener cambios
+                            firestore.collection("usuarios")
+                                .document(user.uid)
+                                .set(datosActualizados, com.google.firebase.firestore.SetOptions.merge())
+                                .await()
+                            
+                            // 3. Recargar usuario para confirmar cambios
                             user.reload().await()
-                            nombre = user.displayName ?: nombre
+                            
+                            // 4. Actualizar UI con datos guardados
+                            nombre = nuevoNombre
+                            telefono = nuevoTelefono
                             email = user.email ?: email
                             
                             showSuccessMessage = true

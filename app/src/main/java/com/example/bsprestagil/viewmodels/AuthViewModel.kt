@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -19,6 +20,7 @@ sealed class AuthState {
 class AuthViewModel : ViewModel() {
     
     private val auth = FirebaseAuth.getInstance()
+    private val firestore = FirebaseFirestore.getInstance()
     
     private val _authState = MutableStateFlow<AuthState>(AuthState.Initial)
     val authState: StateFlow<AuthState> = _authState
@@ -74,16 +76,36 @@ class AuthViewModel : ViewModel() {
                 _authState.value = AuthState.Loading
                 val result = auth.createUserWithEmailAndPassword(email, password).await()
                 result.user?.let { user ->
-                    // Actualizar perfil con el nombre
+                    // 1. Actualizar perfil en Firebase Auth con el nombre
                     val profileUpdates = com.google.firebase.auth.UserProfileChangeRequest.Builder()
                         .setDisplayName(nombre)
                         .build()
                     user.updateProfile(profileUpdates).await()
                     
-                    // Enviar email de verificación automáticamente
+                    // 2. Crear documento en Firestore con datos completos
+                    try {
+                        val datosUsuario = hashMapOf(
+                            "nombre" to nombre,
+                            "email" to email,
+                            "telefono" to "",
+                            "rol" to "ADMIN",
+                            "activo" to true,
+                            "fechaCreacion" to System.currentTimeMillis(),
+                            "ultimaActualizacion" to System.currentTimeMillis()
+                        )
+                        
+                        firestore.collection("usuarios")
+                            .document(user.uid)
+                            .set(datosUsuario)
+                            .await()
+                    } catch (e: Exception) {
+                        // Si falla Firestore, no bloqueamos el registro
+                        // El documento se creará después desde el perfil
+                    }
+                    
+                    // 3. Enviar email de verificación automáticamente
                     try {
                         user.sendEmailVerification().await()
-                        // Email enviado exitosamente (no bloqueamos el login)
                     } catch (e: Exception) {
                         // Si falla el envío del email, no bloqueamos el registro
                         // El usuario podrá enviarlo después desde su perfil
