@@ -10,6 +10,8 @@ class ClienteRepository(
     private val clienteDao: ClienteDao,
     private val firebaseService: FirebaseService = FirebaseService()
 ) {
+    // Exponer el DAO para sincronización directa desde Firebase
+    internal val dao: ClienteDao get() = clienteDao
     
     // Observar todos los clientes
     fun getAllClientes(): Flow<List<ClienteEntity>> {
@@ -69,8 +71,8 @@ class ClienteRepository(
     }
     
     // Marcar como sincronizado
-    suspend fun markAsSynced(clienteId: String) {
-        clienteDao.markAsSynced(clienteId, System.currentTimeMillis())
+    suspend fun markAsSynced(clienteId: String): Int {
+        return clienteDao.markAsSynced(clienteId, System.currentTimeMillis())
     }
     
     // Estadísticas

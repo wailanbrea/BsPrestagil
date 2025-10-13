@@ -37,55 +37,20 @@ class SyncViewModel(application: Application) : AndroidViewModel(application) {
     val syncStatus: StateFlow<SyncStatus> = _syncStatus.asStateFlow()
     
     init {
-        Log.d(TAG, "🔧 SyncViewModel inicializado")
         loadSyncStatus()
     }
     
     fun loadSyncStatus() {
-        Log.d(TAG, "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-        Log.d(TAG, "🔄 loadSyncStatus() INICIADO")
-        Log.d(TAG, "⏰ Timestamp: ${System.currentTimeMillis()}")
-        
         viewModelScope.launch {
             try {
-                Log.d(TAG, "📥 Obteniendo contadores de base de datos...")
-                
-                val clientesPendientesList = clienteRepository.getClientesPendingSync()
-                val clientesPendientes = clientesPendientesList.size
-                Log.d(TAG, "  📝 Clientes pendientes: $clientesPendientes")
-                if (clientesPendientes > 0) {
-                    Log.d(TAG, "     IDs: ${clientesPendientesList.map { it.id.take(8) }}")
-                }
-                
-                val prestamosPendientesList = prestamoRepository.getPrestamosPendingSync()
-                val prestamosPendientes = prestamosPendientesList.size
-                Log.d(TAG, "  💰 Préstamos pendientes: $prestamosPendientes")
-                if (prestamosPendientes > 0) {
-                    Log.d(TAG, "     IDs: ${prestamosPendientesList.map { it.id.take(8) }}")
-                }
-                
-                val pagosPendientesList = pagoRepository.getPagosPendingSync()
-                val pagosPendientes = pagosPendientesList.size
-                Log.d(TAG, "  💵 Pagos pendientes: $pagosPendientes")
-                if (pagosPendientes > 0) {
-                    Log.d(TAG, "     IDs: ${pagosPendientesList.map { it.id.take(8) }}")
-                }
-                
-                val garantiasPendientesList = garantiaRepository.getGarantiasPendingSync()
-                val garantiasPendientes = garantiasPendientesList.size
-                Log.d(TAG, "  🔐 Garantías pendientes: $garantiasPendientes")
-                
-                val cuotasPendientesList = cuotaRepository.getCuotasPendingSync()
-                val cuotasPendientes = cuotasPendientesList.size
-                Log.d(TAG, "  📅 Cuotas pendientes: $cuotasPendientes")
-                if (cuotasPendientes > 0) {
-                    Log.d(TAG, "     IDs: ${cuotasPendientesList.map { it.id.take(8) }}")
-                }
+                val clientesPendientes = clienteRepository.getClientesPendingSync().size
+                val prestamosPendientes = prestamoRepository.getPrestamosPendingSync().size
+                val pagosPendientes = pagoRepository.getPagosPendingSync().size
+                val garantiasPendientes = garantiaRepository.getGarantiasPendingSync().size
+                val cuotasPendientes = cuotaRepository.getCuotasPendingSync().size
                 
                 val total = clientesPendientes + prestamosPendientes + pagosPendientes + 
                             garantiasPendientes + cuotasPendientes
-                
-                Log.d(TAG, "📊 TOTAL PENDIENTES: $total")
                 
                 _syncStatus.value = _syncStatus.value.copy(
                     clientesPendientes = clientesPendientes,
@@ -97,17 +62,17 @@ class SyncViewModel(application: Application) : AndroidViewModel(application) {
                     enSincronizacion = false
                 )
                 
-                Log.d(TAG, "✅ Estado actualizado: ${_syncStatus.value}")
-                Log.d(TAG, "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+                if (total > 0) {
+                    Log.d(TAG, "Elementos pendientes de sincronización: $total")
+                }
             } catch (e: Exception) {
-                Log.e(TAG, "❌ Error en loadSyncStatus: ${e.message}", e)
+                Log.e(TAG, "Error al cargar estado de sincronización: ${e.message}", e)
                 _syncStatus.value = _syncStatus.value.copy(enSincronizacion = false)
             }
         }
     }
     
     fun iniciarSincronizacion() {
-        Log.d(TAG, "🚀 iniciarSincronizacion() - Cambiando estado a 'en sincronización'")
         _syncStatus.value = _syncStatus.value.copy(enSincronizacion = true)
     }
 }

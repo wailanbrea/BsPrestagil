@@ -14,6 +14,12 @@ data class UsuarioEntity(
     val activo: Boolean = true,
     val fechaCreacion: Long,
     
+    // Sistema de comisiones
+    val porcentajeComision: Float = 3.0f, // Porcentaje de comisión (ej: 3%)
+    val totalComisionesGeneradas: Double = 0.0, // Total histórico generado
+    val totalComisionesPagadas: Double = 0.0, // Total histórico pagado
+    val ultimoPagoComision: Long = 0L, // Fecha del último pago de comisión
+    
     // Campos de sincronización
     val pendingSync: Boolean = true,
     val lastSyncTime: Long = 0L,

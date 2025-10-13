@@ -31,7 +31,8 @@ class NotificacionRepository(
         tipo: String,
         prestamoId: String? = null,
         clienteId: String? = null,
-        pagoId: String? = null
+        pagoId: String? = null,
+        cobradorId: String? = null
     ): String {
         val id = UUID.randomUUID().toString()
         val notificacion = NotificacionEntity(
@@ -43,7 +44,8 @@ class NotificacionRepository(
             leida = false,
             prestamoId = prestamoId,
             clienteId = clienteId,
-            pagoId = pagoId
+            pagoId = pagoId,
+            cobradorId = cobradorId
         )
         notificacionDao.insertNotificacion(notificacion)
         return id

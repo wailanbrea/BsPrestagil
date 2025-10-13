@@ -232,6 +232,48 @@ fun LoanDetailScreen(
                 }
             }
             
+            // Cobrador asignado (si existe)
+            prestamo?.let { p ->
+                if (p.cobradorId != null && p.cobradorNombre != null) {
+                    item {
+                        Card(
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Badge,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.secondary
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "Cobrador asignado",
+                                        fontSize = 12.sp,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                    )
+                                    Text(
+                                        text = p.cobradorNombre,
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
+                                Icon(
+                                    imageVector = Icons.Default.WorkOutline,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            
             // Resumen financiero
             item {
                 Text(

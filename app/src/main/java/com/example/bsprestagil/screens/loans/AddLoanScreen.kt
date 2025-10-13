@@ -26,6 +26,7 @@ import com.example.bsprestagil.utils.AmortizacionUtils
 import com.example.bsprestagil.viewmodels.ClientsViewModel
 import com.example.bsprestagil.viewmodels.ConfiguracionViewModel
 import com.example.bsprestagil.viewmodels.LoansViewModel
+import com.example.bsprestagil.viewmodels.UsersViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,10 +35,13 @@ fun AddLoanScreen(
     navController: NavController,
     clientsViewModel: ClientsViewModel = viewModel(),
     loansViewModel: LoansViewModel = viewModel(),
-    configuracionViewModel: ConfiguracionViewModel = viewModel()
+    configuracionViewModel: ConfiguracionViewModel = viewModel(),
+    usersViewModel: UsersViewModel = viewModel()
 ) {
     var clienteSeleccionado by remember { mutableStateOf(clientId ?: "") }
     var clienteNombre by remember { mutableStateOf("") }
+    var cobradorSeleccionado by remember { mutableStateOf<String?>(null) }
+    var cobradorNombre by remember { mutableStateOf<String?>(null) }
     var monto by remember { mutableStateOf("") }
     var tasaInteres by remember { mutableStateOf("10") }
     var frecuenciaPago by remember { mutableStateOf(FrecuenciaPago.MENSUAL) }
@@ -50,10 +54,15 @@ fun AddLoanScreen(
     var showSuccessDialog by remember { mutableStateOf(false) }
     var showConfirmDialog by remember { mutableStateOf(false) }
     var showClientSelector by remember { mutableStateOf(false) }
+    var showCobradorSelector by remember { mutableStateOf(false) }
     var mostrarTablaEnConfirmacion by remember { mutableStateOf(false) }
     
     // Cargar lista de clientes
     val clientes by clientsViewModel.clientes.collectAsState()
+    
+    // Cargar lista de cobradores (usuarios con rol COBRADOR)
+    val usuarios by usersViewModel.usuarios.collectAsState()
+    val cobradores = usuarios.filter { it.activo }
     
     // Cargar tasa de interés desde configuración
     val configuracion by configuracionViewModel.configuracion.collectAsState()
@@ -149,6 +158,76 @@ fun AddLoanScreen(
                     Icon(Icons.Default.PersonAdd, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Seleccionar cliente")
+                }
+            }
+            
+            // Selector de Cobrador (opcional)
+            Text(
+                text = "Asignar cobrador (opcional)",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+            )
+            
+            if (cobradorSeleccionado != null) {
+                Card(
+                    onClick = { showCobradorSelector = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Badge,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.secondary
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    text = "Cobrador asignado",
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                )
+                                Text(
+                                    text = cobradorNombre ?: "Sin nombre",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                        }
+                        Row {
+                            IconButton(onClick = {
+                                cobradorSeleccionado = null
+                                cobradorNombre = null
+                            }) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Quitar",
+                                    tint = MaterialTheme.colorScheme.error
+                                )
+                            }
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "Cambiar",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                }
+            } else {
+                OutlinedButton(
+                    onClick = { showCobradorSelector = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.PersonAdd, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Asignar cobrador")
                 }
             }
             
@@ -685,6 +764,8 @@ fun AddLoanScreen(
                     loansViewModel.crearPrestamo(
                         clienteId = clienteSeleccionado,
                         clienteNombre = clienteNombre,
+                        cobradorId = cobradorSeleccionado,
+                        cobradorNombre = cobradorNombre,
                         monto = montoNum,
                         tasaInteresPorPeriodo = tasaNum,
                         frecuenciaPago = frecuenciaPago,
@@ -801,6 +882,89 @@ fun AddLoanScreen(
             confirmButton = {},
             dismissButton = {
                 TextButton(onClick = { showClientSelector = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+    
+    // Diálogo selector de cobradores
+    if (showCobradorSelector) {
+        AlertDialog(
+            onDismissRequest = { showCobradorSelector = false },
+            title = { Text("Seleccionar cobrador") },
+            text = {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(400.dp)
+                ) {
+                    if (cobradores.isEmpty()) {
+                        item {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(32.dp),
+                                horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.PersonOff,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(48.dp),
+                                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(
+                                    text = "No hay cobradores disponibles",
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                )
+                            }
+                        }
+                    }
+                    
+                    items(cobradores.size) { index ->
+                        val cobrador = cobradores[index]
+                        Card(
+                            onClick = {
+                                cobradorSeleccionado = cobrador.id
+                                cobradorNombre = cobrador.nombre
+                                showCobradorSelector = false
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Badge,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.secondary
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text(
+                                        text = cobrador.nombre,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                    Text(
+                                        text = cobrador.rol,
+                                        fontSize = 13.sp,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showCobradorSelector = false }) {
                     Text("Cancelar")
                 }
             }

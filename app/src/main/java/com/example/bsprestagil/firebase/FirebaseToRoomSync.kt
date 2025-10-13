@@ -19,6 +19,12 @@ class FirebaseToRoomSync(
 ) {
     private val firestore = FirebaseFirestore.getInstance()
     
+    // Acceso directo a los DAOs para evitar la lógica de los repositorios que marca pendingSync = true
+    private val clienteDao = clienteRepository.dao
+    private val prestamoDao = prestamoRepository.dao
+    private val pagoDao = pagoRepository.dao
+    private val cuotaDao = cuotaRepository.dao
+    
     /**
      * Descarga clientes de Firebase y actualiza Room
      */
@@ -53,9 +59,10 @@ class FirebaseToRoomSync(
                 }
             }.filterNotNull()
             
-            // Insertar o actualizar en Room
+            // Insertar o actualizar en Room directamente usando el DAO
+            // para evitar la lógica del repositorio que marca pendingSync = true
             clientesFirebase.forEach { cliente ->
-                clienteRepository.insertCliente(cliente.copy(pendingSync = false))
+                clienteDao.insertCliente(cliente)
             }
             
             Result.success(Unit)
@@ -76,6 +83,8 @@ class FirebaseToRoomSync(
                         id = data["id"] as? String ?: doc.id,
                         clienteId = data["clienteId"] as? String ?: "",
                         clienteNombre = data["clienteNombre"] as? String ?: "",
+                        cobradorId = data["cobradorId"] as? String,
+                        cobradorNombre = data["cobradorNombre"] as? String,
                         montoOriginal = (data["montoOriginal"] as? Number)?.toDouble() ?: 0.0,
                         capitalPendiente = (data["capitalPendiente"] as? Number)?.toDouble() ?: 0.0,
                         tasaInteresPorPeriodo = (data["tasaInteresPorPeriodo"] as? Number)?.toDouble() ?: 0.0,
@@ -99,8 +108,9 @@ class FirebaseToRoomSync(
                 }
             }.filterNotNull()
             
+            // Insertar o actualizar en Room directamente usando el DAO
             prestamosFirebase.forEach { prestamo ->
-                prestamoRepository.insertPrestamo(prestamo.copy(pendingSync = false))
+                prestamoDao.insertPrestamo(prestamo)
             }
             
             Result.success(Unit)
@@ -144,8 +154,9 @@ class FirebaseToRoomSync(
                 }
             }.filterNotNull()
             
+            // Insertar o actualizar en Room directamente usando el DAO
             pagosFirebase.forEach { pago ->
-                pagoRepository.insertPago(pago.copy(pendingSync = false))
+                pagoDao.insertPago(pago)
             }
             
             Result.success(Unit)
@@ -183,8 +194,9 @@ class FirebaseToRoomSync(
                 }
             }.filterNotNull()
             
+            // Insertar o actualizar en Room directamente usando el DAO
             cuotasFirebase.forEach { cuota ->
-                cuotaRepository.insertCuota(cuota.copy(pendingSync = false))
+                cuotaDao.insertCuota(cuota)
             }
             
             Result.success(Unit)

@@ -4,6 +4,8 @@ data class Prestamo(
     val id: String = "",
     val clienteId: String = "",
     val clienteNombre: String = "",
+    val cobradorId: String? = null, // ID del cobrador asignado
+    val cobradorNombre: String? = null, // Nombre del cobrador
     val montoOriginal: Double = 0.0, // Capital inicial prestado
     val capitalPendiente: Double = 0.0, // Capital que aún debe (se reduce con pagos)
     val tasaInteresPorPeriodo: Double = 0.0, // Ej: 20% mensual, 10% quincenal

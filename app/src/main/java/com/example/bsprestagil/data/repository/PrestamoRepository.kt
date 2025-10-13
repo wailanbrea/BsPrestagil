@@ -8,6 +8,8 @@ import java.util.UUID
 class PrestamoRepository(
     private val prestamoDao: PrestamoDao
 ) {
+    // Exponer el DAO para sincronización directa desde Firebase
+    internal val dao: PrestamoDao get() = prestamoDao
     
     // Observar todos los préstamos
     fun getAllPrestamos(): Flow<List<PrestamoEntity>> {
@@ -22,6 +24,10 @@ class PrestamoRepository(
     // Observar préstamos por cliente
     fun getPrestamosByClienteId(clienteId: String): Flow<List<PrestamoEntity>> {
         return prestamoDao.getPrestamosByClienteId(clienteId)
+    }
+    
+    fun getPrestamosByCobradorId(cobradorId: String): Flow<List<PrestamoEntity>> {
+        return prestamoDao.getPrestamosByCobradorId(cobradorId)
     }
     
     // Observar préstamos por estado
@@ -66,8 +72,8 @@ class PrestamoRepository(
     }
     
     // Marcar como sincronizado
-    suspend fun markAsSynced(prestamoId: String) {
-        prestamoDao.markAsSynced(prestamoId, System.currentTimeMillis())
+    suspend fun markAsSynced(prestamoId: String): Int {
+        return prestamoDao.markAsSynced(prestamoId, System.currentTimeMillis())
     }
     
     // Estadísticas

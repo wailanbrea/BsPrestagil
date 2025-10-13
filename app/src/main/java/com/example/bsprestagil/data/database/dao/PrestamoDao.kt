@@ -15,6 +15,9 @@ interface PrestamoDao {
     @Query("SELECT * FROM prestamos WHERE clienteId = :clienteId ORDER BY fechaInicio DESC")
     fun getPrestamosByClienteId(clienteId: String): Flow<List<PrestamoEntity>>
     
+    @Query("SELECT * FROM prestamos WHERE cobradorId = :cobradorId ORDER BY fechaInicio DESC")
+    fun getPrestamosByCobradorId(cobradorId: String): Flow<List<PrestamoEntity>>
+    
     @Query("SELECT * FROM prestamos WHERE estado = :estado")
     fun getPrestamosByEstado(estado: String): Flow<List<PrestamoEntity>>
     
@@ -34,7 +37,7 @@ interface PrestamoDao {
     suspend fun deletePrestamo(prestamo: PrestamoEntity)
     
     @Query("UPDATE prestamos SET pendingSync = 0, lastSyncTime = :syncTime WHERE id = :prestamoId")
-    suspend fun markAsSynced(prestamoId: String, syncTime: Long)
+    suspend fun markAsSynced(prestamoId: String, syncTime: Long): Int
     
     @Query("SELECT COUNT(*) FROM prestamos WHERE estado = :estado")
     suspend fun getPrestamosCountByEstado(estado: String): Int
@@ -47,5 +50,11 @@ interface PrestamoDao {
     
     @Query("SELECT * FROM prestamos ORDER BY fechaInicio DESC LIMIT :limit")
     suspend fun getRecentPrestamos(limit: Int): List<PrestamoEntity>
+    
+    @Query("SELECT COUNT(*) FROM prestamos WHERE cobradorId = :cobradorId AND estado IN ('ACTIVO', 'ATRASADO')")
+    suspend fun getPrestamosActivosByCobradorId(cobradorId: String): Int
+    
+    @Query("SELECT SUM(capitalPendiente) FROM prestamos WHERE cobradorId = :cobradorId AND estado IN ('ACTIVO', 'ATRASADO')")
+    suspend fun getCapitalPendienteByCobradorId(cobradorId: String): Double?
 }
 

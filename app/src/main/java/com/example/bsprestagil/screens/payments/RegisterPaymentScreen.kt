@@ -23,6 +23,7 @@ import com.example.bsprestagil.viewmodels.ConfiguracionViewModel
 import com.example.bsprestagil.viewmodels.LoansViewModel
 import com.example.bsprestagil.viewmodels.PaymentsViewModel
 import com.example.bsprestagil.viewmodels.CuotasViewModel
+import com.example.bsprestagil.viewmodels.UsersViewModel
 import com.google.firebase.auth.FirebaseAuth
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -33,7 +34,8 @@ fun RegisterPaymentScreen(
     loansViewModel: LoansViewModel = viewModel(),
     paymentsViewModel: PaymentsViewModel = viewModel(),
     configuracionViewModel: ConfiguracionViewModel = viewModel(),
-    cuotasViewModel: CuotasViewModel = viewModel()
+    cuotasViewModel: CuotasViewModel = viewModel(),
+    usersViewModel: UsersViewModel = viewModel()
 ) {
     var montoPagado by remember { mutableStateOf("") }
     var montoMora by remember { mutableStateOf("0") }
@@ -42,6 +44,9 @@ fun RegisterPaymentScreen(
     var notas by remember { mutableStateOf("") }
     var expandedMetodo by remember { mutableStateOf(false) }
     var showSuccessDialog by remember { mutableStateOf(false) }
+    var showCobradorSelector by remember { mutableStateOf(false) }
+    var cobradorSeleccionado by remember { mutableStateOf<String?>(null) }
+    var cobradorNombre by remember { mutableStateOf<String?>(null) }
     
     val metodosDisponibles = MetodoPago.values().toList()
     
@@ -51,6 +56,20 @@ fun RegisterPaymentScreen(
     // Cargar cuotas del préstamo
     val cuotas by cuotasViewModel.getCuotasByPrestamoId(loanId).collectAsState(initial = emptyList())
     val proximaCuota = cuotas.firstOrNull { it.estado == com.example.bsprestagil.data.models.EstadoCuota.PENDIENTE || it.estado == com.example.bsprestagil.data.models.EstadoCuota.VENCIDA }
+    
+    // Cargar lista de cobradores
+    val usuarios by usersViewModel.usuarios.collectAsState()
+    val cobradores = usuarios.filter { it.activo }
+    
+    // Inicializar cobrador con el del préstamo
+    LaunchedEffect(prestamo) {
+        prestamo?.let { p ->
+            if (cobradorSeleccionado == null && p.cobradorId != null) {
+                cobradorSeleccionado = p.cobradorId
+                cobradorNombre = p.cobradorNombre
+            }
+        }
+    }
     
     val clienteNombre = prestamo?.clienteNombre ?: "Cargando..."
     val capitalPendiente = prestamo?.capitalPendiente ?: 0.0
@@ -130,8 +149,8 @@ fun RegisterPaymentScreen(
     }
     val nuevoCapitalPendiente = (capitalPendiente - montoACapital).coerceAtLeast(0.0)
     
-    // Usuario actual
-    val usuarioActual = FirebaseAuth.getInstance().currentUser?.email ?: "Admin"
+    // ⭐ Usuario actual (siempre email para filtrado consistente)
+    val usuarioActualEmail = FirebaseAuth.getInstance().currentUser?.email ?: "Admin"
     
     Scaffold(
         topBar = {
@@ -634,6 +653,56 @@ fun RegisterPaymentScreen(
                 }
             }
             
+            // Cobrador que recibe el pago
+            Text(
+                text = "Recibido por",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium
+            )
+            
+            if (cobradorSeleccionado != null) {
+                Card(
+                    onClick = { showCobradorSelector = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Badge,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.secondary
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                text = cobradorNombre ?: "Sin nombre",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Cambiar",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            } else {
+                OutlinedButton(
+                    onClick = { showCobradorSelector = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.PersonAdd, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Asignar cobrador")
+                }
+            }
+            
             OutlinedTextField(
                 value = notas,
                 onValueChange = { notas = it },
@@ -661,7 +730,7 @@ fun RegisterPaymentScreen(
                             montoPagado = montoNum,
                             montoMora = moraNum,
                             metodoPago = metodoPago,
-                            recibidoPor = usuarioActual,
+                            recibidoPor = usuarioActualEmail,
                             notas = notas
                         )
                         showSuccessDialog = true
@@ -713,6 +782,83 @@ fun RegisterPaymentScreen(
                     navController.navigateUp()
                 }) {
                     Text("OK")
+                }
+            }
+        )
+    }
+    
+    // Diálogo selector de cobradores
+    if (showCobradorSelector) {
+        AlertDialog(
+            onDismissRequest = { showCobradorSelector = false },
+            title = { Text("Seleccionar cobrador") },
+            text = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    if (cobradores.isEmpty()) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(32.dp),
+                            horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.PersonOff,
+                                contentDescription = null,
+                                modifier = Modifier.size(48.dp),
+                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "No hay cobradores disponibles",
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            )
+                        }
+                    } else {
+                        cobradores.forEach { cobrador ->
+                            Card(
+                                onClick = {
+                                    cobradorSeleccionado = cobrador.id
+                                    cobradorNombre = cobrador.nombre
+                                    showCobradorSelector = false
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(12.dp),
+                                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Badge,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.secondary
+                                    )
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Column {
+                                        Text(
+                                            text = cobrador.nombre,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                        Text(
+                                            text = cobrador.email,
+                                            fontSize = 13.sp,
+                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showCobradorSelector = false }) {
+                    Text("Cancelar")
                 }
             }
         )

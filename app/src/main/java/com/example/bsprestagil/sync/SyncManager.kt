@@ -42,10 +42,6 @@ object SyncManager {
      * @return ID del trabajo para poder observarlo
      */
     fun forceSyncNow(context: Context): java.util.UUID {
-        Log.d(TAG, "═══════════════════════════════════════════")
-        Log.d(TAG, "🔄 INICIANDO SINCRONIZACIÓN MANUAL")
-        Log.d(TAG, "═══════════════════════════════════════════")
-        
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
@@ -56,9 +52,7 @@ object SyncManager {
             .build()
         
         WorkManager.getInstance(context).enqueue(syncRequest)
-        
-        Log.d(TAG, "✅ Trabajo de sincronización encolado")
-        Log.d(TAG, "📋 Work ID: ${syncRequest.id}")
+        Log.i(TAG, "Sincronización manual iniciada")
         
         return syncRequest.id
     }

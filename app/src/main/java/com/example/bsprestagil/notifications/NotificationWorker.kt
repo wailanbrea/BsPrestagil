@@ -56,14 +56,21 @@ class NotificationWorker(
                             mensaje = "${prestamo.clienteNombre} tiene un pago vencido desde hace $diasVencido día(s)",
                             tipo = "PAGO_VENCIDO",
                             prestamoId = prestamo.id,
-                            clienteId = prestamo.clienteId
+                            clienteId = prestamo.clienteId,
+                            cobradorId = prestamo.cobradorId // Asignar al cobrador
                         )
                         
                         // Mostrar notificación push
+                        val mensaje = if (prestamo.cobradorNombre != null) {
+                            "${prestamo.cobradorNombre}: ${prestamo.clienteNombre} tiene pago vencido ($diasVencido días)"
+                        } else {
+                            "${prestamo.clienteNombre} tiene un pago vencido desde hace $diasVencido día(s)"
+                        }
+                        
                         AppNotificationManager.showPagoVencidoNotification(
                             context = context,
                             notificationId = prestamo.id.hashCode(),
-                            clienteNombre = prestamo.clienteNombre,
+                            clienteNombre = mensaje,
                             diasVencido = diasVencido
                         )
                     }
@@ -101,14 +108,21 @@ class NotificationWorker(
                             mensaje = "${prestamo.clienteNombre} tiene un pago que vence en $diasRestantes día(s)",
                             tipo = "PAGO_PROXIMO",
                             prestamoId = prestamo.id,
-                            clienteId = prestamo.clienteId
+                            clienteId = prestamo.clienteId,
+                            cobradorId = prestamo.cobradorId // Asignar al cobrador
                         )
                         
                         // Mostrar notificación push
+                        val mensaje = if (prestamo.cobradorNombre != null) {
+                            "${prestamo.cobradorNombre}: ${prestamo.clienteNombre} - Pago vence en $diasRestantes día(s)"
+                        } else {
+                            "${prestamo.clienteNombre} tiene un pago que vence en $diasRestantes día(s)"
+                        }
+                        
                         AppNotificationManager.showPagoProximoNotification(
                             context = context,
                             notificationId = (prestamo.id.hashCode() + 1000),
-                            clienteNombre = prestamo.clienteNombre,
+                            clienteNombre = mensaje,
                             diasRestantes = diasRestantes
                         )
                     }

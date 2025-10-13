@@ -4,6 +4,7 @@ sealed class Screen(val route: String) {
     // Autenticación
     object Login : Screen("login")
     object Register : Screen("register")
+    object CambiarPassword : Screen("cambiar_password")
     
     // Main Tabs
     object Dashboard : Screen("dashboard")
@@ -66,6 +67,7 @@ sealed class Screen(val route: String) {
     
     // Reportes
     object Reports : Screen("reports")
+    object ReporteCobradores : Screen("reporte_cobradores")
     
     // Notificaciones
     object Notifications : Screen("notifications")
@@ -74,6 +76,10 @@ sealed class Screen(val route: String) {
     object PersonalizacionRecibo : Screen("personalizacion_recibo")
     object GestionCobradores : Screen("gestion_cobradores")
     object Perfil : Screen("perfil")
+    
+    // Cobradores
+    object CobradorDashboard : Screen("cobrador_dashboard")
+    object Comisiones : Screen("comisiones")
     
     // Pantalla de prueba de sincronización
     object TestSync : Screen("test_sync")

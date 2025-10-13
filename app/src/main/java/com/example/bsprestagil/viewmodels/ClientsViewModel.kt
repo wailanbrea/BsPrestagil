@@ -26,24 +26,43 @@ class ClientsViewModel(application: Application) : AndroidViewModel(application)
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
     
+    private val _clientesIdsPermitidos = MutableStateFlow<Set<String>?>(null)
+    
     init {
         loadClientes()
+    }
+    
+    /**
+     * Establece los IDs de clientes que el cobrador puede ver
+     * (basado en sus préstamos asignados)
+     */
+    fun setClientesPermitidos(clientesIds: Set<String>?) {
+        _clientesIdsPermitidos.value = clientesIds
     }
     
     private fun loadClientes() {
         viewModelScope.launch {
             combine(
                 clienteRepository.getAllClientes(),
-                _searchQuery
-            ) { clientes, query ->
-                if (query.isBlank()) {
-                    clientes.map { it.toCliente() }
-                } else {
-                    clientes.filter {
+                _searchQuery,
+                _clientesIdsPermitidos
+            ) { clientes, query, idsPermitidos ->
+                var resultado = clientes
+                
+                // Filtrar por IDs permitidos si está establecido (para cobradores)
+                if (idsPermitidos != null) {
+                    resultado = resultado.filter { it.id in idsPermitidos }
+                }
+                
+                // Filtrar por búsqueda
+                if (query.isNotBlank()) {
+                    resultado = resultado.filter {
                         it.nombre.contains(query, ignoreCase = true) ||
                         it.telefono.contains(query, ignoreCase = true)
-                    }.map { it.toCliente() }
+                    }
                 }
+                
+                resultado.map { it.toCliente() }
             }.collect { filteredClientes ->
                 _clientes.value = filteredClientes
             }

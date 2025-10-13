@@ -7,6 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -22,6 +23,7 @@ import com.example.bsprestagil.sync.SyncManager
 import com.example.bsprestagil.viewmodels.AuthViewModel
 import com.example.bsprestagil.viewmodels.ConfiguracionViewModel
 import com.example.bsprestagil.viewmodels.SyncViewModel
+import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -32,6 +34,20 @@ fun SettingsScreen(
     configuracionViewModel: ConfiguracionViewModel = viewModel(),
     syncViewModel: SyncViewModel = viewModel()
 ) {
+    // ⭐ Leer el rol directamente del AuthViewModel (viene de Firestore)
+    val userRole by authViewModel.userRole.collectAsState()
+    
+    // ⭐ Si el rol aún no se ha cargado, mostrar loading
+    if (userRole == null) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+    
     val context = androidx.compose.ui.platform.LocalContext.current
     val scope = rememberCoroutineScope()
     var showInterestDialog by remember { mutableStateOf(false) }
@@ -65,7 +81,10 @@ fun SettingsScreen(
             )
         },
         bottomBar = {
-            BottomNavigationBar(navController = navController)
+            BottomNavigationBar(
+                navController = navController,
+                userRole = userRole
+            )
         }
     ) { paddingValues ->
         LazyColumn(
@@ -154,58 +173,33 @@ fun SettingsScreen(
                             }
                             IconButton(
                                 onClick = {
-                                    Log.d("SettingsScreen", "═══════════════════════════════════════════")
-                                    Log.d("SettingsScreen", "👆 Usuario tocó botón de sincronización")
-                                    Log.d("SettingsScreen", "📊 Estado actual: ${syncStatus.totalPendientes} pendientes")
-                                    Log.d("SettingsScreen", "═══════════════════════════════════════════")
-                                    
-                                    syncViewModel.iniciarSincronizacion()
-                                    val workId = SyncManager.forceSyncNow(context)
-                                    
-                                    Log.d("SettingsScreen", "🎯 Work ID recibido: $workId")
-                                    
-                                    // Observar el trabajo hasta que termine
-                                    scope.launch {
-                                        val workManager = WorkManager.getInstance(context)
-                                        Log.d("SettingsScreen", "👀 Iniciando observación del trabajo...")
+                                    if (!syncStatus.enSincronizacion) {
+                                        syncViewModel.iniciarSincronizacion()
+                                        val workId = SyncManager.forceSyncNow(context)
                                         
-                                        workManager.getWorkInfoByIdFlow(workId).collect { workInfo ->
-                                            val state = workInfo?.state
-                                            Log.d("SettingsScreen", "📡 Estado del trabajo: $state")
+                                        // Observar el trabajo hasta que termine
+                                        val job = scope.launch {
+                                            val workManager = WorkManager.getInstance(context)
                                             
-                                            when (state) {
-                                                WorkInfo.State.SUCCEEDED -> {
-                                                    Log.d("SettingsScreen", "✅ Trabajo COMPLETADO exitosamente")
-                                                    Log.d("SettingsScreen", "⏳ Esperando 1 segundo antes de recargar...")
-                                                    
-                                                    // Esperar un momento para que Room termine de escribir
-                                                    kotlinx.coroutines.delay(1000)
-                                                    
-                                                    Log.d("SettingsScreen", "🔄 Recargando estado de sincronización...")
-                                                    Log.d("SettingsScreen", "📍 Timestamp antes de recargar: ${System.currentTimeMillis()}")
-                                                    syncViewModel.loadSyncStatus()
-                                                    Log.d("SettingsScreen", "✅ Estado recargado solicitado")
-                                                }
-                                                WorkInfo.State.FAILED -> {
-                                                    Log.e("SettingsScreen", "❌ Trabajo FALLÓ")
-                                                    syncViewModel.loadSyncStatus()
-                                                }
-                                                WorkInfo.State.CANCELLED -> {
-                                                    Log.w("SettingsScreen", "⚠️ Trabajo CANCELADO")
-                                                    syncViewModel.loadSyncStatus()
-                                                }
-                                                WorkInfo.State.RUNNING -> {
-                                                    Log.d("SettingsScreen", "⏳ Trabajo en ejecución...")
-                                                }
-                                                WorkInfo.State.ENQUEUED -> {
-                                                    Log.d("SettingsScreen", "📥 Trabajo encolado, esperando...")
-                                                }
-                                                WorkInfo.State.BLOCKED -> {
-                                                    Log.w("SettingsScreen", "🚫 Trabajo bloqueado")
-                                                }
-                                                null -> {
-                                                    Log.w("SettingsScreen", "⚠️ WorkInfo es null")
-                                                }
+                                            try {
+                                                workManager.getWorkInfoByIdFlow(workId)
+                                                    .takeWhile { workInfo ->
+                                                        when (workInfo?.state) {
+                                                            WorkInfo.State.SUCCEEDED,
+                                                            WorkInfo.State.FAILED,
+                                                            WorkInfo.State.CANCELLED,
+                                                            null -> false
+                                                            else -> true
+                                                        }
+                                                    }
+                                                    .collect { }
+                                                
+                                                // Esperar y recargar el estado
+                                                kotlinx.coroutines.delay(2000)
+                                                syncViewModel.loadSyncStatus()
+                                            } catch (e: Exception) {
+                                                Log.e("SettingsScreen", "Error observando sincronización: ${e.message}", e)
+                                                syncViewModel.loadSyncStatus()
                                             }
                                         }
                                     }

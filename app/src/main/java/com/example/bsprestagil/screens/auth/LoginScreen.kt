@@ -19,11 +19,18 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.bsprestagil.navigation.Screen
 import com.example.bsprestagil.viewmodels.AuthState
 import com.example.bsprestagil.viewmodels.AuthViewModel
+import androidx.navigation.NavController
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.tasks.await
+import android.util.Log
 
 @Composable
 fun LoginScreen(
+    navController: NavController,
     onLoginSuccess: () -> Unit,
     onNavigateToRegister: () -> Unit,
     authViewModel: AuthViewModel = viewModel()
@@ -33,13 +40,66 @@ fun LoginScreen(
     var passwordVisible by remember { mutableStateOf(false) }
     
     val authState by authViewModel.authState.collectAsState()
+    val firestore = FirebaseFirestore.getInstance()
+    val auth = FirebaseAuth.getInstance()
     
     // Observar el estado de autenticación
     LaunchedEffect(authState) {
-        when (authState) {
+        when (val state = authState) {
             is AuthState.Success -> {
-                onLoginSuccess()
-                authViewModel.resetState()
+                val rol = state.rol
+                Log.d("LoginScreen", "✅ Login exitoso. Rol: $rol")
+                
+                // Verificar si es el primer login ANTES de resetear el estado
+                try {
+                    val userId = auth.currentUser?.uid
+                    if (userId != null) {
+                        val userDoc = firestore.collection("usuarios")
+                            .document(userId)
+                            .get()
+                            .await()
+                        
+                        val primerLogin = userDoc.getBoolean("primerLogin") ?: false
+                        
+                        // Resetear el estado DESPUÉS de obtener los datos pero ANTES de navegar
+                        authViewModel.resetState()
+                        
+                        if (primerLogin) {
+                            // Redirigir a cambiar contraseña
+                            Log.d("LoginScreen", "🔑 Primer login detectado, navegando a cambiar contraseña")
+                            navController.navigate(Screen.CambiarPassword.route) {
+                                popUpTo(Screen.Login.route) { inclusive = true }
+                            }
+                        } else {
+                            // Navegar según el rol
+                            when (rol) {
+                                "COBRADOR" -> {
+                                    Log.d("LoginScreen", "🚀 Navegando a CobradorDashboard")
+                                    navController.navigate(Screen.CobradorDashboard.route) {
+                                        popUpTo(Screen.Login.route) { inclusive = true }
+                                    }
+                                }
+                                "ADMIN" -> {
+                                    Log.d("LoginScreen", "🚀 Navegando a Dashboard (Admin)")
+                                    navController.navigate(Screen.Dashboard.route) {
+                                        popUpTo(Screen.Login.route) { inclusive = true }
+                                    }
+                                }
+                                else -> {
+                                    Log.e("LoginScreen", "❌ Rol desconocido o null: $rol")
+                                }
+                            }
+                        }
+                    } else {
+                        // No hay usuario autenticado, resetear y no navegar
+                        authViewModel.resetState()
+                        Log.e("LoginScreen", "❌ No hay usuario autenticado")
+                    }
+                } catch (e: Exception) {
+                    // En caso de error, resetear el estado
+                    authViewModel.resetState()
+                    Log.e("LoginScreen", "❌ Error al verificar primer login: ${e.message}")
+                }
             }
             else -> {}
         }

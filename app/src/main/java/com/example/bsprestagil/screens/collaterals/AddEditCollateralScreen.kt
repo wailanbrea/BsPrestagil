@@ -28,27 +28,48 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.bsprestagil.components.TopAppBarComponent
 import com.example.bsprestagil.data.models.TipoGarantia
+import com.example.bsprestagil.data.models.EstadoGarantia
 import com.example.bsprestagil.utils.PhotoUtils
+import com.example.bsprestagil.viewmodels.CollateralsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddEditCollateralScreen(
     collateralId: String?,
-    navController: NavController
+    navController: NavController,
+    viewModel: CollateralsViewModel = viewModel()
 ) {
     val context = LocalContext.current
     val isEditing = collateralId != null
     
+    // Cargar garantía existente si estamos editando
+    val garantiaExistente by viewModel.getGarantiaById(collateralId ?: "").collectAsState(initial = null)
+    
     var descripcion by remember { mutableStateOf("") }
     var valorEstimado by remember { mutableStateOf("") }
     var tipo by remember { mutableStateOf(TipoGarantia.OTRO) }
+    var estadoGarantia by remember { mutableStateOf(EstadoGarantia.RETENIDA) }
     var notas by remember { mutableStateOf("") }
     var expandedTipo by remember { mutableStateOf(false) }
+    var expandedEstado by remember { mutableStateOf(false) }
     var fotosUris by remember { mutableStateOf<List<String>>(emptyList()) }
     var showSuccessDialog by remember { mutableStateOf(false) }
     var fotoTemporal by remember { mutableStateOf<File?>(null) }
+    
+    // Cargar datos existentes si es edición
+    LaunchedEffect(garantiaExistente) {
+        garantiaExistente?.let { g ->
+            descripcion = g.descripcion
+            valorEstimado = g.valorEstimado.toString()
+            tipo = g.tipo
+            estadoGarantia = g.estado
+            notas = g.notas
+            fotosUris = g.fotosUrls
+        }
+    }
     
     val tiposDisponibles = TipoGarantia.values().toList()
     
@@ -179,6 +200,54 @@ fun AddEditCollateralScreen(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 prefix = { Text("$") }
             )
+            
+            // Estado de la garantía (solo al editar)
+            if (isEditing) {
+                ExposedDropdownMenuBox(
+                    expanded = expandedEstado,
+                    onExpandedChange = { expandedEstado = it }
+                ) {
+                    OutlinedTextField(
+                        value = when(estadoGarantia) {
+                            EstadoGarantia.RETENIDA -> "Retenida"
+                            EstadoGarantia.DEVUELTA -> "Devuelta"
+                            EstadoGarantia.EJECUTADA -> "Ejecutada"
+                        },
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Estado *") },
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedEstado)
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor(),
+                        leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
+                        colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+                    )
+                    
+                    ExposedDropdownMenu(
+                        expanded = expandedEstado,
+                        onDismissRequest = { expandedEstado = false }
+                    ) {
+                        EstadoGarantia.values().forEach { estado ->
+                            DropdownMenuItem(
+                                text = {
+                                    Text(when(estado) {
+                                        EstadoGarantia.RETENIDA -> "Retenida"
+                                        EstadoGarantia.DEVUELTA -> "Devuelta"
+                                        EstadoGarantia.EJECUTADA -> "Ejecutada"
+                                    })
+                                },
+                                onClick = {
+                                    estadoGarantia = estado
+                                    expandedEstado = false
+                                }
+                            )
+                        }
+                    }
+                }
+            }
             
             OutlinedTextField(
                 value = notas,
@@ -318,13 +387,37 @@ fun AddEditCollateralScreen(
             // Botón de guardar
             Button(
                 onClick = {
-                    // TODO: Guardar garantía con fotos
-                    showSuccessDialog = true
+                    val valorNum = valorEstimado.toDoubleOrNull() ?: 0.0
+                    
+                    if (descripcion.isNotBlank() && valorNum > 0) {
+                        if (isEditing && collateralId != null) {
+                            // Actualizar garantía existente
+                            viewModel.updateGarantia(
+                                garantiaId = collateralId,
+                                tipo = tipo,
+                                descripcion = descripcion,
+                                valorEstimado = valorNum,
+                                estado = estadoGarantia,
+                                fotosUrls = fotosUris,
+                                notas = notas
+                            )
+                        } else {
+                            // Crear nueva garantía
+                            viewModel.crearGarantia(
+                                tipo = tipo,
+                                descripcion = descripcion,
+                                valorEstimado = valorNum,
+                                fotosUrls = fotosUris,
+                                notas = notas
+                            )
+                        }
+                        showSuccessDialog = true
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                enabled = descripcion.isNotBlank() && valorEstimado.isNotBlank()
+                enabled = descripcion.isNotBlank() && (valorEstimado.toDoubleOrNull() ?: 0.0) > 0
             ) {
                 Icon(Icons.Default.Save, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))

@@ -40,7 +40,7 @@ interface CuotaDao {
     suspend fun deleteCuotasByPrestamoId(prestamoId: String)
     
     @Query("UPDATE cuotas SET pendingSync = 0, lastSyncTime = :syncTime WHERE id = :cuotaId")
-    suspend fun markAsSynced(cuotaId: String, syncTime: Long)
+    suspend fun markAsSynced(cuotaId: String, syncTime: Long): Int
     
     @Query("SELECT COUNT(*) FROM cuotas WHERE prestamoId = :prestamoId AND estado = 'PAGADA'")
     suspend fun countCuotasPagadas(prestamoId: String): Int

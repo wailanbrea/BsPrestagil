@@ -31,12 +31,32 @@ import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 @Composable
 fun DashboardScreen(
     navController: NavController,
-    dashboardViewModel: DashboardViewModel = viewModel()
+    dashboardViewModel: DashboardViewModel = viewModel(),
+    authViewModel: com.example.bsprestagil.viewmodels.AuthViewModel = viewModel()
 ) {
+    // ⭐ Leer el rol directamente del AuthViewModel (viene de Firestore)
+    val userRole by authViewModel.userRole.collectAsState()
+    
+    // ⭐ Si el rol aún no se ha cargado, mostrar loading
+    if (userRole == null) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+    
     val stats by dashboardViewModel.stats.collectAsState()
     val prestamosRecientes by dashboardViewModel.prestamosRecientes.collectAsState()
     val isLoading by dashboardViewModel.isLoading.collectAsState()
     val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = isLoading)
+    
+    // Asegurar que los datos se carguen cuando la pantalla se muestre
+    LaunchedEffect(Unit) {
+        dashboardViewModel.refresh()
+    }
     
     Scaffold(
         topBar = {
@@ -83,7 +103,10 @@ fun DashboardScreen(
             )
         },
         bottomBar = {
-            BottomNavigationBar(navController = navController)
+            BottomNavigationBar(
+                navController = navController,
+                userRole = userRole
+            )
         },
         floatingActionButton = {
             FloatingActionButton(
@@ -209,10 +232,31 @@ fun DashboardScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     QuickAccessCard(
-                        icon = Icons.Default.History,
-                        label = "Historial",
+                        icon = Icons.Default.Badge,
+                        label = "Dashboard Cobrador",
                         modifier = Modifier.weight(1f),
-                        onClick = { navController.navigate(Screen.HistorialGarantias.route) }
+                        onClick = { navController.navigate(Screen.CobradorDashboard.route) }
+                    )
+                    
+                    QuickAccessCard(
+                        icon = Icons.Default.Leaderboard,
+                        label = "Reporte Cobradores",
+                        modifier = Modifier.weight(1f),
+                        onClick = { navController.navigate(Screen.ReporteCobradores.route) }
+                    )
+                }
+            }
+            
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    QuickAccessCard(
+                        icon = Icons.Default.Payments,
+                        label = "Comisiones",
+                        modifier = Modifier.weight(1f),
+                        onClick = { navController.navigate(Screen.Comisiones.route) }
                     )
                     
                     QuickAccessCard(
@@ -230,10 +274,10 @@ fun DashboardScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     QuickAccessCard(
-                        icon = Icons.Default.Assessment,
-                        label = "Reportes",
+                        icon = Icons.Default.History,
+                        label = "Historial",
                         modifier = Modifier.weight(1f),
-                        onClick = { navController.navigate(Screen.Reports.route) }
+                        onClick = { navController.navigate(Screen.HistorialGarantias.route) }
                     )
                     
                     QuickAccessCard(

@@ -36,6 +36,18 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
     
     init {
         loadDashboardData()
+        observarPrestamosRecientes()
+    }
+    
+    // Observar préstamos recientes continuamente
+    private fun observarPrestamosRecientes() {
+        viewModelScope.launch {
+            prestamoRepository.getAllPrestamos()
+                .map { entities -> entities.take(5).map { it.toPrestamo() } }
+                .collect { prestamos ->
+                    _prestamosRecientes.value = prestamos
+                }
+        }
     }
     
     private fun loadDashboardData() {
@@ -60,17 +72,12 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
                     prestamosActivos = prestamosActivos,
                     prestamosAtrasados = prestamosAtrasados
                 )
+                
+                _isLoading.value = false
             } catch (e: Exception) {
+                _isLoading.value = false
                 // Manejar error
             }
-            
-            // Cargar préstamos recientes
-            prestamoRepository.getAllPrestamos()
-                .map { entities -> entities.take(5).map { it.toPrestamo() } }
-                .collect { prestamos ->
-                    _prestamosRecientes.value = prestamos
-                    _isLoading.value = false
-                }
         }
     }
     

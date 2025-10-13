@@ -12,6 +12,9 @@ interface GarantiaDao {
     @Query("SELECT * FROM garantias WHERE id = :garantiaId")
     fun getGarantiaById(garantiaId: String): Flow<GarantiaEntity?>
     
+    @Query("SELECT * FROM garantias WHERE id = :garantiaId")
+    suspend fun getGarantiaByIdSync(garantiaId: String): GarantiaEntity?
+    
     @Query("SELECT * FROM garantias WHERE estado = :estado")
     fun getGarantiasByEstado(estado: String): Flow<List<GarantiaEntity>>
     

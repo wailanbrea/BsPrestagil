@@ -26,6 +26,14 @@ class PaymentsViewModel(application: Application) : AndroidViewModel(application
     private val _pagos = MutableStateFlow<List<Pago>>(emptyList())
     val pagos: StateFlow<List<Pago>> = _pagos.asStateFlow()
     
+    private val _cobradorEmail = MutableStateFlow<String?>(null)
+    
+    // Exponer todos los pagos como Flow (para filtrados externos)
+    fun getAllPagos(): Flow<List<Pago>> {
+        return pagoRepository.getAllPagos()
+            .map { entities -> entities.map { it.toPago() } }
+    }
+    
     private val _totalCobradoHoy = MutableStateFlow(0.0)
     val totalCobradoHoy: StateFlow<Double> = _totalCobradoHoy.asStateFlow()
     
@@ -40,13 +48,31 @@ class PaymentsViewModel(application: Application) : AndroidViewModel(application
         loadEstadisticasHoy()
     }
     
+    /**
+     * Establece el email del cobrador para filtrar solo sus pagos
+     */
+    fun setCobradorFilter(email: String?) {
+        _cobradorEmail.value = email
+    }
+    
     private fun loadPagos() {
         viewModelScope.launch {
-            pagoRepository.getAllPagos()
-                .map { entities -> entities.map { it.toPago() } }
-                .collect { pagos ->
-                    _pagos.value = pagos
+            combine(
+                pagoRepository.getAllPagos(),
+                _cobradorEmail
+            ) { pagos, cobradorEmail ->
+                if (cobradorEmail != null) {
+                    // ⭐ Filtrar por email (también busca por nombre para retrocompatibilidad)
+                    pagos.filter { 
+                        it.recibidoPor == cobradorEmail || 
+                        it.recibidoPor.contains(cobradorEmail, ignoreCase = true)
+                    }.map { it.toPago() }
+                } else {
+                    pagos.map { it.toPago() }
                 }
+            }.collect { pagos ->
+                _pagos.value = pagos
+            }
         }
     }
     

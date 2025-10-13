@@ -22,6 +22,8 @@ data class PrestamoEntity(
     val id: String,
     val clienteId: String,
     val clienteNombre: String,
+    val cobradorId: String? = null, // ID del cobrador asignado
+    val cobradorNombre: String? = null, // Nombre del cobrador para mostrar
     val montoOriginal: Double,
     val capitalPendiente: Double,
     val tasaInteresPorPeriodo: Double,

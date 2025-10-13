@@ -25,15 +25,34 @@ data class BottomNavItem(
 @Composable
 fun BottomNavigationBar(
     navController: NavController,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    userRole: String? // Rol del usuario (desde Firestore)
 ) {
-    val items = listOf(
-        BottomNavItem(Screen.Dashboard.route, Icons.Default.Home, "Dashboard"),
-        BottomNavItem(Screen.Clients.route, Icons.Default.Person, "Clientes"),
-        BottomNavItem(Screen.Loans.route, Icons.Default.AccountBalance, "Préstamos"),
-        BottomNavItem(Screen.Payments.route, Icons.Default.Payment, "Pagos"),
-        BottomNavItem(Screen.Settings.route, Icons.Default.Settings, "Ajustes")
-    )
+    // Debug: Log para verificar el rol
+    android.util.Log.d("BottomNav", "📊 BottomNav recomponiendo con rol: $userRole")
+    
+    // Si no hay rol, no mostrar nada (aún cargando)
+    if (userRole == null) return
+    
+    // Items diferentes según el rol
+    val items = if (userRole == "COBRADOR") {
+        // Cobradores: Solo dashboard, clientes, préstamos y pagos (4 items, SIN Settings)
+        listOf(
+            BottomNavItem(Screen.CobradorDashboard.route, Icons.Default.Dashboard, "Mi Dashboard"),
+            BottomNavItem(Screen.Clients.route, Icons.Default.Person, "Clientes"),
+            BottomNavItem(Screen.Loans.route, Icons.Default.AccountBalance, "Préstamos"),
+            BottomNavItem(Screen.Payments.route, Icons.Default.Payment, "Pagos")
+        )
+    } else {
+        // Prestamistas/Admin: Menú completo (5 items, CON Settings)
+        listOf(
+            BottomNavItem(Screen.Dashboard.route, Icons.Default.Home, "Dashboard"),
+            BottomNavItem(Screen.Clients.route, Icons.Default.Person, "Clientes"),
+            BottomNavItem(Screen.Loans.route, Icons.Default.AccountBalance, "Préstamos"),
+            BottomNavItem(Screen.Payments.route, Icons.Default.Payment, "Pagos"),
+            BottomNavItem(Screen.Settings.route, Icons.Default.Settings, "Ajustes")
+        )
+    }
     
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
     
@@ -59,7 +78,13 @@ fun BottomNavigationBar(
                     onClick = {
                         if (currentRoute != item.route) {
                             navController.navigate(item.route) {
-                                popUpTo(Screen.Dashboard.route) {
+                                // popUpTo según el rol
+                                val startRoute = if (userRole == "COBRADOR") {
+                                    Screen.CobradorDashboard.route
+                                } else {
+                                    Screen.Dashboard.route
+                                }
+                                popUpTo(startRoute) {
                                     saveState = true
                                 }
                                 launchSingleTop = true

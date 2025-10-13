@@ -37,7 +37,7 @@ interface PagoDao {
     suspend fun deletePago(pago: PagoEntity)
     
     @Query("UPDATE pagos SET pendingSync = 0, lastSyncTime = :syncTime WHERE id = :pagoId")
-    suspend fun markAsSynced(pagoId: String, syncTime: Long)
+    suspend fun markAsSynced(pagoId: String, syncTime: Long): Int
     
     @Query("SELECT SUM(montoPagado) FROM pagos WHERE fechaPago >= :startDate")
     suspend fun getTotalCobradoDesde(startDate: Long): Double?

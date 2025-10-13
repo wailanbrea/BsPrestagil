@@ -31,7 +31,7 @@ interface ClienteDao {
     suspend fun deleteCliente(cliente: ClienteEntity)
     
     @Query("UPDATE clientes SET pendingSync = 0, lastSyncTime = :syncTime WHERE id = :clienteId")
-    suspend fun markAsSynced(clienteId: String, syncTime: Long)
+    suspend fun markAsSynced(clienteId: String, syncTime: Long): Int
     
     @Query("SELECT COUNT(*) FROM clientes")
     suspend fun getClientesCount(): Int

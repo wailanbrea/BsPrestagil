@@ -21,6 +21,7 @@ import com.example.bsprestagil.data.models.Pago
 import com.example.bsprestagil.navigation.Screen
 import com.example.bsprestagil.ui.theme.SuccessColor
 import com.example.bsprestagil.viewmodels.PaymentsViewModel
+import com.example.bsprestagil.viewmodels.UsersViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -28,13 +29,59 @@ import java.util.*
 @Composable
 fun PaymentsScreen(
     navController: NavController,
-    paymentsViewModel: PaymentsViewModel = viewModel()
+    paymentsViewModel: PaymentsViewModel = viewModel(),
+    usersViewModel: UsersViewModel = viewModel(),
+    authViewModel: com.example.bsprestagil.viewmodels.AuthViewModel = viewModel()
 ) {
+    // ⭐ Leer rol y usuario actual del AuthViewModel (viene de Firestore)
+    val userRole by authViewModel.userRole.collectAsState()
+    
+    // ⭐ Si el rol aún no se ha cargado, mostrar loading
+    if (userRole == null) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+    
+    val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+    val currentUserId = currentUser?.uid
+    val currentUserEmail = currentUser?.email
+    
     val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     
     val pagos by paymentsViewModel.pagos.collectAsState()
     val totalCobradoHoy by paymentsViewModel.totalCobradoHoy.collectAsState()
     val countPagosHoy by paymentsViewModel.countPagosHoy.collectAsState()
+    
+    var showCobradorFilterDialog by remember { mutableStateOf(false) }
+    var cobradorFiltroSeleccionado by remember { mutableStateOf<String?>(null) }
+    var cobradorFiltroNombre by remember { mutableStateOf<String?>(null) }
+    
+    // Cargar cobradores
+    val usuarios by usersViewModel.usuarios.collectAsState()
+    val cobradores = usuarios.filter { it.activo }
+    
+    // ⭐ Si es COBRADOR, filtrar automáticamente sus pagos en el ViewModel
+    LaunchedEffect(Unit) {
+        android.util.Log.d("PaymentsScreen", "UserRole: $userRole, Email: $currentUserEmail")
+    }
+    
+    LaunchedEffect(userRole, currentUserEmail) {
+        if (userRole == "COBRADOR" && currentUserEmail != null) {
+            android.util.Log.d("PaymentsScreen", "Aplicando filtro de pagos: $currentUserEmail")
+            paymentsViewModel.setCobradorFilter(currentUserEmail)
+        } else {
+            android.util.Log.d("PaymentsScreen", "Quitando filtro de pagos")
+            paymentsViewModel.setCobradorFilter(null)
+        }
+    }
+    
+    // Los pagos ya vienen filtrados del ViewModel
+    val pagosFiltrados = pagos
     
     Scaffold(
         topBar = {
@@ -47,9 +94,21 @@ fun PaymentsScreen(
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "${pagos.size} pagos registrados",
+                            text = "${pagosFiltrados.size} de ${pagos.size} pagos",
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { showCobradorFilterDialog = true }) {
+                        Icon(
+                            Icons.Default.WorkOutline,
+                            contentDescription = "Filtrar por cobrador",
+                            tint = if (cobradorFiltroSeleccionado != null) 
+                                MaterialTheme.colorScheme.primary 
+                            else 
+                                MaterialTheme.colorScheme.onSurface
                         )
                     }
                 },
@@ -59,7 +118,10 @@ fun PaymentsScreen(
             )
         },
         bottomBar = {
-            BottomNavigationBar(navController = navController)
+            BottomNavigationBar(
+                navController = navController,
+                userRole = userRole
+            )
         }
     ) { paddingValues ->
         LazyColumn(
@@ -104,6 +166,26 @@ fun PaymentsScreen(
                 }
             }
             
+            // Chip de filtro activo
+            if (cobradorFiltroSeleccionado != null) {
+                item {
+                    FilterChip(
+                        selected = true,
+                        onClick = {
+                            cobradorFiltroSeleccionado = null
+                            cobradorFiltroNombre = null
+                        },
+                        label = { Text("Cobrador: ${cobradorFiltroNombre ?: ""}") },
+                        leadingIcon = {
+                            Icon(Icons.Default.WorkOutline, contentDescription = null)
+                        },
+                        trailingIcon = {
+                            Icon(Icons.Default.Cancel, contentDescription = null)
+                        }
+                    )
+                }
+            }
+            
             item {
                 Text(
                     text = "Historial de pagos",
@@ -113,7 +195,7 @@ fun PaymentsScreen(
                 )
             }
             
-            items(pagos) { pago ->
+            items(pagosFiltrados) { pago ->
                 PaymentCard(
                     pago = pago,
                     dateFormat = dateFormat,
@@ -123,6 +205,84 @@ fun PaymentsScreen(
                 )
             }
         }
+    }
+    
+    // Diálogo de filtro por cobrador
+    if (showCobradorFilterDialog) {
+        AlertDialog(
+            onDismissRequest = { showCobradorFilterDialog = false },
+            icon = {
+                Icon(
+                    Icons.Default.WorkOutline,
+                    contentDescription = null,
+                    modifier = Modifier.size(32.dp)
+                )
+            },
+            title = { Text("Filtrar por cobrador") },
+            text = {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // Opción: Todos
+                    Card(
+                        onClick = {
+                            cobradorFiltroSeleccionado = null
+                            cobradorFiltroNombre = null
+                            showCobradorFilterDialog = false
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.People, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Todos los cobradores", fontWeight = FontWeight.Medium)
+                        }
+                    }
+                    
+                    // Lista de cobradores
+                    cobradores.forEach { cobrador ->
+                        Card(
+                            onClick = {
+                                cobradorFiltroSeleccionado = cobrador.id
+                                cobradorFiltroNombre = cobrador.nombre
+                                showCobradorFilterDialog = false
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(Icons.Default.WorkOutline, contentDescription = null)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(cobrador.nombre, fontWeight = FontWeight.Medium)
+                            }
+                        }
+                    }
+                    
+                    if (cobradores.isEmpty()) {
+                        Text(
+                            text = "No hay cobradores disponibles",
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showCobradorFilterDialog = false }) {
+                    Text("Cerrar")
+                }
+            }
+        )
     }
 }
 

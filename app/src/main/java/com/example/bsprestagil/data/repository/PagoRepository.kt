@@ -8,6 +8,8 @@ import java.util.UUID
 class PagoRepository(
     private val pagoDao: PagoDao
 ) {
+    // Exponer el DAO para sincronización directa desde Firebase
+    internal val dao: PagoDao get() = pagoDao
     
     // Observar todos los pagos
     fun getAllPagos(): Flow<List<PagoEntity>> {
@@ -71,8 +73,8 @@ class PagoRepository(
     }
     
     // Marcar como sincronizado
-    suspend fun markAsSynced(pagoId: String) {
-        pagoDao.markAsSynced(pagoId, System.currentTimeMillis())
+    suspend fun markAsSynced(pagoId: String): Int {
+        return pagoDao.markAsSynced(pagoId, System.currentTimeMillis())
     }
     
     // Estadísticas

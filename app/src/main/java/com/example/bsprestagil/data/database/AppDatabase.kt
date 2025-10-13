@@ -20,7 +20,7 @@ import com.example.bsprestagil.data.database.entities.*
         ConfiguracionEntity::class,
         NotificacionEntity::class
     ],
-    version = 7,
+    version = 10,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

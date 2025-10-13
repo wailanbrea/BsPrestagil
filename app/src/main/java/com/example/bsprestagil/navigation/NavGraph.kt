@@ -1,6 +1,9 @@
 package com.example.bsprestagil.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -8,6 +11,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.bsprestagil.screens.auth.LoginScreen
 import com.example.bsprestagil.screens.auth.RegisterScreen
+import com.example.bsprestagil.viewmodels.AuthViewModel
+import com.google.firebase.auth.FirebaseAuth
 import com.example.bsprestagil.screens.clients.AddEditClientScreen
 import com.example.bsprestagil.screens.clients.ClientDetailScreen
 import com.example.bsprestagil.screens.clients.ClientsScreen
@@ -33,7 +38,8 @@ import com.example.bsprestagil.screens.test.TestSyncScreen
 @Composable
 fun NavGraph(
     navController: NavHostController,
-    startDestination: String = Screen.Login.route
+    startDestination: String = Screen.Login.route,
+    authViewModel: AuthViewModel = viewModel()
 ) {
     NavHost(
         navController = navController,
@@ -42,6 +48,7 @@ fun NavGraph(
         // Auth
         composable(Screen.Login.route) {
             LoginScreen(
+                navController = navController,
                 onLoginSuccess = {
                     navController.navigate(Screen.Dashboard.route) {
                         popUpTo(Screen.Login.route) { inclusive = true }
@@ -49,7 +56,8 @@ fun NavGraph(
                 },
                 onNavigateToRegister = {
                     navController.navigate(Screen.Register.route)
-                }
+                },
+                authViewModel = authViewModel
             )
         }
         
@@ -62,29 +70,51 @@ fun NavGraph(
                 },
                 onNavigateBack = {
                     navController.navigateUp()
-                }
+                },
+                authViewModel = authViewModel
+            )
+        }
+        
+        composable(Screen.CambiarPassword.route) {
+            com.example.bsprestagil.screens.auth.CambiarPasswordScreen(
+                navController = navController
             )
         }
         
         // Main Tabs
         composable(Screen.Dashboard.route) {
-            DashboardScreen(navController = navController)
+            DashboardScreen(
+                navController = navController,
+                authViewModel = authViewModel
+            )
         }
         
         composable(Screen.Clients.route) {
-            ClientsScreen(navController = navController)
+            ClientsScreen(
+                navController = navController,
+                authViewModel = authViewModel
+            )
         }
         
         composable(Screen.Loans.route) {
-            LoansScreen(navController = navController)
+            LoansScreen(
+                navController = navController,
+                authViewModel = authViewModel
+            )
         }
         
         composable(Screen.Payments.route) {
-            PaymentsScreen(navController = navController)
+            PaymentsScreen(
+                navController = navController,
+                authViewModel = authViewModel
+            )
         }
         
         composable(Screen.Settings.route) {
-            SettingsScreen(navController = navController)
+            SettingsScreen(
+                navController = navController,
+                authViewModel = authViewModel
+            )
         }
         
         composable(Screen.PersonalizacionRecibo.route) {
@@ -101,6 +131,26 @@ fun NavGraph(
         
         composable(Screen.Perfil.route) {
             com.example.bsprestagil.screens.settings.PerfilScreen(
+                navController = navController
+            )
+        }
+        
+        composable(Screen.CobradorDashboard.route) {
+            com.example.bsprestagil.screens.cobradores.CobradorDashboardScreen(
+                navController = navController,
+                authViewModel = authViewModel,
+                usersViewModel = viewModel()
+            )
+        }
+        
+        composable(Screen.ReporteCobradores.route) {
+            com.example.bsprestagil.screens.reports.ReporteCobradoresScreen(
+                navController = navController
+            )
+        }
+        
+        composable(Screen.Comisiones.route) {
+            com.example.bsprestagil.screens.comisiones.ComisionesScreen(
                 navController = navController
             )
         }

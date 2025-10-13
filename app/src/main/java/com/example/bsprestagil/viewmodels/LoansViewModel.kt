@@ -31,22 +31,39 @@ class LoansViewModel(application: Application) : AndroidViewModel(application) {
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
     
+    private val _cobradorId = MutableStateFlow<String?>(null)
+    
     init {
         loadPrestamos()
+    }
+    
+    /**
+     * Establece el ID del cobrador para filtrar automáticamente sus préstamos
+     */
+    fun setCobradorFilter(cobradorId: String?) {
+        _cobradorId.value = cobradorId
     }
     
     private fun loadPrestamos() {
         viewModelScope.launch {
             combine(
                 prestamoRepository.getAllPrestamos(),
-                _filtroEstado
-            ) { prestamos, filtro ->
-                if (filtro != null) {
-                    prestamos.filter { it.estado == filtro.name }
-                        .map { it.toPrestamo() }
-                } else {
-                    prestamos.map { it.toPrestamo() }
+                _filtroEstado,
+                _cobradorId
+            ) { prestamos, filtro, cobradorId ->
+                var resultado = prestamos
+                
+                // Filtrar por cobrador si está establecido
+                if (cobradorId != null) {
+                    resultado = resultado.filter { it.cobradorId == cobradorId }
                 }
+                
+                // Filtrar por estado si está establecido
+                if (filtro != null) {
+                    resultado = resultado.filter { it.estado == filtro.name }
+                }
+                
+                resultado.map { it.toPrestamo() }
             }.collect { prestamos ->
                 _prestamos.value = prestamos
             }
@@ -67,9 +84,16 @@ class LoansViewModel(application: Application) : AndroidViewModel(application) {
             .map { entities -> entities.map { it.toPrestamo() } }
     }
     
+    fun getPrestamosByCobradorId(cobradorId: String): Flow<List<Prestamo>> {
+        return prestamoRepository.getPrestamosByCobradorId(cobradorId)
+            .map { entities -> entities.map { it.toPrestamo() } }
+    }
+    
     fun crearPrestamo(
         clienteId: String,
         clienteNombre: String,
+        cobradorId: String? = null,
+        cobradorNombre: String? = null,
         monto: Double,
         tasaInteresPorPeriodo: Double, // Ej: 20% mensual
         frecuenciaPago: FrecuenciaPago,
@@ -99,6 +123,8 @@ class LoansViewModel(application: Application) : AndroidViewModel(application) {
                     id = "",
                     clienteId = clienteId,
                     clienteNombre = clienteNombre,
+                    cobradorId = cobradorId,
+                    cobradorNombre = cobradorNombre,
                     montoOriginal = monto,
                     capitalPendiente = monto, // Al inicio, el capital pendiente es el monto completo
                     tasaInteresPorPeriodo = tasaInteresPorPeriodo,

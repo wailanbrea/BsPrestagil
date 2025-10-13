@@ -52,6 +52,8 @@ fun PrestamoEntity.toPrestamo() = Prestamo(
     id = id,
     clienteId = clienteId,
     clienteNombre = clienteNombre,
+    cobradorId = cobradorId,
+    cobradorNombre = cobradorNombre,
     montoOriginal = montoOriginal,
     capitalPendiente = capitalPendiente,
     tasaInteresPorPeriodo = tasaInteresPorPeriodo,
@@ -88,6 +90,8 @@ fun Prestamo.toEntity() = PrestamoEntity(
     id = id,
     clienteId = clienteId,
     clienteNombre = clienteNombre,
+    cobradorId = cobradorId,
+    cobradorNombre = cobradorNombre,
     montoOriginal = montoOriginal,
     capitalPendiente = capitalPendiente,
     tasaInteresPorPeriodo = tasaInteresPorPeriodo,
@@ -238,9 +242,9 @@ fun UsuarioEntity.toUsuario() = Usuario(
     nombre = nombre,
     email = email,
     rol = when (rol) {
-        "PRESTAMISTA" -> RolUsuario.PRESTAMISTA
+        "ADMIN" -> RolUsuario.ADMIN
         "COBRADOR" -> RolUsuario.COBRADOR
-        else -> RolUsuario.PRESTAMISTA
+        else -> RolUsuario.ADMIN
     },
     fechaCreacion = fechaCreacion
 )

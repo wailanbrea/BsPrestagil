@@ -189,7 +189,9 @@ fun CollateralDetailScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     OutlinedButton(
-                        onClick = { /* TODO: Editar */ },
+                        onClick = {
+                            navController.navigate(Screen.AddEditCollateral.createRoute(collateralId))
+                        },
                         modifier = Modifier.weight(1f)
                     ) {
                         Icon(Icons.Default.Edit, contentDescription = null)

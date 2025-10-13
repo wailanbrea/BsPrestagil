@@ -8,6 +8,8 @@ import java.util.UUID
 class CuotaRepository(
     private val cuotaDao: CuotaDao
 ) {
+    // Exponer el DAO para sincronización directa desde Firebase
+    internal val dao: CuotaDao get() = cuotaDao
     
     // Observar cuotas por préstamo
     fun getCuotasByPrestamoId(prestamoId: String): Flow<List<CuotaEntity>> {
@@ -92,8 +94,8 @@ class CuotaRepository(
     }
     
     // Marcar como sincronizado
-    suspend fun markAsSynced(cuotaId: String) {
-        cuotaDao.markAsSynced(cuotaId, System.currentTimeMillis())
+    suspend fun markAsSynced(cuotaId: String): Int {
+        return cuotaDao.markAsSynced(cuotaId, System.currentTimeMillis())
     }
     
     // Contar cuotas pagadas

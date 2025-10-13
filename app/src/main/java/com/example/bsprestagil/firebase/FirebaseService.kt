@@ -92,6 +92,8 @@ class FirebaseService {
                 "id" to prestamo.id,
                 "clienteId" to prestamo.clienteId,
                 "clienteNombre" to prestamo.clienteNombre,
+                "cobradorId" to prestamo.cobradorId,
+                "cobradorNombre" to prestamo.cobradorNombre,
                 "montoOriginal" to prestamo.montoOriginal,
                 "capitalPendiente" to prestamo.capitalPendiente,
                 "tasaInteresPorPeriodo" to prestamo.tasaInteresPorPeriodo,

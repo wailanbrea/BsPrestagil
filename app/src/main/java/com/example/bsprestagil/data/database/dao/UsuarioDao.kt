@@ -12,6 +12,9 @@ interface UsuarioDao {
     @Query("SELECT * FROM usuarios WHERE id = :usuarioId")
     fun getUsuarioById(usuarioId: String): Flow<UsuarioEntity?>
     
+    @Query("SELECT * FROM usuarios WHERE id = :usuarioId")
+    suspend fun getUsuarioByIdSync(usuarioId: String): UsuarioEntity?
+    
     @Query("SELECT * FROM usuarios WHERE email = :email LIMIT 1")
     suspend fun getUsuarioByEmail(email: String): UsuarioEntity?
     

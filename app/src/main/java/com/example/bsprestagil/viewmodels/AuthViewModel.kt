@@ -13,7 +13,7 @@ import kotlinx.coroutines.tasks.await
 sealed class AuthState {
     object Initial : AuthState()
     object Loading : AuthState()
-    data class Success(val user: FirebaseUser) : AuthState()
+    data class Success(val user: FirebaseUser, val rol: String?) : AuthState()
     data class Error(val message: String) : AuthState()
 }
 
@@ -25,10 +25,21 @@ class AuthViewModel : ViewModel() {
     private val _authState = MutableStateFlow<AuthState>(AuthState.Initial)
     val authState: StateFlow<AuthState> = _authState
     
+    private val _userRole = MutableStateFlow<String?>(null)
+    val userRole: StateFlow<String?> = _userRole
+    
     init {
         // Verificar si hay un usuario ya logueado
-        auth.currentUser?.let {
-            _authState.value = AuthState.Success(it)
+        auth.currentUser?.let { user ->
+            viewModelScope.launch {
+                try {
+                    val rol = obtenerRolUsuario(user.uid)
+                    _userRole.value = rol
+                    _authState.value = AuthState.Success(user, rol)
+                } catch (e: Exception) {
+                    _authState.value = AuthState.Success(user, null)
+                }
+            }
         }
     }
     
@@ -42,8 +53,23 @@ class AuthViewModel : ViewModel() {
             try {
                 _authState.value = AuthState.Loading
                 val result = auth.signInWithEmailAndPassword(email, password).await()
-                result.user?.let {
-                    _authState.value = AuthState.Success(it)
+                result.user?.let { user ->
+                    android.util.Log.d("AuthViewModel", "Login exitoso - Email: ${user.email}, UID: ${user.uid}")
+                    
+                    // Obtener el rol del usuario desde Firestore
+                    try {
+                        val rol = obtenerRolUsuario(user.uid)
+                        android.util.Log.d("AuthViewModel", "🔑 Rol final asignado: $rol")
+                        _userRole.value = rol
+                        android.util.Log.d("AuthViewModel", "✅ StateFlow _userRole actualizado a: ${_userRole.value}")
+                        _authState.value = AuthState.Success(user, rol)
+                        android.util.Log.d("AuthViewModel", "✅ AuthState actualizado con rol: $rol")
+                    } catch (e: Exception) {
+                        android.util.Log.e("AuthViewModel", "❌ No se pudo obtener rol", e)
+                        // No asignar ningún rol por defecto - dejar en null
+                        _userRole.value = null
+                        _authState.value = AuthState.Success(user, null)
+                    }
                 } ?: run {
                     _authState.value = AuthState.Error("Error al iniciar sesión")
                 }
@@ -57,6 +83,62 @@ class AuthViewModel : ViewModel() {
                     }
                 )
             }
+        }
+    }
+    
+    private suspend fun obtenerRolUsuario(userId: String): String? {
+        return try {
+            android.util.Log.d("AuthViewModel", "📥 Obteniendo rol para userId: $userId")
+            
+            val userDoc = firestore.collection("usuarios")
+                .document(userId)
+                .get()
+                .await()
+            
+            if (!userDoc.exists()) {
+                android.util.Log.e("AuthViewModel", "❌ El documento del usuario NO EXISTE en Firestore")
+                android.util.Log.e("AuthViewModel", "❌ UID: $userId")
+                android.util.Log.e("AuthViewModel", "❌ Email: ${auth.currentUser?.email}")
+                
+                // ⭐ CREAR el documento automáticamente con rol ADMIN
+                // (Para usuarios que existen en Auth pero no en Firestore)
+                try {
+                    val email = auth.currentUser?.email
+                    val nombre = auth.currentUser?.displayName ?: email?.split("@")?.get(0) ?: "Usuario"
+                    
+                    val datosUsuario = hashMapOf(
+                        "nombre" to nombre,
+                        "email" to email,
+                        "telefono" to "",
+                        "rol" to "ADMIN", // Usuarios existentes → ADMIN por defecto
+                        "activo" to true,
+                        "fechaCreacion" to System.currentTimeMillis(),
+                        "ultimaActualizacion" to System.currentTimeMillis()
+                    )
+                    
+                    firestore.collection("usuarios")
+                        .document(userId)
+                        .set(datosUsuario)
+                        .await()
+                    
+                    android.util.Log.d("AuthViewModel", "✅ Documento creado automáticamente con rol ADMIN")
+                    return "ADMIN"
+                } catch (createError: Exception) {
+                    android.util.Log.e("AuthViewModel", "❌ Error al crear documento", createError)
+                    return null
+                }
+            }
+            
+            val rol = userDoc.getString("rol")
+            
+            android.util.Log.d("AuthViewModel", "✅ Rol obtenido de Firestore: $rol")
+            android.util.Log.d("AuthViewModel", "📄 Documento existe: ${userDoc.exists()}")
+            android.util.Log.d("AuthViewModel", "📊 Datos del documento: ${userDoc.data}")
+            
+            rol
+        } catch (e: Exception) {
+            android.util.Log.e("AuthViewModel", "❌ Error al obtener rol: ${e.message}", e)
+            null
         }
     }
     
@@ -88,7 +170,7 @@ class AuthViewModel : ViewModel() {
                             "nombre" to nombre,
                             "email" to email,
                             "telefono" to "",
-                            "rol" to "ADMIN",
+                            "rol" to "ADMIN", // Por defecto ADMIN
                             "activo" to true,
                             "fechaCreacion" to System.currentTimeMillis(),
                             "ultimaActualizacion" to System.currentTimeMillis()
@@ -111,7 +193,10 @@ class AuthViewModel : ViewModel() {
                         // El usuario podrá enviarlo después desde su perfil
                     }
                     
-                    _authState.value = AuthState.Success(user)
+                    // 4. Obtener rol del usuario recién creado
+                    val rol = obtenerRolUsuario(user.uid)
+                    _userRole.value = rol
+                    _authState.value = AuthState.Success(user, rol)
                 } ?: run {
                     _authState.value = AuthState.Error("Error al crear la cuenta")
                 }
@@ -131,10 +216,7 @@ class AuthViewModel : ViewModel() {
     fun logout() {
         auth.signOut()
         _authState.value = AuthState.Initial
-    }
-    
-    fun getCurrentUser(): FirebaseUser? {
-        return auth.currentUser
+        _userRole.value = null
     }
     
     fun resetState() {

@@ -8,6 +8,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -27,10 +28,49 @@ import com.example.bsprestagil.viewmodels.ClientsViewModel
 @Composable
 fun ClientsScreen(
     navController: NavController,
-    clientsViewModel: ClientsViewModel = viewModel()
+    clientsViewModel: ClientsViewModel = viewModel(),
+    loansViewModel: com.example.bsprestagil.viewmodels.LoansViewModel = viewModel(),
+    authViewModel: com.example.bsprestagil.viewmodels.AuthViewModel = viewModel()
 ) {
+    // ⭐ Leer rol y usuario actual del AuthViewModel (viene de Firestore)
+    val userRole by authViewModel.userRole.collectAsState()
+    
+    // ⭐ Si el rol aún no se ha cargado, mostrar loading
+    if (userRole == null) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+    
+    val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+    val currentUserId = currentUser?.uid
+    
     val clientes by clientsViewModel.clientes.collectAsState()
     val searchQuery by clientsViewModel.searchQuery.collectAsState()
+    
+    // ⭐ Si es COBRADOR, filtrar clientes según sus préstamos
+    LaunchedEffect(Unit) {
+        android.util.Log.d("ClientsScreen", "UserRole: $userRole, UserId: $currentUserId")
+    }
+    
+    LaunchedEffect(userRole, currentUserId) {
+        if (userRole == "COBRADOR" && currentUserId != null) {
+            android.util.Log.d("ClientsScreen", "Aplicando filtro de cobrador: $currentUserId")
+            // Obtener préstamos del cobrador
+            loansViewModel.getPrestamosByCobradorId(currentUserId).collect { prestamos ->
+                val clientesIds = prestamos.map { it.clienteId }.toSet()
+                android.util.Log.d("ClientsScreen", "Clientes permitidos: ${clientesIds.size}")
+                clientsViewModel.setClientesPermitidos(clientesIds)
+            }
+        } else {
+            android.util.Log.d("ClientsScreen", "Quitando filtro de clientes")
+            clientsViewModel.setClientesPermitidos(null)
+        }
+    }
     
     Scaffold(
         topBar = {
@@ -55,14 +95,20 @@ fun ClientsScreen(
             )
         },
         bottomBar = {
-            BottomNavigationBar(navController = navController)
+            BottomNavigationBar(
+                navController = navController,
+                userRole = userRole
+            )
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { navController.navigate(Screen.AddEditClient.createRoute()) },
-                containerColor = MaterialTheme.colorScheme.primary
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Agregar cliente")
+            // ⭐ Solo prestamistas pueden crear clientes
+            if (userRole != "COBRADOR") {
+                FloatingActionButton(
+                    onClick = { navController.navigate(Screen.AddEditClient.createRoute()) },
+                    containerColor = MaterialTheme.colorScheme.primary
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Agregar cliente")
+                }
             }
         }
     ) { paddingValues ->

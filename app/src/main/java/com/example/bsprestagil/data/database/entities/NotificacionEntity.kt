@@ -14,6 +14,7 @@ data class NotificacionEntity(
     val leida: Boolean = false,
     val prestamoId: String? = null, // Referencia opcional al préstamo
     val clienteId: String? = null, // Referencia opcional al cliente
-    val pagoId: String? = null // Referencia opcional al pago
+    val pagoId: String? = null, // Referencia opcional al pago
+    val cobradorId: String? = null // Cobrador al que va dirigida la notificación
 )
 
