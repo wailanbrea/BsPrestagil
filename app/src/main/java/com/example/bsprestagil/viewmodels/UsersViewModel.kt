@@ -238,5 +238,51 @@ class UsersViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
     }
+    
+    /**
+     * Sincroniza usuarios desde Firestore a Room
+     */
+    fun syncUsuariosFromFirestore() {
+        viewModelScope.launch {
+            try {
+                Log.d(TAG, "Sincronizando usuarios desde Firestore...")
+                val snapshot = firestore.collection("usuarios").get().await()
+                
+                val usuariosFirestore = snapshot.documents.mapNotNull { doc ->
+                    try {
+                        val data = doc.data ?: return@mapNotNull null
+                        UsuarioEntity(
+                            id = doc.id,
+                            nombre = data["nombre"] as? String ?: "",
+                            email = data["email"] as? String ?: "",
+                            telefono = data["telefono"] as? String ?: "",
+                            rol = data["rol"] as? String ?: "COBRADOR",
+                            activo = data["activo"] as? Boolean ?: true,
+                            fechaCreacion = data["fechaCreacion"] as? Long ?: System.currentTimeMillis(),
+                            porcentajeComision = (data["porcentajeComision"] as? Number)?.toFloat() ?: 3.0f,
+                            totalComisionesGeneradas = (data["totalComisionesGeneradas"] as? Number)?.toDouble() ?: 0.0,
+                            totalComisionesPagadas = (data["totalComisionesPagadas"] as? Number)?.toDouble() ?: 0.0,
+                            ultimoPagoComision = (data["ultimoPagoComision"] as? Long) ?: 0L,
+                            pendingSync = false,
+                            lastSyncTime = System.currentTimeMillis(),
+                            firebaseId = doc.id
+                        )
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error al parsear usuario ${doc.id}: ${e.message}")
+                        null
+                    }
+                }
+                
+                // Insertar o actualizar en Room
+                usuariosFirestore.forEach { usuario ->
+                    usuarioRepository.insertUsuario(usuario)
+                }
+                
+                Log.d(TAG, "✅ ${usuariosFirestore.size} usuarios sincronizados desde Firestore")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error al sincronizar usuarios: ${e.message}", e)
+            }
+        }
+    }
 }
 

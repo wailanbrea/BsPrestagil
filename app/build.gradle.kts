@@ -80,6 +80,18 @@ dependencies {
     // WorkManager para sincronización
     implementation("androidx.work:work-runtime-ktx:2.9.0")
     
+    // Fragment (requerido para BiometricPrompt)
+    implementation("androidx.fragment:fragment-ktx:1.6.2")
+    
+    // Biometric (huella dactilar)
+    implementation("androidx.biometric:biometric:1.2.0-alpha05")
+    
+    // Security (credenciales encriptadas)
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
+    
+    // DataStore (preferencias)
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
+    
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")

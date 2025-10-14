@@ -5,7 +5,7 @@ import com.example.bsprestagil.data.database.entities.UsuarioEntity
 import kotlinx.coroutines.flow.Flow
 
 class UsuarioRepository(
-    private val usuarioDao: UsuarioDao
+    internal val usuarioDao: UsuarioDao
 ) {
     
     fun getAllUsuarios(): Flow<List<UsuarioEntity>> {

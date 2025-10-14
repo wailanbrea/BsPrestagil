@@ -24,6 +24,7 @@ class SyncWorker(
     private val cuotaRepository = CuotaRepository(database.cuotaDao())
     private val garantiaRepository = GarantiaRepository(database.garantiaDao())
     private val configuracionRepository = ConfiguracionRepository(database.configuracionDao())
+    private val usuarioRepository = UsuarioRepository(database.usuarioDao())
     private val firebaseService = FirebaseService()
     
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
@@ -250,7 +251,8 @@ class SyncWorker(
                 pagoRepository = pagoRepository,
                 cuotaRepository = cuotaRepository,
                 garantiaRepository = garantiaRepository,
-                configuracionRepository = configuracionRepository
+                configuracionRepository = configuracionRepository,
+                usuarioRepository = usuarioRepository
             )
             firebaseToRoomSync.fullSync()
         } catch (e: Exception) {

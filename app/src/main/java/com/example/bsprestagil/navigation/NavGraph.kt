@@ -11,6 +11,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.bsprestagil.screens.auth.LoginScreen
 import com.example.bsprestagil.screens.auth.RegisterScreen
+import com.example.bsprestagil.screens.auth.SplashScreen
 import com.example.bsprestagil.viewmodels.AuthViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.example.bsprestagil.screens.clients.AddEditClientScreen
@@ -38,13 +39,21 @@ import com.example.bsprestagil.screens.test.TestSyncScreen
 @Composable
 fun NavGraph(
     navController: NavHostController,
-    startDestination: String = Screen.Login.route,
+    startDestination: String = Screen.Splash.route,
     authViewModel: AuthViewModel = viewModel()
 ) {
     NavHost(
         navController = navController,
         startDestination = startDestination
     ) {
+        // Splash Screen
+        composable(Screen.Splash.route) {
+            SplashScreen(
+                navController = navController,
+                authViewModel = authViewModel
+            )
+        }
+        
         // Auth
         composable(Screen.Login.route) {
             LoginScreen(

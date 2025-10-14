@@ -1,7 +1,8 @@
 package com.example.bsprestagil.navigation
 
 sealed class Screen(val route: String) {
-    // Autenticación
+    // Splash y Autenticación
+    object Splash : Screen("splash")
     object Login : Screen("login")
     object Register : Screen("register")
     object CambiarPassword : Screen("cambiar_password")

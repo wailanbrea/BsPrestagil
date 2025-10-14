@@ -15,7 +15,8 @@ class FirebaseToRoomSync(
     private val pagoRepository: PagoRepository,
     private val cuotaRepository: CuotaRepository,
     private val garantiaRepository: GarantiaRepository,
-    private val configuracionRepository: ConfiguracionRepository
+    private val configuracionRepository: ConfiguracionRepository,
+    private val usuarioRepository: UsuarioRepository
 ) {
     private val firestore = FirebaseFirestore.getInstance()
     
@@ -24,6 +25,7 @@ class FirebaseToRoomSync(
     private val prestamoDao = prestamoRepository.dao
     private val pagoDao = pagoRepository.dao
     private val cuotaDao = cuotaRepository.dao
+    private val usuarioDao = usuarioRepository.usuarioDao
     
     /**
      * Descarga clientes de Firebase y actualiza Room
@@ -206,10 +208,49 @@ class FirebaseToRoomSync(
     }
     
     /**
+     * Descarga usuarios de Firebase y actualiza Room
+     */
+    suspend fun syncUsuariosFromFirebase(): Result<Unit> {
+        return try {
+            val snapshot = firestore.collection("usuarios").get().await()
+            val usuariosFirebase = snapshot.documents.map { doc ->
+                doc.data?.let { data ->
+                    UsuarioEntity(
+                        id = doc.id,
+                        nombre = data["nombre"] as? String ?: "",
+                        email = data["email"] as? String ?: "",
+                        telefono = data["telefono"] as? String ?: "",
+                        rol = data["rol"] as? String ?: "COBRADOR",
+                        activo = data["activo"] as? Boolean ?: true,
+                        fechaCreacion = data["fechaCreacion"] as? Long ?: System.currentTimeMillis(),
+                        porcentajeComision = (data["porcentajeComision"] as? Number)?.toFloat() ?: 3.0f,
+                        totalComisionesGeneradas = (data["totalComisionesGeneradas"] as? Number)?.toDouble() ?: 0.0,
+                        totalComisionesPagadas = (data["totalComisionesPagadas"] as? Number)?.toDouble() ?: 0.0,
+                        ultimoPagoComision = (data["ultimoPagoComision"] as? Long) ?: 0L,
+                        pendingSync = false,
+                        lastSyncTime = System.currentTimeMillis(),
+                        firebaseId = doc.id
+                    )
+                }
+            }.filterNotNull()
+            
+            // Insertar o actualizar en Room directamente usando el DAO
+            usuariosFirebase.forEach { usuario ->
+                usuarioDao.insertUsuario(usuario)
+            }
+            
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    /**
      * Sincronización completa bidireccional
      */
     suspend fun fullSync(): Result<Unit> {
         return try {
+            syncUsuariosFromFirebase()
             syncClientesFromFirebase()
             syncPrestamosFromFirebase()
             syncPagosFromFirebase()

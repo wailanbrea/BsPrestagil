@@ -38,6 +38,14 @@ fun GestionCobradoresScreen(
     var showDeleteDialog by remember { mutableStateOf<UsuarioEntity?>(null) }
     var showSuccessDialog by remember { mutableStateOf(false) }
     var usuarioCreado by remember { mutableStateOf<Pair<String, String>?>(null) } // email, password
+    var isSyncing by remember { mutableStateOf(false) }
+    
+    // Sincronizar usuarios al abrir la pantalla
+    LaunchedEffect(Unit) {
+        isSyncing = true
+        viewModel.syncUsuariosFromFirestore()
+        isSyncing = false
+    }
     
     Scaffold(
         topBar = {
@@ -70,15 +78,37 @@ fun GestionCobradoresScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item {
-                Text(
-                    text = "COBRADORES ACTIVOS",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "COBRADORES ACTIVOS",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                    if (isSyncing) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(12.dp),
+                                strokeWidth = 1.5.dp
+                            )
+                            Text(
+                                text = "Sincronizando...",
+                                fontSize = 10.sp,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            )
+                        }
+                    }
+                }
             }
             
-            if (usuarios.isEmpty()) {
+            if (usuarios.isEmpty() && !isSyncing) {
                 item {
                     Card(
                         modifier = Modifier.fillMaxWidth(),

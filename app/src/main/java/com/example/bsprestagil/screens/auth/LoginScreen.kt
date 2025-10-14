@@ -4,22 +4,24 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.bsprestagil.navigation.Screen
+import com.example.bsprestagil.utils.BiometricHelper
+import com.example.bsprestagil.utils.BiometricStatus
+import com.example.bsprestagil.utils.SecurePreferences
 import com.example.bsprestagil.viewmodels.AuthState
 import com.example.bsprestagil.viewmodels.AuthViewModel
 import androidx.navigation.NavController
@@ -35,13 +37,31 @@ fun LoginScreen(
     onNavigateToRegister: () -> Unit,
     authViewModel: AuthViewModel = viewModel()
 ) {
+    val context = LocalContext.current
+    val securePrefs = remember { SecurePreferences(context) }
+    
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+    var rememberMe by remember { mutableStateOf(false) }
+    var enableBiometric by remember { mutableStateOf(false) }
     
     val authState by authViewModel.authState.collectAsState()
     val firestore = FirebaseFirestore.getInstance()
     val auth = FirebaseAuth.getInstance()
+    
+    // Verificar si hay credenciales guardadas y capacidad biométrica
+    val biometricStatus = remember { BiometricHelper.canAuthenticate(context) }
+    val hasBiometric = biometricStatus == BiometricStatus.AVAILABLE
+    
+    // Cargar credenciales guardadas al inicio
+    LaunchedEffect(Unit) {
+        if (securePrefs.hasCredentials()) {
+            email = securePrefs.savedEmail ?: ""
+            rememberMe = securePrefs.rememberMe
+            enableBiometric = securePrefs.biometricEnabled
+        }
+    }
     
     // Observar el estado de autenticación
     LaunchedEffect(authState) {
@@ -49,6 +69,14 @@ fun LoginScreen(
             is AuthState.Success -> {
                 val rol = state.rol
                 Log.d("LoginScreen", "✅ Login exitoso. Rol: $rol")
+                
+                // Guardar credenciales si está marcado "Recordarme"
+                if (rememberMe && email.isNotBlank() && password.isNotBlank()) {
+                    securePrefs.saveCredentials(email, password, enableBiometric)
+                    Log.d("LoginScreen", "💾 Credenciales guardadas. Biométrico: $enableBiometric")
+                } else if (!rememberMe) {
+                    securePrefs.clearCredentials()
+                }
                 
                 // Verificar si es el primer login ANTES de resetear el estado
                 try {
@@ -171,14 +199,54 @@ fun LoginScreen(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
             )
             
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             
-            // Olvidaste tu contraseña
-            TextButton(
-                onClick = { /* TODO: Implementar recuperación de contraseña */ },
-                modifier = Modifier.align(Alignment.End)
+            // Recordarme
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("¿Olvidaste tu contraseña?")
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Checkbox(
+                        checked = rememberMe,
+                        onCheckedChange = { 
+                            rememberMe = it
+                            if (!it) enableBiometric = false
+                        }
+                    )
+                    Text("Recordarme")
+                }
+                
+                // Olvidaste tu contraseña
+                TextButton(
+                    onClick = { /* TODO: Implementar recuperación de contraseña */ }
+                ) {
+                    Text("¿Olvidaste tu contraseña?")
+                }
+            }
+            
+            // Habilitar biométrico (solo si "Recordarme" está activo y hay biométrico disponible)
+            if (rememberMe && hasBiometric) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Checkbox(
+                        checked = enableBiometric,
+                        onCheckedChange = { enableBiometric = it }
+                    )
+                    Icon(
+                        Icons.Default.Fingerprint,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Usar huella dactilar para iniciar sesión")
+                }
             }
             
             Spacer(modifier = Modifier.height(24.dp))
@@ -216,6 +284,54 @@ fun LoginScreen(
                 } else {
                     Text(
                         text = "Iniciar sesión",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+            
+            // Botón de autenticación biométrica (solo si hay credenciales guardadas y biométrico habilitado)
+            if (securePrefs.biometricEnabled && hasBiometric && securePrefs.hasCredentials()) {
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                OutlinedButton(
+                    onClick = {
+                        val activity = context as? FragmentActivity
+                        activity?.let {
+                            BiometricHelper.showBiometricPrompt(
+                                activity = it,
+                                title = "Iniciar sesión con huella",
+                                subtitle = "Usa tu huella dactilar",
+                                negativeButtonText = "Cancelar",
+                                onSuccess = {
+                                    // Usar credenciales guardadas
+                                    val savedEmail = securePrefs.savedEmail ?: ""
+                                    val savedPassword = securePrefs.savedPassword ?: ""
+                                    if (savedEmail.isNotBlank() && savedPassword.isNotBlank()) {
+                                        authViewModel.login(savedEmail, savedPassword)
+                                    }
+                                },
+                                onError = { error ->
+                                    Log.e("LoginScreen", "Error biométrico: $error")
+                                },
+                                onFailed = {
+                                    Log.w("LoginScreen", "Autenticación biométrica fallida")
+                                }
+                            )
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Fingerprint,
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Usar huella dactilar",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
                     )
