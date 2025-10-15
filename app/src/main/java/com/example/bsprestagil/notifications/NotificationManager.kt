@@ -72,7 +72,7 @@ object AppNotificationManager {
         )
         
         val notification = NotificationCompat.Builder(context, CHANNEL_ID_PAGOS)
-            .setSmallIcon(R.drawable.ic_launcher_foreground) // Asegúrate de tener este recurso
+            .setSmallIcon(R.drawable.ic_bs_prestagil) // Icono BSPrestagil personalizado
             .setContentTitle("⚠️ Pago Vencido")
             .setContentText("$clienteNombre tiene un pago vencido desde hace $diasVencido día(s)")
             .setStyle(NotificationCompat.BigTextStyle()
@@ -108,7 +108,7 @@ object AppNotificationManager {
         )
         
         val notification = NotificationCompat.Builder(context, CHANNEL_ID_PAGOS)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.drawable.ic_bs_prestagil)
             .setContentTitle("📅 Pago Próximo")
             .setContentText("$clienteNombre tiene un pago que vence en $diasRestantes día(s)")
             .setStyle(NotificationCompat.BigTextStyle()
@@ -144,7 +144,7 @@ object AppNotificationManager {
         )
         
         val notification = NotificationCompat.Builder(context, CHANNEL_ID_GENERAL)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.drawable.ic_bs_prestagil)
             .setContentTitle("✅ Pago Recibido")
             .setContentText("$clienteNombre pagó $${"%.2f".format(monto)}")
             .setPriority(NotificationCompat.PRIORITY_LOW)
@@ -177,7 +177,7 @@ object AppNotificationManager {
         )
         
         val notification = NotificationCompat.Builder(context, CHANNEL_ID_GENERAL)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.drawable.ic_bs_prestagil)
             .setContentTitle(titulo)
             .setContentText(mensaje)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)

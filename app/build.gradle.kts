@@ -92,6 +92,9 @@ dependencies {
     // DataStore (preferencias)
     implementation("androidx.datastore:datastore-preferences:1.0.0")
     
+    // SplashScreen API oficial (Android 12+)
+    implementation("androidx.core:core-splashscreen:1.0.1")
+    
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")

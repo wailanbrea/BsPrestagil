@@ -11,9 +11,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.bsprestagil.screens.auth.LoginScreen
 import com.example.bsprestagil.screens.auth.RegisterScreen
-import com.example.bsprestagil.screens.auth.SplashScreen
 import com.example.bsprestagil.viewmodels.AuthViewModel
-import com.google.firebase.auth.FirebaseAuth
 import com.example.bsprestagil.screens.clients.AddEditClientScreen
 import com.example.bsprestagil.screens.clients.ClientDetailScreen
 import com.example.bsprestagil.screens.clients.ClientsScreen
@@ -39,33 +37,21 @@ import com.example.bsprestagil.screens.test.TestSyncScreen
 @Composable
 fun NavGraph(
     navController: NavHostController,
-    startDestination: String = Screen.Splash.route,
+        startDestination: String = Screen.Login.route,
     authViewModel: AuthViewModel = viewModel()
 ) {
-    NavHost(
-        navController = navController,
-        startDestination = startDestination
-    ) {
-        // Splash Screen
-        composable(Screen.Splash.route) {
-            SplashScreen(
-                navController = navController,
-                authViewModel = authViewModel
-            )
-        }
+    // Obtener el rol del usuario para protección de rutas
+    val userRole by authViewModel.userRole.collectAsState()
+    
+        NavHost(
+            navController = navController,
+            startDestination = startDestination
+        ) {
         
         // Auth
         composable(Screen.Login.route) {
             LoginScreen(
                 navController = navController,
-                onLoginSuccess = {
-                    navController.navigate(Screen.Dashboard.route) {
-                        popUpTo(Screen.Login.route) { inclusive = true }
-                    }
-                },
-                onNavigateToRegister = {
-                    navController.navigate(Screen.Register.route)
-                },
                 authViewModel = authViewModel
             )
         }
@@ -92,10 +78,16 @@ fun NavGraph(
         
         // Main Tabs
         composable(Screen.Dashboard.route) {
-            DashboardScreen(
+            ProtectedRoute(
                 navController = navController,
-                authViewModel = authViewModel
-            )
+                currentRoute = Screen.Dashboard.route,
+                userRole = userRole
+            ) {
+                DashboardScreen(
+                    navController = navController,
+                    authViewModel = authViewModel
+                )
+            }
         }
         
         composable(Screen.Clients.route) {

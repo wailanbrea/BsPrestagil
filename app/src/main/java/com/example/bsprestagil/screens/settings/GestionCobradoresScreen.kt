@@ -536,7 +536,7 @@ fun AddCobradorDialog(
     var mostrarPassword by remember { mutableStateOf(false) }
     var errorPassword by remember { mutableStateOf("") }
     
-    val roles = listOf("ADMIN", "COBRADOR", "SUPERVISOR")
+    val roles = listOf("ADMIN", "COBRADOR")
     
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -728,7 +728,7 @@ fun EditCobradorDialog(
     var expanded by remember { mutableStateOf(false) }
     var errorMensaje by remember { mutableStateOf("") }
     
-    val roles = listOf("ADMIN", "COBRADOR", "SUPERVISOR")
+    val roles = listOf("ADMIN", "COBRADOR")
     
     AlertDialog(
         onDismissRequest = onDismiss,

@@ -33,8 +33,6 @@ import android.util.Log
 @Composable
 fun LoginScreen(
     navController: NavController,
-    onLoginSuccess: () -> Unit,
-    onNavigateToRegister: () -> Unit,
     authViewModel: AuthViewModel = viewModel()
 ) {
     val context = LocalContext.current
@@ -348,7 +346,9 @@ fun LoginScreen(
                     text = "¿No tienes cuenta?",
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
                 )
-                TextButton(onClick = onNavigateToRegister) {
+                TextButton(onClick = { 
+                    navController.navigate(Screen.Register.route)
+                }) {
                     Text("Regístrate")
                 }
             }

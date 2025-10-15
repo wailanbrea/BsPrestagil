@@ -232,10 +232,10 @@ fun DashboardScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     QuickAccessCard(
-                        icon = Icons.Default.Badge,
-                        label = "Dashboard Cobrador",
+                        icon = Icons.Default.People,
+                        label = "Gestionar Cobradores",
                         modifier = Modifier.weight(1f),
-                        onClick = { navController.navigate(Screen.CobradorDashboard.route) }
+                        onClick = { navController.navigate(Screen.GestionCobradores.route) }
                     )
                     
                     QuickAccessCard(

@@ -7,4 +7,13 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    
+    <!-- Colores del icono BSPrestagil -->
+    <color name="launcher_background">#FF1a237e</color>
+    <color name="bs_prestagil_blue_dark">#FF1a237e</color>
+    <color name="bs_prestagil_blue_light">#FF2196f3</color>
+    
+    <!-- Colores del SplashScreen -->
+    <color name="splash_background_color">#FFFFFFFF</color>
+    
 </resources>

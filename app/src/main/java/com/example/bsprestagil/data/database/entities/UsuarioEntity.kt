@@ -10,7 +10,7 @@ data class UsuarioEntity(
     val nombre: String,
     val email: String,
     val telefono: String = "",
-    val rol: String, // ADMIN, COBRADOR, SUPERVISOR
+    val rol: String, // ADMIN, COBRADOR
     val activo: Boolean = true,
     val fechaCreacion: Long,
     

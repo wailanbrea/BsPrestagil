@@ -35,6 +35,8 @@ class ClientsViewModel(application: Application) : AndroidViewModel(application)
     /**
      * Establece los IDs de clientes que el cobrador puede ver
      * (basado en sus préstamos asignados)
+     * @param clientesIds Set de IDs de clientes obtenidos de préstamos del cobrador
+     * Nota: Estrategia de filtrado indirecta - se obtienen clienteIds de préstamos donde cobradorId == usuario
      */
     fun setClientesPermitidos(clientesIds: Set<String>?) {
         _clientesIdsPermitidos.value = clientesIds

@@ -39,6 +39,8 @@ class LoansViewModel(application: Application) : AndroidViewModel(application) {
     
     /**
      * Establece el ID del cobrador para filtrar automáticamente sus préstamos
+     * @param cobradorId UID de Firebase del cobrador (se guarda en cobradorId del préstamo)
+     * Nota: Estrategia de filtrado por cobradorId en la tabla préstamos
      */
     fun setCobradorFilter(cobradorId: String?) {
         _cobradorId.value = cobradorId

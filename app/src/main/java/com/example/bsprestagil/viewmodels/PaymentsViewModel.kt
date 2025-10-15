@@ -26,6 +26,8 @@ class PaymentsViewModel(application: Application) : AndroidViewModel(application
     private val _pagos = MutableStateFlow<List<Pago>>(emptyList())
     val pagos: StateFlow<List<Pago>> = _pagos.asStateFlow()
     
+    // NOTA: Para pagos usamos email porque recibidoPor guarda el email del usuario
+    // Para mantener consistencia con otros ViewModels, el método se llama igual
     private val _cobradorEmail = MutableStateFlow<String?>(null)
     
     // Exponer todos los pagos como Flow (para filtrados externos)
@@ -49,10 +51,12 @@ class PaymentsViewModel(application: Application) : AndroidViewModel(application
     }
     
     /**
-     * Establece el email del cobrador para filtrar solo sus pagos
+     * Establece el filtro del cobrador para ver solo sus pagos
+     * @param cobradorEmail Email del cobrador (porque recibidoPor guarda email)
+     * Nota: Mantiene el nombre setCobradorFilter() por consistencia con otros ViewModels
      */
-    fun setCobradorFilter(email: String?) {
-        _cobradorEmail.value = email
+    fun setCobradorFilter(cobradorEmail: String?) {
+        _cobradorEmail.value = cobradorEmail
     }
     
     private fun loadPagos() {
@@ -62,11 +66,8 @@ class PaymentsViewModel(application: Application) : AndroidViewModel(application
                 _cobradorEmail
             ) { pagos, cobradorEmail ->
                 if (cobradorEmail != null) {
-                    // ⭐ Filtrar por email (también busca por nombre para retrocompatibilidad)
-                    pagos.filter { 
-                        it.recibidoPor == cobradorEmail || 
-                        it.recibidoPor.contains(cobradorEmail, ignoreCase = true)
-                    }.map { it.toPago() }
+                    // ⭐ Filtrar por email (recibidoPor siempre contiene el email del usuario)
+                    pagos.filter { it.recibidoPor == cobradorEmail }.map { it.toPago() }
                 } else {
                     pagos.map { it.toPago() }
                 }
@@ -283,9 +284,9 @@ class PaymentsViewModel(application: Application) : AndroidViewModel(application
             // Contar cuántas cuotas se han pagado completamente
             val cuotasPagadas = cuotaRepository.countCuotasPagadas(prestamo.id)
             
-            // Determinar nuevo estado
+            // Determinar nuevo estado (con tolerancia de $1.00 para errores de redondeo)
             val nuevoEstado = when {
-                nuevoCapitalPendiente <= 0.0 -> "COMPLETADO"
+                nuevoCapitalPendiente < 1.0 -> "COMPLETADO"  // Tolerancia: menos de $1 = completado
                 cuotasPagadas >= prestamo.numeroCuotas -> "COMPLETADO"
                 else -> "ACTIVO" // Puede ser ATRASADO si hay mora, pero eso se maneja en otra parte
             }
