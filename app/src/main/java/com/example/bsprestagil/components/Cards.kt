@@ -1,5 +1,6 @@
 package com.example.bsprestagil.components
 
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -7,9 +8,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -120,13 +122,30 @@ fun ClientCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // Animación de aparición
+    var visible by remember { mutableStateOf(false) }
+    val scale by animateFloatAsState(
+        targetValue = if (visible) 1f else 0.95f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "cardScale"
+    )
+    
+    LaunchedEffect(Unit) {
+        visible = true
+    }
+    
     Card(
-        modifier = modifier.clickable(onClick = onClick),
+        modifier = modifier
+            .clickable(onClick = onClick)
+            .scale(scale),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp, pressedElevation = 8.dp)
     ) {
         Row(
             modifier = Modifier
@@ -189,13 +208,30 @@ fun LoanCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // Animación de aparición
+    var visible by remember { mutableStateOf(false) }
+    val scale by animateFloatAsState(
+        targetValue = if (visible) 1f else 0.95f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "loanCardScale"
+    )
+    
+    LaunchedEffect(Unit) {
+        visible = true
+    }
+    
     Card(
-        modifier = modifier.clickable(onClick = onClick),
+        modifier = modifier
+            .clickable(onClick = onClick)
+            .scale(scale),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp, pressedElevation = 8.dp),
         border = BorderStroke(1.dp, estadoColor.copy(alpha = 0.3f))
     ) {
         Column(

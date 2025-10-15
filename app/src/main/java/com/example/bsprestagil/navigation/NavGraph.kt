@@ -1,5 +1,9 @@
 package com.example.bsprestagil.navigation
 
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -76,8 +80,12 @@ fun NavGraph(
             )
         }
         
-        // Main Tabs
-        composable(Screen.Dashboard.route) {
+        // Main Tabs (con animaciones fade)
+        composable(
+            route = Screen.Dashboard.route,
+            enterTransition = { fadeIn(animationSpec = tween(300)) },
+            exitTransition = { fadeOut(animationSpec = tween(300)) }
+        ) {
             ProtectedRoute(
                 navController = navController,
                 currentRoute = Screen.Dashboard.route,
@@ -90,28 +98,44 @@ fun NavGraph(
             }
         }
         
-        composable(Screen.Clients.route) {
+        composable(
+            route = Screen.Clients.route,
+            enterTransition = { fadeIn(animationSpec = tween(300)) },
+            exitTransition = { fadeOut(animationSpec = tween(300)) }
+        ) {
             ClientsScreen(
                 navController = navController,
                 authViewModel = authViewModel
             )
         }
         
-        composable(Screen.Loans.route) {
+        composable(
+            route = Screen.Loans.route,
+            enterTransition = { fadeIn(animationSpec = tween(300)) },
+            exitTransition = { fadeOut(animationSpec = tween(300)) }
+        ) {
             LoansScreen(
                 navController = navController,
                 authViewModel = authViewModel
             )
         }
         
-        composable(Screen.Payments.route) {
+        composable(
+            route = Screen.Payments.route,
+            enterTransition = { fadeIn(animationSpec = tween(300)) },
+            exitTransition = { fadeOut(animationSpec = tween(300)) }
+        ) {
             PaymentsScreen(
                 navController = navController,
                 authViewModel = authViewModel
             )
         }
         
-        composable(Screen.Settings.route) {
+        composable(
+            route = Screen.Settings.route,
+            enterTransition = { fadeIn(animationSpec = tween(300)) },
+            exitTransition = { fadeOut(animationSpec = tween(300)) }
+        ) {
             SettingsScreen(
                 navController = navController,
                 authViewModel = authViewModel
@@ -156,10 +180,34 @@ fun NavGraph(
             )
         }
         
-        // Clients
+        // Clients (con animaciones slide)
         composable(
             route = Screen.ClientDetail.route,
-            arguments = listOf(navArgument("clientId") { type = NavType.StringType })
+            arguments = listOf(navArgument("clientId") { type = NavType.StringType }),
+            enterTransition = {
+                slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(300)
+                )
+            },
+            exitTransition = {
+                slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(300)
+                )
+            },
+            popEnterTransition = {
+                slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(300)
+                )
+            },
+            popExitTransition = {
+                slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(300)
+                )
+            }
         ) { backStackEntry ->
             val clientId = backStackEntry.arguments?.getString("clientId") ?: ""
             ClientDetailScreen(
@@ -174,7 +222,22 @@ fun NavGraph(
                 type = NavType.StringType
                 nullable = true
                 defaultValue = null
-            })
+            }),
+            enterTransition = {
+                slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Up,
+                    animationSpec = tween(400)
+                )
+            },
+            exitTransition = {
+                fadeOut(animationSpec = tween(300))
+            },
+            popExitTransition = {
+                slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Down,
+                    animationSpec = tween(400)
+                )
+            }
         ) { backStackEntry ->
             val clientId = backStackEntry.arguments?.getString("clientId")
             AddEditClientScreen(
@@ -183,10 +246,34 @@ fun NavGraph(
             )
         }
         
-        // Loans
+        // Loans (con animaciones slide)
         composable(
             route = Screen.LoanDetail.route,
-            arguments = listOf(navArgument("loanId") { type = NavType.StringType })
+            arguments = listOf(navArgument("loanId") { type = NavType.StringType }),
+            enterTransition = {
+                slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(300)
+                )
+            },
+            exitTransition = {
+                slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(300)
+                )
+            },
+            popEnterTransition = {
+                slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(300)
+                )
+            },
+            popExitTransition = {
+                slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(300)
+                )
+            }
         ) { backStackEntry ->
             val loanId = backStackEntry.arguments?.getString("loanId") ?: ""
             LoanDetailScreen(

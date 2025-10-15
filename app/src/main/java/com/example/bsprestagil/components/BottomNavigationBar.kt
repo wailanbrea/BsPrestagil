@@ -1,13 +1,15 @@
 package com.example.bsprestagil.components
 
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -73,6 +75,16 @@ fun BottomNavigationBar(
             items.forEach { item ->
                 val selected = currentRoute == item.route
                 
+                // Animación de escala para el icono seleccionado
+                val iconScale by animateFloatAsState(
+                    targetValue = if (selected) 1.2f else 1f,
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessMedium
+                    ),
+                    label = "iconScale"
+                )
+                
                 NavigationBarItem(
                     selected = selected,
                     onClick = {
@@ -96,7 +108,9 @@ fun BottomNavigationBar(
                         Icon(
                             imageVector = item.icon,
                             contentDescription = item.label,
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier
+                                .size(24.dp)
+                                .scale(iconScale)
                         )
                     },
                     label = {
@@ -111,7 +125,7 @@ fun BottomNavigationBar(
                         selectedTextColor = MaterialTheme.colorScheme.primary,
                         unselectedIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                         unselectedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                        indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                        indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
                     )
                 )
             }

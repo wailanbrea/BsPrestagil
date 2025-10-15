@@ -5,7 +5,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.SearchOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,6 +19,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.bsprestagil.components.BottomNavigationBar
 import com.example.bsprestagil.components.ClientCard
+import com.example.bsprestagil.components.EmptyStateComponent
 import com.example.bsprestagil.data.models.EstadoPagos
 import com.example.bsprestagil.navigation.Screen
 import com.example.bsprestagil.ui.theme.ErrorColor
@@ -131,52 +134,58 @@ fun ClientsScreen(
                 singleLine = true
             )
             
-            // Lista de clientes
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(clientes) { cliente ->
-                    val estadoColor = when (cliente.historialPagos) {
-                        EstadoPagos.AL_DIA -> SuccessColor
-                        EstadoPagos.ATRASADO -> WarningColor
-                        EstadoPagos.MOROSO -> ErrorColor
-                    }
-                    
-                    val estadoTexto = when (cliente.historialPagos) {
-                        EstadoPagos.AL_DIA -> "Al día"
-                        EstadoPagos.ATRASADO -> "Atrasado"
-                        EstadoPagos.MOROSO -> "Moroso"
-                    }
-                    
-                    ClientCard(
-                        nombre = cliente.nombre,
-                        telefono = cliente.telefono,
-                        prestamosActivos = cliente.prestamosActivos,
-                        estado = estadoTexto,
-                        estadoColor = estadoColor,
-                        onClick = {
-                            navController.navigate(Screen.ClientDetail.createRoute(cliente.id))
+            // Lista de clientes o estado vacío
+            if (clientes.isEmpty() && searchQuery.isBlank()) {
+                EmptyStateComponent(
+                    icon = Icons.Default.PersonAdd,
+                    title = "No hay clientes registrados",
+                    message = if (userRole == "COBRADOR") {
+                        "Aún no tienes clientes asignados.\nContacta a tu administrador para que te asigne préstamos."
+                    } else {
+                        "Comienza agregando tu primer cliente para gestionar préstamos."
+                    },
+                    actionText = if (userRole != "COBRADOR") "Agregar cliente" else null,
+                    onActionClick = if (userRole != "COBRADOR") {
+                        { navController.navigate(Screen.AddEditClient.createRoute()) }
+                    } else null
+                )
+            } else if (clientes.isEmpty() && searchQuery.isNotBlank()) {
+                EmptyStateComponent(
+                    icon = Icons.Default.SearchOff,
+                    title = "Sin resultados",
+                    message = "No se encontraron clientes que coincidan con \"$searchQuery\".\nIntenta con otro término de búsqueda.",
+                    actionText = null,
+                    onActionClick = null
+                )
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(clientes) { cliente ->
+                        val estadoColor = when (cliente.historialPagos) {
+                            EstadoPagos.AL_DIA -> SuccessColor
+                            EstadoPagos.ATRASADO -> WarningColor
+                            EstadoPagos.MOROSO -> ErrorColor
                         }
-                    )
-                }
-                
-                if (clientes.isEmpty()) {
-                    item {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(32.dp)
-                        ) {
-                            Text(
-                                text = if (searchQuery.isBlank()) 
-                                    "No hay clientes registrados" 
-                                else 
-                                    "No se encontraron clientes",
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                            )
+                        
+                        val estadoTexto = when (cliente.historialPagos) {
+                            EstadoPagos.AL_DIA -> "Al día"
+                            EstadoPagos.ATRASADO -> "Atrasado"
+                            EstadoPagos.MOROSO -> "Moroso"
                         }
+                        
+                        ClientCard(
+                            nombre = cliente.nombre,
+                            telefono = cliente.telefono,
+                            prestamosActivos = cliente.prestamosActivos,
+                            estado = estadoTexto,
+                            estadoColor = estadoColor,
+                            onClick = {
+                                navController.navigate(Screen.ClientDetail.createRoute(cliente.id))
+                            }
+                        )
                     }
                 }
             }

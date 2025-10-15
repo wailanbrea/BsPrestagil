@@ -11,6 +11,7 @@ import com.example.bsprestagil.data.models.Pago
 import com.example.bsprestagil.data.repository.PagoRepository
 import com.example.bsprestagil.data.repository.PrestamoRepository
 import com.example.bsprestagil.data.repository.CuotaRepository
+import com.example.bsprestagil.firebase.FirebaseService
 import com.example.bsprestagil.utils.InteresUtils
 import com.example.bsprestagil.utils.CronogramaUtils
 import kotlinx.coroutines.flow.*
@@ -22,6 +23,7 @@ class PaymentsViewModel(application: Application) : AndroidViewModel(application
     private val pagoRepository = PagoRepository(database.pagoDao())
     private val prestamoRepository = PrestamoRepository(database.prestamoDao())
     private val cuotaRepository = CuotaRepository(database.cuotaDao())
+    private val firebaseService = FirebaseService()
     
     private val _pagos = MutableStateFlow<List<Pago>>(emptyList())
     val pagos: StateFlow<List<Pago>> = _pagos.asStateFlow()
@@ -220,7 +222,36 @@ class PaymentsViewModel(application: Application) : AndroidViewModel(application
                         reciboUrl = ""
                     )
                     
-                    pagoRepository.insertPago(pago)
+                    android.util.Log.d("PaymentsViewModel", "💾 Guardando pago:")
+                    android.util.Log.d("PaymentsViewModel", "  - Monto: $$montoPagado")
+                    android.util.Log.d("PaymentsViewModel", "  - RecibidoPor: $recibidoPor")
+                    android.util.Log.d("PaymentsViewModel", "  - Cliente: $clienteNombre")
+                    android.util.Log.d("PaymentsViewModel", "  - PendingSync: ${pago.pendingSync}")
+                    
+                    val pagoId = pagoRepository.insertPago(pago)
+                    android.util.Log.d("PaymentsViewModel", "✅ Pago guardado en Room con ID: $pagoId")
+                    
+                    // 🚀 Sincronizar INMEDIATAMENTE a Firebase (no esperar 15 minutos)
+                    try {
+                        android.util.Log.d("PaymentsViewModel", "📤 Sincronizando pago a Firebase inmediatamente...")
+                        
+                        // Obtener el pago recién guardado para sincronizarlo
+                        pagoRepository.getPagoById(pagoId).firstOrNull()?.let { pagoGuardado ->
+                            val syncResult = firebaseService.syncPago(pagoGuardado)
+                            if (syncResult.isSuccess) {
+                                // Marcar como sincronizado
+                                pagoRepository.markAsSynced(pagoId)
+                                android.util.Log.d("PaymentsViewModel", "✅ Pago sincronizado exitosamente a Firebase")
+                                android.util.Log.d("PaymentsViewModel", "💡 El cobrador puede refrescar su dashboard para ver la comisión")
+                            } else {
+                                android.util.Log.w("PaymentsViewModel", "⚠️ Error al sincronizar pago: ${syncResult.exceptionOrNull()?.message}")
+                                android.util.Log.w("PaymentsViewModel", "⏰ Se sincronizará automáticamente en la próxima ejecución del SyncWorker")
+                            }
+                        }
+                    } catch (e: Exception) {
+                        android.util.Log.e("PaymentsViewModel", "❌ Error al sincronizar inmediatamente: ${e.message}")
+                        android.util.Log.w("PaymentsViewModel", "⏰ Se sincronizará automáticamente en la próxima ejecución del SyncWorker")
+                    }
                     
                     // Actualizar la cuota correspondiente si existe
                     var huboAbonoExtraordinario = false
@@ -284,12 +315,30 @@ class PaymentsViewModel(application: Application) : AndroidViewModel(application
             // Contar cuántas cuotas se han pagado completamente
             val cuotasPagadas = cuotaRepository.countCuotasPagadas(prestamo.id)
             
+            // Log para debugging de estado
+            android.util.Log.d("PaymentsViewModel", "📊 Evaluando estado del préstamo:")
+            android.util.Log.d("PaymentsViewModel", "  - Capital pendiente ANTES: ${prestamo.capitalPendiente}")
+            android.util.Log.d("PaymentsViewModel", "  - Monto a capital: $montoACapital")
+            android.util.Log.d("PaymentsViewModel", "  - Capital pendiente DESPUÉS: $nuevoCapitalPendiente")
+            android.util.Log.d("PaymentsViewModel", "  - Cuotas pagadas: $cuotasPagadas / ${prestamo.numeroCuotas}")
+            
             // Determinar nuevo estado (con tolerancia de $1.00 para errores de redondeo)
             val nuevoEstado = when {
-                nuevoCapitalPendiente < 1.0 -> "COMPLETADO"  // Tolerancia: menos de $1 = completado
-                cuotasPagadas >= prestamo.numeroCuotas -> "COMPLETADO"
-                else -> "ACTIVO" // Puede ser ATRASADO si hay mora, pero eso se maneja en otra parte
+                nuevoCapitalPendiente < 1.0 -> {
+                    android.util.Log.d("PaymentsViewModel", "✅ Capital < $1.00 → Marcando como COMPLETADO")
+                    "COMPLETADO"
+                }
+                cuotasPagadas >= prestamo.numeroCuotas -> {
+                    android.util.Log.d("PaymentsViewModel", "✅ Todas las cuotas pagadas → Marcando como COMPLETADO")
+                    "COMPLETADO"
+                }
+                else -> {
+                    android.util.Log.d("PaymentsViewModel", "⏳ Préstamo continúa ACTIVO")
+                    "ACTIVO"
+                }
             }
+            
+            android.util.Log.d("PaymentsViewModel", "🎯 Nuevo estado: $nuevoEstado")
             
             // Actualizar préstamo con los nuevos valores
             prestamoRepository.updatePrestamo(

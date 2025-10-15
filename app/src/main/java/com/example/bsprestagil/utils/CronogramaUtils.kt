@@ -6,8 +6,9 @@ import java.util.Calendar
 
 object CronogramaUtils {
     
-    // Tolerancia para comparaciones de decimales (1 centavo)
-    private const val TOLERANCIA_DECIMAL = 0.01
+    // Tolerancia para comparaciones de decimales ($1.00 para redondeos)
+    // Si falta menos de $1.00, se considera pagado completo
+    private const val TOLERANCIA_DECIMAL = 1.00
     
     /**
      * Compara dos valores con tolerancia decimal
@@ -114,12 +115,28 @@ object CronogramaUtils {
         // Calcular totales acumulados
         val totalPagado = cuota.montoPagado + montoPagado
         
+        android.util.Log.d("CronogramaUtils", "📊 Actualizando cuota #${cuota.numeroCuota}:")
+        android.util.Log.d("CronogramaUtils", "  - Cuota mínima: ${cuota.montoCuotaMinimo}")
+        android.util.Log.d("CronogramaUtils", "  - Total pagado: $totalPagado")
+        android.util.Log.d("CronogramaUtils", "  - Diferencia: ${cuota.montoCuotaMinimo - totalPagado}")
+        
         // Determinar estado de la cuota después del pago (con tolerancia de decimales)
         val nuevoEstado = when {
-            esMayorOIgualConTolerancia(totalPagado, cuota.montoCuotaMinimo) -> "PAGADA"
-            totalPagado > 0 -> "PARCIAL"
-            else -> "PENDIENTE"
+            esMayorOIgualConTolerancia(totalPagado, cuota.montoCuotaMinimo) -> {
+                android.util.Log.d("CronogramaUtils", "✅ Total pagado >= cuota mínima (con tolerancia) → PAGADA")
+                "PAGADA"
+            }
+            totalPagado > 0 -> {
+                android.util.Log.d("CronogramaUtils", "⏳ Pago parcial → PARCIAL")
+                "PARCIAL"
+            }
+            else -> {
+                android.util.Log.d("CronogramaUtils", "⏸️ Sin pago → PENDIENTE")
+                "PENDIENTE"
+            }
         }
+        
+        android.util.Log.d("CronogramaUtils", "🎯 Nuevo estado de cuota: $nuevoEstado")
         
         return cuota.copy(
             montoPagado = totalPagado,
