@@ -68,11 +68,19 @@ dependencies {
     // Pull to Refresh
     implementation("com.google.accompanist:accompanist-swiperefresh:0.32.0")
     
+    // Shimmer loading effect
+    implementation("com.valentinilk.shimmer:compose-shimmer:1.2.0")
+    
     // Room Database
     val roomVersion = "2.6.1"
     implementation("androidx.room:room-runtime:$roomVersion")
     implementation("androidx.room:room-ktx:$roomVersion")
     ksp("androidx.room:room-compiler:$roomVersion")
+    
+    // Paging 3 (para listas grandes)
+    implementation("androidx.paging:paging-runtime-ktx:3.2.1")
+    implementation("androidx.paging:paging-compose:3.2.1")
+    implementation("androidx.room:room-paging:$roomVersion")
     
     // Firebase
     implementation(platform("com.google.firebase:firebase-bom:32.7.0"))

@@ -20,6 +20,8 @@ import androidx.navigation.NavController
 import com.example.bsprestagil.components.BottomNavigationBar
 import com.example.bsprestagil.components.ClientCard
 import com.example.bsprestagil.components.EmptyStateComponent
+import com.example.bsprestagil.components.ShimmerCardList
+import com.example.bsprestagil.components.ClientCardShimmer
 import com.example.bsprestagil.data.models.EstadoPagos
 import com.example.bsprestagil.navigation.Screen
 import com.example.bsprestagil.ui.theme.ErrorColor
@@ -38,14 +40,9 @@ fun ClientsScreen(
     // ⭐ Leer rol y usuario actual del AuthViewModel (viene de Firestore)
     val userRole by authViewModel.userRole.collectAsState()
     
-    // ⭐ Si el rol aún no se ha cargado, mostrar loading
+    // ⭐ Si el rol aún no se ha cargado, mostrar shimmer loading
     if (userRole == null) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator()
-        }
+        ShimmerCardList(count = 8, cardType = { ClientCardShimmer(it) })
         return
     }
     

@@ -16,7 +16,10 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.bsprestagil.components.TopAppBarComponent
+import com.example.bsprestagil.components.ValidatedTextField
+import com.example.bsprestagil.components.validateForm
 import com.example.bsprestagil.data.mappers.toEntity
+import com.example.bsprestagil.utils.ValidationUtils
 import com.example.bsprestagil.viewmodels.ClientsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -102,43 +105,49 @@ fun AddEditClientScreen(
                 color = MaterialTheme.colorScheme.primary
             )
             
-            OutlinedTextField(
+            ValidatedTextField(
                 value = nombre,
                 onValueChange = { nombre = it },
-                label = { Text("Nombre completo *") },
+                label = "Nombre completo *",
                 leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                validator = { ValidationUtils.validateNotEmpty(it, "Nombre") },
+                validateOnChange = true
             )
             
-            OutlinedTextField(
+            ValidatedTextField(
                 value = telefono,
                 onValueChange = { telefono = it },
-                label = { Text("Teléfono *") },
+                label = "Teléfono *",
                 leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null) },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                validator = { ValidationUtils.validatePhone(it) },
+                validateOnChange = true
             )
             
-            OutlinedTextField(
+            ValidatedTextField(
                 value = email,
                 onValueChange = { email = it },
-                label = { Text("Correo electrónico") },
+                label = "Correo electrónico",
                 leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                validator = { if (it.isNotBlank()) ValidationUtils.validateEmail(it) else ValidationUtils.ValidationResult.success() },
+                validateOnChange = true
             )
             
-            OutlinedTextField(
+            ValidatedTextField(
                 value = direccion,
                 onValueChange = { direccion = it },
-                label = { Text("Dirección *") },
+                label = "Dirección *",
                 leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null) },
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 2,
-                maxLines = 3
+                maxLines = 3,
+                singleLine = false,
+                validator = { ValidationUtils.validateNotEmpty(it, "Dirección") },
+                validateOnChange = true
             )
             
             Spacer(modifier = Modifier.height(8.dp))
@@ -246,19 +255,40 @@ fun AddEditClientScreen(
             // Botón de guardar
             Button(
                 onClick = {
-                    clientsViewModel.insertCliente(
-                        nombre = nombre,
-                        telefono = telefono,
-                        email = email,
-                        direccion = direccion,
-                        referencia1Nombre = referencia1Nombre,
-                        referencia1Telefono = referencia1Telefono,
-                        referencia1Relacion = referencia1Relacion,
-                        referencia2Nombre = referencia2Nombre,
-                        referencia2Telefono = referencia2Telefono,
-                        referencia2Relacion = referencia2Relacion
-                    )
-                    showSuccessDialog = true
+                    // Validar todos los campos antes de guardar
+                    val nombreValid = ValidationUtils.validateNotEmpty(nombre, "Nombre")
+                    val telefonoValid = ValidationUtils.validatePhone(telefono)
+                    val direccionValid = ValidationUtils.validateNotEmpty(direccion, "Dirección")
+                    val emailValid = if (email.isNotBlank()) 
+                        ValidationUtils.validateEmail(email) 
+                    else 
+                        ValidationUtils.ValidationResult.success()
+                    
+                    // Si todo es válido, guardar
+                    if (validateForm(
+                        { nombreValid },
+                        { telefonoValid },
+                        { direccionValid },
+                        { emailValid }
+                    )) {
+                        // Sanitizar datos antes de guardar
+                        val nombreSanitized = ValidationUtils.sanitizeInput(nombre)
+                        val direccionSanitized = ValidationUtils.sanitizeInput(direccion)
+                        
+                        clientsViewModel.insertCliente(
+                            nombre = nombreSanitized,
+                            telefono = telefono,
+                            email = email,
+                            direccion = direccionSanitized,
+                            referencia1Nombre = referencia1Nombre,
+                            referencia1Telefono = referencia1Telefono,
+                            referencia1Relacion = referencia1Relacion,
+                            referencia2Nombre = referencia2Nombre,
+                            referencia2Telefono = referencia2Telefono,
+                            referencia2Relacion = referencia2Relacion
+                        )
+                        showSuccessDialog = true
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()

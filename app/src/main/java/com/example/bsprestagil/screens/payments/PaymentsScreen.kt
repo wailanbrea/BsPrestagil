@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.bsprestagil.components.BottomNavigationBar
+import com.example.bsprestagil.components.EmptyStateComponent
 import com.example.bsprestagil.data.models.MetodoPago
 import com.example.bsprestagil.data.models.Pago
 import com.example.bsprestagil.navigation.Screen
@@ -195,14 +196,43 @@ fun PaymentsScreen(
                 )
             }
             
-            items(pagosFiltrados) { pago ->
-                PaymentCard(
-                    pago = pago,
-                    dateFormat = dateFormat,
-                    onClick = {
-                        navController.navigate(Screen.PaymentDetail.createRoute(pago.id))
+            if (pagosFiltrados.isEmpty()) {
+                item {
+                    if (cobradorFiltroSeleccionado != null) {
+                        EmptyStateComponent(
+                            icon = Icons.Default.FilterList,
+                            title = "Sin pagos registrados",
+                            message = "El cobrador seleccionado no tiene pagos registrados.\nSelecciona otro cobrador o limpia el filtro.",
+                            actionText = "Limpiar filtro",
+                            onActionClick = {
+                                cobradorFiltroSeleccionado = null
+                                cobradorFiltroNombre = null
+                            }
+                        )
+                    } else {
+                        EmptyStateComponent(
+                            icon = Icons.Default.Payment,
+                            title = "No hay pagos registrados",
+                            message = if (userRole == "COBRADOR") {
+                                "Aún no has registrado ningún pago.\nComienza cobrando a tus clientes."
+                            } else {
+                                "No hay pagos registrados en el sistema.\nLos pagos aparecerán aquí cuando se registren."
+                            },
+                            actionText = null,
+                            onActionClick = null
+                        )
                     }
-                )
+                }
+            } else {
+                items(pagosFiltrados) { pago ->
+                    PaymentCard(
+                        pago = pago,
+                        dateFormat = dateFormat,
+                        onClick = {
+                            navController.navigate(Screen.PaymentDetail.createRoute(pago.id))
+                        }
+                    )
+                }
             }
         }
     }

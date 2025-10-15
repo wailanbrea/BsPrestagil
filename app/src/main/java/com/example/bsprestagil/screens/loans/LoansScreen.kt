@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.FilterList
@@ -20,6 +21,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.bsprestagil.components.BottomNavigationBar
 import com.example.bsprestagil.components.LoanCard
+import com.example.bsprestagil.components.EmptyStateComponent
+import com.example.bsprestagil.components.ShimmerCardList
+import com.example.bsprestagil.components.LoanCardShimmer
 import com.example.bsprestagil.data.models.EstadoPrestamo
 import com.example.bsprestagil.navigation.Screen
 import com.example.bsprestagil.ui.theme.ErrorColor
@@ -39,14 +43,9 @@ fun LoansScreen(
     // ⭐ Leer rol y usuario actual del AuthViewModel (viene de Firestore)
     val userRole by authViewModel.userRole.collectAsState()
     
-    // ⭐ Si el rol aún no se ha cargado, mostrar loading
+    // ⭐ Si el rol aún no se ha cargado, mostrar shimmer loading
     if (userRole == null) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator()
-        }
+        ShimmerCardList(count = 8, cardType = { LoanCardShimmer(it) })
         return
     }
     
@@ -265,17 +264,30 @@ fun LoansScreen(
             
             if (prestamosFiltrados.isEmpty()) {
                 item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(32.dp)
-                    ) {
-                        Text(
-                            text = if (filtroEstado != null || cobradorFiltroSeleccionado != null) 
-                                "No hay préstamos con estos filtros"
-                            else 
-                                "No hay préstamos registrados",
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    if (filtroEstado != null || cobradorFiltroSeleccionado != null) {
+                        EmptyStateComponent(
+                            icon = Icons.Default.FilterList,
+                            title = "Sin resultados",
+                            message = "No hay préstamos que coincidan con los filtros seleccionados.\nIntenta ajustar o limpiar los filtros.",
+                            actionText = "Limpiar filtros",
+                            onActionClick = {
+                                loansViewModel.setFiltroEstado(null)
+                                cobradorFiltroSeleccionado = null
+                            }
+                        )
+                    } else {
+                        EmptyStateComponent(
+                            icon = Icons.Default.AccountBalance,
+                            title = "No hay préstamos registrados",
+                            message = if (userRole == "COBRADOR") {
+                                "Aún no tienes préstamos asignados.\nContacta a tu administrador."
+                            } else {
+                                "Comienza creando tu primer préstamo para tus clientes."
+                            },
+                            actionText = if (userRole != "COBRADOR") "Crear préstamo" else null,
+                            onActionClick = if (userRole != "COBRADOR") {
+                                { navController.navigate(Screen.AddLoan.createRoute()) }
+                            } else null
                         )
                     }
                 }
