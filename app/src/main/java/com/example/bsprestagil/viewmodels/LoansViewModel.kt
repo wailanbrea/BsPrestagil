@@ -11,8 +11,9 @@ import com.example.bsprestagil.data.models.FrecuenciaPago
 import com.example.bsprestagil.data.models.Prestamo
 import com.example.bsprestagil.data.repository.PrestamoRepository
 import com.example.bsprestagil.data.repository.CuotaRepository
-import com.example.bsprestagil.utils.CronogramaUtils
 import com.example.bsprestagil.utils.AmortizacionUtils
+import com.example.bsprestagil.utils.AuthUtils
+import com.example.bsprestagil.utils.CronogramaUtils
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -101,6 +102,7 @@ class LoansViewModel(application: Application) : AndroidViewModel(application) {
         frecuenciaPago: FrecuenciaPago,
         tipoAmortizacion: com.example.bsprestagil.data.models.TipoAmortizacion, // Sistema Francés o Alemán
         numeroCuotas: Int, // NUEVO: número de cuotas
+        diaCobroPreferido: Int? = null, // NUEVO: día del mes para cobro (1-31)
         garantiaId: String? = null,
         notas: String = ""
     ) {
@@ -120,6 +122,8 @@ class LoansViewModel(application: Application) : AndroidViewModel(application) {
                 
                 // Primera cuota (en Francés es fija, en Alemán es la mayor)
                 val montoCuotaFija = tablaAmortizacion.firstOrNull()?.cuotaFija ?: 0.0
+                
+                val adminId = AuthUtils.getCurrentAdminId()
                 
                 val prestamo = PrestamoEntity(
                     id = "",
@@ -142,7 +146,8 @@ class LoansViewModel(application: Application) : AndroidViewModel(application) {
                     totalInteresesPagados = 0.0,
                     totalCapitalPagado = 0.0,
                     totalMorasPagadas = 0.0,
-                    notas = notas
+                    notas = notas,
+                    adminId = adminId // NUEVO: Multi-tenant
                 )
                 
                 // Insertar préstamo y obtener el ID
@@ -156,7 +161,9 @@ class LoansViewModel(application: Application) : AndroidViewModel(application) {
                     frecuenciaPago = frecuenciaPago,
                     tipoAmortizacion = tipoAmortizacion,
                     numeroCuotas = numeroCuotas,
-                    fechaInicio = fechaInicio
+                    fechaInicio = fechaInicio,
+                    diaCobroPreferido = diaCobroPreferido, // NUEVO: Día de cobro
+                    adminId = adminId // NUEVO: Multi-tenant
                 )
                 
                 // Insertar todas las cuotas
@@ -176,6 +183,30 @@ class LoansViewModel(application: Application) : AndroidViewModel(application) {
                 // TODO: Implementar actualización de estado
             } catch (e: Exception) {
                 // Manejar error
+            }
+        }
+    }
+    
+    // Eliminar préstamo (solo ADMIN)
+    fun deletePrestamo(prestamo: PrestamoEntity) {
+        viewModelScope.launch {
+            prestamoRepository.deletePrestamo(prestamo)
+        }
+    }
+    
+    // Eliminar préstamo por ID (obtiene el entity completo de Room con firebaseId)
+    fun deletePrestamoById(prestamoId: String) {
+        viewModelScope.launch {
+            try {
+                val adminId = AuthUtils.getCurrentAdminId()
+                val prestamoEntity = database.prestamoDao().getPrestamoByIdSync(prestamoId, adminId)
+                
+                if (prestamoEntity != null) {
+                    android.util.Log.d("LoansViewModel", "🗑️ Eliminando préstamo: ${prestamoEntity.id}, firebaseId: ${prestamoEntity.firebaseId}")
+                    prestamoRepository.deletePrestamo(prestamoEntity)
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("LoansViewModel", "❌ Error eliminando: ${e.message}")
             }
         }
     }

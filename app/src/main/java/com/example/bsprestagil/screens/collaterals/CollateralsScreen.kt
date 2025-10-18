@@ -14,7 +14,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.bsprestagil.components.SwipeToDeleteItem
 import com.example.bsprestagil.components.TopAppBarComponent
+import com.example.bsprestagil.data.mappers.toEntity
 import com.example.bsprestagil.data.models.EstadoGarantia
 import com.example.bsprestagil.data.models.Garantia
 import com.example.bsprestagil.data.models.TipoGarantia
@@ -22,12 +25,18 @@ import com.example.bsprestagil.navigation.Screen
 import com.example.bsprestagil.ui.theme.ErrorColor
 import com.example.bsprestagil.ui.theme.SuccessColor
 import com.example.bsprestagil.ui.theme.WarningColor
+import com.example.bsprestagil.utils.AuthUtils
+import com.example.bsprestagil.viewmodels.AuthViewModel
+import com.example.bsprestagil.viewmodels.CollateralsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CollateralsScreen(
-    navController: NavController
+    navController: NavController,
+    collateralsViewModel: CollateralsViewModel = viewModel(),
+    authViewModel: AuthViewModel = viewModel()
 ) {
+    val userRole by authViewModel.userRole.collectAsState()
     val garantias = remember {
         listOf(
             Garantia(
@@ -86,25 +95,39 @@ fun CollateralsScreen(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(garantias) { garantia ->
-                CollateralCard(
-                    garantia = garantia,
-                    onClick = {
-                        navController.navigate(Screen.CollateralDetail.createRoute(garantia.id))
-                    },
-                    onQRClick = {
-                        navController.navigate(
-                            Screen.QRGarantia.createRoute(
-                                garantiaId = garantia.id,
-                                clienteNombre = "Cliente", // TODO: Obtener nombre real del cliente
-                                descripcion = garantia.descripcion,
-                                valorEstimado = garantia.valorEstimado,
-                                tipo = garantia.tipo.name,
-                                fechaRegistro = garantia.fechaRegistro
-                            )
-                        )
+            items(
+                items = garantias,
+                key = { it.id }
+            ) { garantia ->
+                SwipeToDeleteItem(
+                    isAdmin = (userRole == "ADMIN"),
+                    itemName = garantia.descripcion,
+                    itemType = "garantía",
+                    onDelete = {
+                        kotlinx.coroutines.runBlocking {
+                            collateralsViewModel.deleteGarantiaById(garantia.id)
+                        }
                     }
-                )
+                ) {
+                    CollateralCard(
+                        garantia = garantia,
+                        onClick = {
+                            navController.navigate(Screen.CollateralDetail.createRoute(garantia.id))
+                        },
+                        onQRClick = {
+                            navController.navigate(
+                                Screen.QRGarantia.createRoute(
+                                    garantiaId = garantia.id,
+                                    clienteNombre = "Cliente", // TODO: Obtener nombre real del cliente
+                                    descripcion = garantia.descripcion,
+                                    valorEstimado = garantia.valorEstimado,
+                                    tipo = garantia.tipo.name,
+                                    fechaRegistro = garantia.fechaRegistro
+                                )
+                            )
+                        }
+                    )
+                }
             }
         }
     }

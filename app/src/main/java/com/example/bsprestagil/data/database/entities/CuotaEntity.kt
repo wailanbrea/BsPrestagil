@@ -33,6 +33,9 @@ data class CuotaEntity(
     val estado: String, // PENDIENTE, PAGADA, PARCIAL, VENCIDA
     val notas: String,
     
+    // NUEVO: Multi-tenant - Empresa a la que pertenece
+    val adminId: String, // UID del ADMIN dueño
+    
     // Campos de sincronización
     val pendingSync: Boolean = true,
     val lastSyncTime: Long = 0L,

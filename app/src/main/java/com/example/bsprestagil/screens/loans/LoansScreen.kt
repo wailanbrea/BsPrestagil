@@ -1,5 +1,8 @@
 package com.example.bsprestagil.screens.loans
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -7,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.WorkOutline
@@ -14,6 +18,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -24,11 +30,14 @@ import com.example.bsprestagil.components.LoanCard
 import com.example.bsprestagil.components.EmptyStateComponent
 import com.example.bsprestagil.components.ShimmerCardList
 import com.example.bsprestagil.components.LoanCardShimmer
+import com.example.bsprestagil.components.SwipeToDeleteItem
+import com.example.bsprestagil.data.mappers.toEntity
 import com.example.bsprestagil.data.models.EstadoPrestamo
 import com.example.bsprestagil.navigation.Screen
 import com.example.bsprestagil.ui.theme.ErrorColor
 import com.example.bsprestagil.ui.theme.SuccessColor
 import com.example.bsprestagil.ui.theme.WarningColor
+import com.example.bsprestagil.utils.AuthUtils
 import com.example.bsprestagil.viewmodels.LoansViewModel
 import com.example.bsprestagil.viewmodels.UsersViewModel
 
@@ -234,7 +243,10 @@ fun LoansScreen(
                 }
             }
             
-            items(prestamosFiltrados) { prestamo ->
+            items(
+                items = prestamosFiltrados,
+                key = { it.id }
+            ) { prestamo ->
                 val estadoColor = when (prestamo.estado) {
                     EstadoPrestamo.ACTIVO -> SuccessColor
                     EstadoPrestamo.ATRASADO -> WarningColor
@@ -249,17 +261,28 @@ fun LoansScreen(
                     EstadoPrestamo.CANCELADO -> "Cancelado"
                 }
                 
-                LoanCard(
-                    clienteNombre = prestamo.clienteNombre,
-                    montoOriginal = prestamo.montoOriginal,
-                    capitalPendiente = prestamo.capitalPendiente,
-                    totalCapitalPagado = prestamo.totalCapitalPagado,
-                    estado = estadoTexto,
-                    estadoColor = estadoColor,
-                    onClick = {
-                        navController.navigate(Screen.LoanDetail.createRoute(prestamo.id))
+                SwipeToDeleteItem(
+                    isAdmin = (userRole == "ADMIN"),
+                    itemName = prestamo.clienteNombre,
+                    itemType = "préstamo",
+                    onDelete = {
+                        kotlinx.coroutines.runBlocking {
+                            loansViewModel.deletePrestamoById(prestamo.id)
+                        }
                     }
-                )
+                ) {
+                    LoanCard(
+                        clienteNombre = prestamo.clienteNombre,
+                        montoOriginal = prestamo.montoOriginal,
+                        capitalPendiente = prestamo.capitalPendiente,
+                        totalCapitalPagado = prestamo.totalCapitalPagado,
+                        estado = estadoTexto,
+                        estadoColor = estadoColor,
+                        onClick = {
+                            navController.navigate(Screen.LoanDetail.createRoute(prestamo.id))
+                        }
+                    )
+                }
             }
             
             if (prestamosFiltrados.isEmpty()) {

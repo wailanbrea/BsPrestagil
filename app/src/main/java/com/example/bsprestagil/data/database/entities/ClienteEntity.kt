@@ -20,6 +20,9 @@ data class ClienteEntity(
     val prestamosActivos: Int,
     val historialPagos: String, // AL_DIA, ATRASADO, MOROSO
     
+    // NUEVO: Multi-tenant - Empresa a la que pertenece
+    val adminId: String, // UID del ADMIN dueño
+    
     // Campos de sincronización
     val pendingSync: Boolean = true,
     val lastSyncTime: Long = 0L,

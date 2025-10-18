@@ -7,6 +7,7 @@ import android.util.Log
 import com.example.bsprestagil.data.database.AppDatabase
 import com.example.bsprestagil.data.database.entities.UsuarioEntity
 import com.example.bsprestagil.data.repository.UsuarioRepository
+import com.example.bsprestagil.utils.AuthUtils
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.firestore.FirebaseFirestore
@@ -48,14 +49,23 @@ class UsersViewModel(application: Application) : AndroidViewModel(application) {
         rol: String
     ) {
         viewModelScope.launch {
+            // NUEVO: Obtener adminId del usuario actual
+            val currentAdminId = AuthUtils.getCurrentAdminId()
+            
+            // Si el nuevo usuario es ADMIN, su adminId es su propio ID
+            // Si es SUPERVISOR o COBRADOR, hereda el adminId del ADMIN actual
+            val usuarioId = UUID.randomUUID().toString()
+            val adminId = if (rol == "ADMIN") usuarioId else currentAdminId
+            
             val usuario = UsuarioEntity(
-                id = UUID.randomUUID().toString(),
+                id = usuarioId,
                 nombre = nombre,
                 email = email,
                 telefono = telefono,
                 rol = rol,
                 activo = true,
-                fechaCreacion = System.currentTimeMillis()
+                fechaCreacion = System.currentTimeMillis(),
+                adminId = adminId // NUEVO: Multi-tenant
             )
             usuarioRepository.insertUsuario(usuario)
         }
@@ -87,6 +97,9 @@ class UsersViewModel(application: Application) : AndroidViewModel(application) {
                 }
                 
                 // ⭐ Llamar a Firebase Function (NO afecta la sesión actual)
+                // NUEVO: Obtener adminId del usuario actual
+                val currentAdminId = AuthUtils.getCurrentAdminId()
+                
                 val crearCobradorFn = functions.getHttpsCallable("crearCobrador")
                 
                 val data = hashMapOf(
@@ -94,7 +107,8 @@ class UsersViewModel(application: Application) : AndroidViewModel(application) {
                     "email" to email,
                     "telefono" to telefono,
                     "rol" to rol,
-                    "password" to password
+                    "password" to password,
+                    "adminId" to currentAdminId // NUEVO: Multi-tenant
                 )
                 
                 val result = crearCobradorFn.call(data).await()
@@ -107,6 +121,13 @@ class UsersViewModel(application: Application) : AndroidViewModel(application) {
                     Log.i(TAG, "✅ Cobrador creado exitosamente. UID: $uid")
                     Log.i(TAG, "✅ El admin mantiene su sesión: ${currentUser.email}")
                     
+                    // NUEVO: Obtener adminId del usuario actual
+                    val currentAdminId = AuthUtils.getCurrentAdminId()
+                    
+                    // Si el nuevo usuario es ADMIN, su adminId es su propio UID
+                    // Si es SUPERVISOR o COBRADOR, hereda el adminId del ADMIN actual
+                    val adminIdNuevo = if (rol == "ADMIN") uid else currentAdminId
+                    
                     // Guardar en Room local para sincronización
                     val usuarioLocal = UsuarioEntity(
                         id = uid,
@@ -115,7 +136,8 @@ class UsersViewModel(application: Application) : AndroidViewModel(application) {
                         telefono = telefono,
                         rol = rol,
                         activo = true,
-                        fechaCreacion = System.currentTimeMillis()
+                        fechaCreacion = System.currentTimeMillis(),
+                        adminId = adminIdNuevo // NUEVO: Multi-tenant
                     )
                     usuarioRepository.insertUsuario(usuarioLocal)
                     
@@ -259,6 +281,7 @@ class UsersViewModel(application: Application) : AndroidViewModel(application) {
                             rol = data["rol"] as? String ?: "COBRADOR",
                             activo = data["activo"] as? Boolean ?: true,
                             fechaCreacion = data["fechaCreacion"] as? Long ?: System.currentTimeMillis(),
+                            adminId = data["adminId"] as? String ?: doc.id, // NUEVO: Multi-tenant
                             porcentajeComision = (data["porcentajeComision"] as? Number)?.toFloat() ?: 3.0f,
                             totalComisionesGeneradas = (data["totalComisionesGeneradas"] as? Number)?.toDouble() ?: 0.0,
                             totalComisionesPagadas = (data["totalComisionesPagadas"] as? Number)?.toDouble() ?: 0.0,
@@ -282,6 +305,13 @@ class UsersViewModel(application: Application) : AndroidViewModel(application) {
             } catch (e: Exception) {
                 Log.e(TAG, "Error al sincronizar usuarios: ${e.message}", e)
             }
+        }
+    }
+    
+    // Eliminar usuario (solo ADMIN)
+    fun deleteUsuario(usuario: UsuarioEntity) {
+        viewModelScope.launch {
+            usuarioRepository.deleteUsuario(usuario)
         }
     }
 }

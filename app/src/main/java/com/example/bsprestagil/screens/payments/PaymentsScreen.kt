@@ -17,10 +17,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.bsprestagil.components.BottomNavigationBar
 import com.example.bsprestagil.components.EmptyStateComponent
+import com.example.bsprestagil.components.SwipeToDeleteItem
+import com.example.bsprestagil.data.mappers.toEntity
 import com.example.bsprestagil.data.models.MetodoPago
 import com.example.bsprestagil.data.models.Pago
 import com.example.bsprestagil.navigation.Screen
 import com.example.bsprestagil.ui.theme.SuccessColor
+import com.example.bsprestagil.utils.AuthUtils
 import com.example.bsprestagil.viewmodels.PaymentsViewModel
 import com.example.bsprestagil.viewmodels.UsersViewModel
 import java.text.SimpleDateFormat
@@ -224,14 +227,28 @@ fun PaymentsScreen(
                     }
                 }
             } else {
-                items(pagosFiltrados) { pago ->
-                    PaymentCard(
-                        pago = pago,
-                        dateFormat = dateFormat,
-                        onClick = {
-                            navController.navigate(Screen.PaymentDetail.createRoute(pago.id))
+                items(
+                    items = pagosFiltrados,
+                    key = { it.id }
+                ) { pago ->
+                    SwipeToDeleteItem(
+                        isAdmin = (userRole == "ADMIN"),
+                        itemName = "${pago.clienteNombre} - $${String.format("%.2f", pago.montoPagado)}",
+                        itemType = "pago",
+                        onDelete = {
+                            kotlinx.coroutines.runBlocking {
+                                paymentsViewModel.deletePagoById(pago.id)
+                            }
                         }
-                    )
+                    ) {
+                        PaymentCard(
+                            pago = pago,
+                            dateFormat = dateFormat,
+                            onClick = {
+                                navController.navigate(Screen.PaymentDetail.createRoute(pago.id))
+                            }
+                        )
+                    }
                 }
             }
         }

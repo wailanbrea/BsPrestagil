@@ -2,12 +2,13 @@ package com.example.bsprestagil.firebase
 
 import com.example.bsprestagil.data.database.entities.*
 import com.example.bsprestagil.data.repository.*
+import com.example.bsprestagil.utils.AuthUtils
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
 /**
  * Sincroniza datos desde Firebase hacia Room
- * Esto permite que cambios en Firebase Console se reflejen en la app
+ * NUEVO: Ahora filtra por adminId para multi-tenancy
  */
 class FirebaseToRoomSync(
     private val clienteRepository: ClienteRepository,
@@ -29,10 +30,18 @@ class FirebaseToRoomSync(
     
     /**
      * Descarga clientes de Firebase y actualiza Room
+     * NUEVO: Solo descarga clientes de la empresa actual (filtrado por adminId)
      */
     suspend fun syncClientesFromFirebase(): Result<Unit> {
         return try {
-            val snapshot = firestore.collection("clientes").get().await()
+            // NUEVO: Obtener adminId del usuario actual
+            val adminId = AuthUtils.getCurrentAdminId()
+            
+            // NUEVO: Filtrar por adminId en la query de Firestore
+            val snapshot = firestore.collection("clientes")
+                .whereEqualTo("adminId", adminId)
+                .get()
+                .await()
             val clientesFirebase = snapshot.documents.map { doc ->
                 doc.data?.let { data ->
                     ClienteEntity(
@@ -54,6 +63,7 @@ class FirebaseToRoomSync(
                         fechaRegistro = data["fechaRegistro"] as? Long ?: System.currentTimeMillis(),
                         prestamosActivos = (data["prestamosActivos"] as? Long)?.toInt() ?: 0,
                         historialPagos = data["historialPagos"] as? String ?: "AL_DIA",
+                        adminId = data["adminId"] as? String ?: adminId, // NUEVO: Multi-tenant
                         pendingSync = false,
                         lastSyncTime = data["lastSyncTime"] as? Long ?: System.currentTimeMillis(),
                         firebaseId = doc.id
@@ -75,10 +85,16 @@ class FirebaseToRoomSync(
     
     /**
      * Descarga préstamos de Firebase y actualiza Room
+     * NUEVO: Solo descarga préstamos de la empresa actual
      */
     suspend fun syncPrestamosFromFirebase(): Result<Unit> {
         return try {
-            val snapshot = firestore.collection("prestamos").get().await()
+            val adminId = AuthUtils.getCurrentAdminId()
+            
+            val snapshot = firestore.collection("prestamos")
+                .whereEqualTo("adminId", adminId)
+                .get()
+                .await()
             val prestamosFirebase = snapshot.documents.map { doc ->
                 doc.data?.let { data ->
                     PrestamoEntity(
@@ -103,6 +119,7 @@ class FirebaseToRoomSync(
                         totalCapitalPagado = (data["totalCapitalPagado"] as? Number)?.toDouble() ?: 0.0,
                         totalMorasPagadas = (data["totalMorasPagadas"] as? Number)?.toDouble() ?: 0.0,
                         notas = data["notas"] as? String ?: "",
+                        adminId = data["adminId"] as? String ?: adminId, // NUEVO: Multi-tenant
                         pendingSync = false,
                         lastSyncTime = data["lastSyncTime"] as? Long ?: System.currentTimeMillis(),
                         firebaseId = doc.id
@@ -123,10 +140,16 @@ class FirebaseToRoomSync(
     
     /**
      * Descarga pagos de Firebase y actualiza Room
+     * NUEVO: Solo descarga pagos de la empresa actual
      */
     suspend fun syncPagosFromFirebase(): Result<Unit> {
         return try {
-            val snapshot = firestore.collection("pagos").get().await()
+            val adminId = AuthUtils.getCurrentAdminId()
+            
+            val snapshot = firestore.collection("pagos")
+                .whereEqualTo("adminId", adminId)
+                .get()
+                .await()
             val pagosFirebase = snapshot.documents.map { doc ->
                 doc.data?.let { data ->
                     PagoEntity(
@@ -149,6 +172,7 @@ class FirebaseToRoomSync(
                         recibidoPor = data["recibidoPor"] as? String ?: "",
                         notas = data["notas"] as? String ?: "",
                         reciboUrl = data["reciboUrl"] as? String ?: "",
+                        adminId = data["adminId"] as? String ?: adminId, // NUEVO: Multi-tenant
                         pendingSync = false,
                         lastSyncTime = data["lastSyncTime"] as? Long ?: System.currentTimeMillis(),
                         firebaseId = doc.id
@@ -169,10 +193,16 @@ class FirebaseToRoomSync(
     
     /**
      * Descarga cuotas de Firebase y actualiza Room
+     * NUEVO: Solo descarga cuotas de la empresa actual
      */
     suspend fun syncCuotasFromFirebase(): Result<Unit> {
         return try {
-            val snapshot = firestore.collection("cuotas").get().await()
+            val adminId = AuthUtils.getCurrentAdminId()
+            
+            val snapshot = firestore.collection("cuotas")
+                .whereEqualTo("adminId", adminId)
+                .get()
+                .await()
             val cuotasFirebase = snapshot.documents.map { doc ->
                 doc.data?.let { data ->
                     CuotaEntity(
@@ -189,6 +219,7 @@ class FirebaseToRoomSync(
                         fechaPago = data["fechaPago"] as? Long,
                         estado = data["estado"] as? String ?: "PENDIENTE",
                         notas = data["notas"] as? String ?: "",
+                        adminId = data["adminId"] as? String ?: adminId, // NUEVO: Multi-tenant
                         pendingSync = false,
                         lastSyncTime = data["lastSyncTime"] as? Long ?: System.currentTimeMillis(),
                         firebaseId = doc.id
@@ -209,10 +240,16 @@ class FirebaseToRoomSync(
     
     /**
      * Descarga usuarios de Firebase y actualiza Room
+     * NUEVO: Solo descarga usuarios de la empresa actual
      */
     suspend fun syncUsuariosFromFirebase(): Result<Unit> {
         return try {
-            val snapshot = firestore.collection("usuarios").get().await()
+            val adminId = AuthUtils.getCurrentAdminId()
+            
+            val snapshot = firestore.collection("usuarios")
+                .whereEqualTo("adminId", adminId)
+                .get()
+                .await()
             val usuariosFirebase = snapshot.documents.map { doc ->
                 doc.data?.let { data ->
                     UsuarioEntity(
@@ -223,6 +260,7 @@ class FirebaseToRoomSync(
                         rol = data["rol"] as? String ?: "COBRADOR",
                         activo = data["activo"] as? Boolean ?: true,
                         fechaCreacion = data["fechaCreacion"] as? Long ?: System.currentTimeMillis(),
+                        adminId = data["adminId"] as? String ?: adminId, // NUEVO: Multi-tenant
                         porcentajeComision = (data["porcentajeComision"] as? Number)?.toFloat() ?: 3.0f,
                         totalComisionesGeneradas = (data["totalComisionesGeneradas"] as? Number)?.toDouble() ?: 0.0,
                         totalComisionesPagadas = (data["totalComisionesPagadas"] as? Number)?.toDouble() ?: 0.0,

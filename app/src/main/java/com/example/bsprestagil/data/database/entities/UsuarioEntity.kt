@@ -10,9 +10,12 @@ data class UsuarioEntity(
     val nombre: String,
     val email: String,
     val telefono: String = "",
-    val rol: String, // ADMIN, COBRADOR
+    val rol: String, // ADMIN, SUPERVISOR, COBRADOR
     val activo: Boolean = true,
     val fechaCreacion: Long,
+    
+    // NUEVO: Multi-tenant - Empresa a la que pertenece
+    val adminId: String, // UID del ADMIN dueño (si rol=ADMIN, adminId=id)
     
     // Sistema de comisiones
     val porcentajeComision: Float = 3.0f, // Porcentaje de comisión (ej: 3%)

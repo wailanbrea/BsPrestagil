@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -38,24 +39,49 @@ fun AddLoanScreen(
     configuracionViewModel: ConfiguracionViewModel = viewModel(),
     usersViewModel: UsersViewModel = viewModel()
 ) {
-    var clienteSeleccionado by remember { mutableStateOf(clientId ?: "") }
-    var clienteNombre by remember { mutableStateOf("") }
-    var cobradorSeleccionado by remember { mutableStateOf<String?>(null) }
-    var cobradorNombre by remember { mutableStateOf<String?>(null) }
-    var monto by remember { mutableStateOf("") }
-    var tasaInteres by remember { mutableStateOf("10") }
+    // NUEVO: Usar rememberSaveable para preservar estado al navegar
+    var clienteSeleccionado by rememberSaveable { mutableStateOf(clientId ?: "") }
+    var clienteNombre by rememberSaveable { mutableStateOf("") }
+    var cobradorSeleccionado by rememberSaveable { mutableStateOf<String?>(null) }
+    var cobradorNombre by rememberSaveable { mutableStateOf<String?>(null) }
+    var monto by rememberSaveable { mutableStateOf("") }
+    var tasaInteres by rememberSaveable { mutableStateOf("10") }
+    var numeroCuotas by rememberSaveable { mutableStateOf("12") }
+    var diaCobroPreferido by rememberSaveable { mutableStateOf("") }
+    var usarDiaCobroPreferido by rememberSaveable { mutableStateOf(false) }
+    // NUEVO: Lista de garantías (múltiples)
+    var garantiasAgregadas by rememberSaveable { mutableStateOf<List<Pair<String, String>>>(emptyList()) } // Pair(id, descripcion)
+    var notas by rememberSaveable { mutableStateOf("") }
+    var mostrarTablaEnConfirmacion by rememberSaveable { mutableStateOf(false) }
+    
+    // NUEVO: Escuchar el resultado de agregar garantía
+    val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
+    LaunchedEffect(savedStateHandle) {
+        savedStateHandle?.getLiveData<String>("garantiaId")?.observeForever { garantiaId ->
+            if (garantiaId != null && garantiaId.isNotEmpty()) {
+                val descripcion = savedStateHandle.get<String>("garantiaDescripcion") ?: "Garantía ${garantiasAgregadas.size + 1}"
+                
+                // Agregar a la lista (no reemplazar)
+                garantiasAgregadas = garantiasAgregadas + Pair(garantiaId, descripcion)
+                
+                android.util.Log.d("AddLoanScreen", "✅ Garantía agregada: $garantiaId - $descripcion (Total: ${garantiasAgregadas.size})")
+                
+                // Limpiar el resultado
+                savedStateHandle.remove<String>("garantiaId")
+                savedStateHandle.remove<String>("garantiaDescripcion")
+            }
+        }
+    }
+    
+    // Estados que no necesitan guardarse (dialogs y dropdowns)
     var frecuenciaPago by remember { mutableStateOf(FrecuenciaPago.MENSUAL) }
     var tipoAmortizacion by remember { mutableStateOf(com.example.bsprestagil.data.models.TipoAmortizacion.FRANCES) }
-    var numeroCuotas by remember { mutableStateOf("12") }
-    var garantiaOpcional by remember { mutableStateOf("") }
-    var notas by remember { mutableStateOf("") }
     var expandedFrecuencia by remember { mutableStateOf(false) }
     var expandedSistema by remember { mutableStateOf(false) }
     var showSuccessDialog by remember { mutableStateOf(false) }
     var showConfirmDialog by remember { mutableStateOf(false) }
     var showClientSelector by remember { mutableStateOf(false) }
     var showCobradorSelector by remember { mutableStateOf(false) }
-    var mostrarTablaEnConfirmacion by remember { mutableStateOf(false) }
     
     // Cargar lista de clientes
     val clientes by clientsViewModel.clientes.collectAsState()
@@ -417,6 +443,74 @@ fun AddLoanScreen(
                 }
             )
             
+            // Día de cobro preferido (opcional)
+            if (frecuenciaPago != FrecuenciaPago.DIARIO) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Día de cobro preferido",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                                Text(
+                                    text = if (frecuenciaPago == FrecuenciaPago.MENSUAL) 
+                                        "Elige el día del mes para cobrar (ej: 10, 15, 25)" 
+                                    else 
+                                        "Día de inicio para cobros cada 15 días",
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                )
+                            }
+                            Switch(
+                                checked = usarDiaCobroPreferido,
+                                onCheckedChange = { usarDiaCobroPreferido = it }
+                            )
+                        }
+                        
+                        if (usarDiaCobroPreferido) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            OutlinedTextField(
+                                value = diaCobroPreferido,
+                                onValueChange = { 
+                                    if (it.isEmpty() || it.toIntOrNull() in 1..31) {
+                                        diaCobroPreferido = it
+                                    }
+                                },
+                                label = { Text("Día del mes (1-31)") },
+                                leadingIcon = { Icon(Icons.Default.Event, contentDescription = null) },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true,
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                supportingText = {
+                                    Text(
+                                        text = if (frecuenciaPago == FrecuenciaPago.MENSUAL)
+                                            "El cliente pagará cada día $diaCobroPreferido del mes"
+                                        else
+                                            "Primer cobro el día $diaCobroPreferido, luego cada 15 días",
+                                        fontSize = 11.sp
+                                    )
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+            
             Spacer(modifier = Modifier.height(8.dp))
             
             // Garantía (opcional)
@@ -427,51 +521,79 @@ fun AddLoanScreen(
                 color = MaterialTheme.colorScheme.primary
             )
             
-            if (garantiaOpcional.isNotBlank()) {
-                Card(
+            // Mostrar garantías agregadas
+            if (garantiasAgregadas.isNotEmpty()) {
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    )
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.Security,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary
+                    garantiasAgregadas.forEachIndexed { index, (garantiaId, descripcion) ->
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer
                             )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Text(
-                                    text = "Garantía agregada",
-                                    fontSize = 12.sp,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
-                                )
-                                Text(
-                                    text = "ID: ${garantiaOpcional.take(8)}...",
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                            ) {
+                                Row(
+                                    modifier = Modifier.weight(1f),
+                                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Security,
+                                        contentDescription = null,
+                                        tint = SuccessColor,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Column {
+                                        Text(
+                                            text = "Garantía ${index + 1}",
+                                            fontSize = 11.sp,
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
+                                        )
+                                        Text(
+                                            text = descripcion,
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                                        )
+                                    }
+                                }
+                                IconButton(
+                                    onClick = { 
+                                        garantiasAgregadas = garantiasAgregadas.filterIndexed { i, _ -> i != index }
+                                    }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Close,
+                                        contentDescription = "Quitar garantía",
+                                        tint = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
                             }
                         }
-                        IconButton(onClick = { garantiaOpcional = "" }) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = "Quitar garantía",
-                                tint = MaterialTheme.colorScheme.error
-                            )
-                        }
+                    }
+                    
+                    // Botón "Agregar otra garantía"
+                    OutlinedButton(
+                        onClick = { navController.navigate(Screen.AddEditCollateral.createRoute(null)) },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(20.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Agregar otra garantía")
                     }
                 }
             } else {
+                // Botón inicial para agregar primera garantía
                 Button(
                     onClick = { navController.navigate(Screen.AddEditCollateral.createRoute(null)) },
                     modifier = Modifier.fillMaxWidth(),
@@ -631,6 +753,13 @@ fun AddLoanScreen(
                         com.example.bsprestagil.data.models.TipoAmortizacion.FRANCES -> "Francés (Cuota Fija)"
                         com.example.bsprestagil.data.models.TipoAmortizacion.ALEMAN -> "Alemán (Capital Fijo)"
                     }}")
+                    if (usarDiaCobroPreferido && diaCobroPreferido.isNotBlank()) {
+                        Text(
+                            "📅 Día de cobro: Cada día $diaCobroPreferido",
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                     Divider(modifier = Modifier.padding(vertical = 8.dp))
                     
                     when(tipoAmortizacion) {
@@ -771,8 +900,18 @@ fun AddLoanScreen(
                         frecuenciaPago = frecuenciaPago,
                         tipoAmortizacion = tipoAmortizacion,
                         numeroCuotas = cuotasNum,
-                        garantiaId = if (garantiaOpcional.isNotBlank()) garantiaOpcional else null,
-                        notas = notas
+                        diaCobroPreferido = if (usarDiaCobroPreferido && diaCobroPreferido.isNotBlank()) 
+                            diaCobroPreferido.toIntOrNull() else null,
+                        garantiaId = if (garantiasAgregadas.isNotEmpty()) garantiasAgregadas.first().first else null,
+                        notas = if (garantiasAgregadas.size > 1) {
+                            // Si hay múltiples garantías, agregar a las notas
+                            val garantiasTexto = garantiasAgregadas.mapIndexed { index, (id, desc) -> 
+                                "Garantía ${index + 1}: $desc (ID: $id)"
+                            }.joinToString("\n")
+                            if (notas.isNotBlank()) "$notas\n\nGarantías:\n$garantiasTexto" else "Garantías:\n$garantiasTexto"
+                        } else {
+                            notas
+                        }
                     )
                     showConfirmDialog = false
                     showSuccessDialog = true

@@ -12,6 +12,7 @@ import com.example.bsprestagil.data.repository.PagoRepository
 import com.example.bsprestagil.data.repository.PrestamoRepository
 import com.example.bsprestagil.data.repository.CuotaRepository
 import com.example.bsprestagil.firebase.FirebaseService
+import com.example.bsprestagil.utils.AuthUtils
 import com.example.bsprestagil.utils.InteresUtils
 import com.example.bsprestagil.utils.CronogramaUtils
 import kotlinx.coroutines.flow.*
@@ -199,6 +200,9 @@ class PaymentsViewModel(application: Application) : AndroidViewModel(application
                     // Calcular el nuevo capital pendiente
                     val nuevoCapitalPendiente = (prestamo.capitalPendiente - montoACapital).coerceAtLeast(0.0)
                     
+                    // NUEVO: Obtener adminId del préstamo
+                    val adminId = prestamo.adminId
+                    
                     // Registrar el pago con toda la información detallada
                     val pago = PagoEntity(
                         id = "",
@@ -219,7 +223,8 @@ class PaymentsViewModel(application: Application) : AndroidViewModel(application
                         metodoPago = metodoPago.name,
                         recibidoPor = recibidoPor,
                         notas = notas,
-                        reciboUrl = ""
+                        reciboUrl = "",
+                        adminId = adminId // NUEVO: Multi-tenant
                     )
                     
                     android.util.Log.d("PaymentsViewModel", "💾 Guardando pago:")
@@ -405,6 +410,30 @@ class PaymentsViewModel(application: Application) : AndroidViewModel(application
         } catch (e: Exception) {
             // Log error pero no fallar el pago
             println("Error al recalcular cuotas futuras: ${e.message}")
+        }
+    }
+    
+    // Eliminar pago (solo ADMIN)
+    fun deletePago(pago: PagoEntity) {
+        viewModelScope.launch {
+            pagoRepository.deletePago(pago)
+        }
+    }
+    
+    // Eliminar pago por ID (obtiene el entity completo de Room con firebaseId)
+    fun deletePagoById(pagoId: String) {
+        viewModelScope.launch {
+            try {
+                val adminId = AuthUtils.getCurrentAdminId()
+                val pagoEntity = database.pagoDao().getPagoByIdSync(pagoId, adminId)
+                
+                if (pagoEntity != null) {
+                    android.util.Log.d("PaymentsViewModel", "🗑️ Eliminando pago: ${pagoEntity.id}, firebaseId: ${pagoEntity.firebaseId}")
+                    pagoRepository.deletePago(pagoEntity)
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("PaymentsViewModel", "❌ Error eliminando: ${e.message}")
+            }
         }
     }
 }

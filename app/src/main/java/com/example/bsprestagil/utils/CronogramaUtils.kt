@@ -38,7 +38,9 @@ object CronogramaUtils {
         frecuenciaPago: FrecuenciaPago,
         tipoAmortizacion: com.example.bsprestagil.data.models.TipoAmortizacion,
         numeroCuotas: Int,
-        fechaInicio: Long
+        fechaInicio: Long,
+        diaCobroPreferido: Int? = null, // NUEVO: Día del mes para cobro (1-31)
+        adminId: String // NUEVO: Multi-tenant
     ): List<CuotaEntity> {
         val cuotas = mutableListOf<CuotaEntity>()
         
@@ -50,13 +52,17 @@ object CronogramaUtils {
             tipoSistema = tipoAmortizacion
         )
         
+        // Calcular todas las fechas de vencimiento
+        val fechasVencimiento = calcularFechasVencimiento(
+            fechaInicio = fechaInicio,
+            numeroCuotas = numeroCuotas,
+            frecuencia = frecuenciaPago,
+            diaCobroPreferido = diaCobroPreferido
+        )
+        
         // Convertir cada fila de la tabla en una CuotaEntity
         tablaAmortizacion.forEach { fila ->
-            val fechaVencimiento = calcularFechaVencimiento(
-                fechaInicio = fechaInicio,
-                numeroCuota = fila.numeroCuota,
-                frecuencia = frecuenciaPago
-            )
+            val fechaVencimiento = fechasVencimiento[fila.numeroCuota - 1]
             
             val cuota = CuotaEntity(
                 id = "",  // Se asignará al insertar
@@ -71,7 +77,8 @@ object CronogramaUtils {
                 montoMora = 0.0,
                 fechaPago = null,
                 estado = "PENDIENTE",
-                notas = "Interés proyectado: $${String.format("%.2f", fila.interes)}, Capital: $${String.format("%.2f", fila.capital)}"
+                notas = "Interés proyectado: $${String.format("%.2f", fila.interes)}, Capital: $${String.format("%.2f", fila.capital)}",
+                adminId = adminId // NUEVO: Multi-tenant
             )
             
             cuotas.add(cuota)
@@ -81,7 +88,93 @@ object CronogramaUtils {
     }
     
     /**
-     * Calcula la fecha de vencimiento de una cuota específica
+     * Calcula todas las fechas de vencimiento de las cuotas basándose en el día de cobro preferido
+     */
+    private fun calcularFechasVencimiento(
+        fechaInicio: Long,
+        numeroCuotas: Int,
+        frecuencia: FrecuenciaPago,
+        diaCobroPreferido: Int?
+    ): List<Long> {
+        val fechas = mutableListOf<Long>()
+        
+        if (frecuencia == FrecuenciaPago.DIARIO || diaCobroPreferido == null) {
+            // Para diario o sin día preferido, usar cálculo tradicional
+            for (i in 1..numeroCuotas) {
+                fechas.add(calcularFechaVencimiento(fechaInicio, i, frecuencia))
+            }
+        } else if (frecuencia == FrecuenciaPago.QUINCENAL) {
+            // Para quincenal con día preferido
+            val primerVencimiento = obtenerProximaFechaCobro(fechaInicio, diaCobroPreferido)
+            fechas.add(primerVencimiento)
+            
+            // Resto de cuotas: cada 15 días
+            for (i in 1 until numeroCuotas) {
+                val calendar = Calendar.getInstance()
+                calendar.timeInMillis = primerVencimiento
+                calendar.add(Calendar.DAY_OF_MONTH, i * 15)
+                fechas.add(calendar.timeInMillis)
+            }
+        } else if (frecuencia == FrecuenciaPago.MENSUAL) {
+            // Para mensual con día preferido
+            for (i in 0 until numeroCuotas) {
+                val fecha = if (i == 0) {
+                    obtenerProximaFechaCobro(fechaInicio, diaCobroPreferido)
+                } else {
+                    val calendar = Calendar.getInstance()
+                    calendar.timeInMillis = fechas[i - 1]
+                    calendar.add(Calendar.MONTH, 1)
+                    ajustarDiaDelMes(calendar, diaCobroPreferido)
+                    calendar.timeInMillis
+                }
+                fechas.add(fecha)
+            }
+        }
+        
+        return fechas
+    }
+    
+    /**
+     * Obtiene la próxima fecha de cobro basada en el día preferido
+     */
+    private fun obtenerProximaFechaCobro(fechaActual: Long, diaPreferido: Int): Long {
+        val calendar = Calendar.getInstance()
+        calendar.timeInMillis = fechaActual
+        
+        // Intentar establecer el día en el mes actual
+        calendar.set(Calendar.DAY_OF_MONTH, diaPreferido)
+        ajustarDiaDelMes(calendar, diaPreferido)
+        
+        // Si la fecha ya pasó, mover al siguiente mes
+        if (calendar.timeInMillis <= fechaActual) {
+            calendar.add(Calendar.MONTH, 1)
+            ajustarDiaDelMes(calendar, diaPreferido)
+        }
+        
+        return calendar.timeInMillis
+    }
+    
+    /**
+     * Ajusta el día del mes si no existe (ej: 31 en febrero → 28/29)
+     */
+    private fun ajustarDiaDelMes(calendar: Calendar, diaDeseado: Int) {
+        val mesActual = calendar.get(Calendar.MONTH)
+        calendar.set(Calendar.DAY_OF_MONTH, 1)
+        
+        val maxDiasEnMes = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
+        val diaFinal = minOf(diaDeseado, maxDiasEnMes)
+        
+        calendar.set(Calendar.DAY_OF_MONTH, diaFinal)
+        
+        // Verificar que no cambió el mes
+        if (calendar.get(Calendar.MONTH) != mesActual) {
+            calendar.set(Calendar.MONTH, mesActual)
+            calendar.set(Calendar.DAY_OF_MONTH, maxDiasEnMes)
+        }
+    }
+    
+    /**
+     * Calcula la fecha de vencimiento de una cuota específica (método original)
      */
     private fun calcularFechaVencimiento(
         fechaInicio: Long,
@@ -159,6 +252,90 @@ object CronogramaUtils {
                 cuota
             }
         }
+    }
+    
+    /**
+     * Genera cuotas adicionales cuando se vence el plazo original
+     * NUEVO: Para préstamos personales que se extienden más allá del plazo inicial
+     * 
+     * @param prestamoId ID del préstamo
+     * @param capitalPendiente Capital que aún debe el cliente
+     * @param tasaInteresPorPeriodo Tasa de interés del préstamo
+     * @param frecuenciaPago Frecuencia de pago
+     * @param ultimaCuota Número de la última cuota generada
+     * @param cuotasAdicionales Cuántas cuotas adicionales generar (default: 1 mes a la vez)
+     * @return Lista de cuotas adicionales generadas
+     */
+    fun generarCuotasAdicionales(
+        prestamoId: String,
+        capitalPendiente: Double,
+        tasaInteresPorPeriodo: Double,
+        frecuenciaPago: FrecuenciaPago,
+        ultimaCuota: Int,
+        fechaUltimaCuota: Long,
+        adminId: String, // NUEVO: Multi-tenant
+        cuotasAdicionales: Int = 1
+    ): List<CuotaEntity> {
+        
+        if (capitalPendiente <= 0.0) {
+            return emptyList() // No generar cuotas si ya está pagado
+        }
+        
+        val cuotasNuevas = mutableListOf<CuotaEntity>()
+        val diasPorPeriodo = when (frecuenciaPago) {
+            FrecuenciaPago.DIARIO -> 1
+            FrecuenciaPago.QUINCENAL -> 15
+            FrecuenciaPago.MENSUAL -> 30
+        }
+        
+        // Calcular interés de cada cuota adicional
+        val interesPorCuota = calcularInteresPeriodo(capitalPendiente, tasaInteresPorPeriodo)
+        
+        // Generar cuotas adicionales
+        var fechaVencimiento = fechaUltimaCuota
+        repeat(cuotasAdicionales) { index ->
+            val numeroCuota = ultimaCuota + index + 1
+            
+            // Calcular fecha de vencimiento
+            val calendar = Calendar.getInstance()
+            calendar.timeInMillis = fechaVencimiento
+            calendar.add(Calendar.DAY_OF_MONTH, diasPorPeriodo)
+            fechaVencimiento = calendar.timeInMillis
+            
+            // Crear cuota adicional (solo interés, el capital se paga cuando pueda)
+            val cuotaNueva = CuotaEntity(
+                id = "",
+                prestamoId = prestamoId,
+                numeroCuota = numeroCuota,
+                fechaVencimiento = fechaVencimiento,
+                montoCuotaMinimo = interesPorCuota, // Cuota mínima = solo interés
+                capitalPendienteAlInicio = capitalPendiente,
+                montoPagado = 0.0,
+                montoAInteres = 0.0,
+                montoACapital = 0.0,
+                montoMora = 0.0,
+                estado = "PENDIENTE",
+                fechaPago = null,
+                notas = "Cuota adicional generada automáticamente - Interés proyectado: $${String.format("%,.2f", interesPorCuota)}, Capital: variable según pago",
+                adminId = adminId, // NUEVO: Multi-tenant
+                pendingSync = true,
+                lastSyncTime = 0L,
+                firebaseId = null
+            )
+            
+            cuotasNuevas.add(cuotaNueva)
+        }
+        
+        android.util.Log.d("CronogramaUtils", "🔄 Generadas $cuotasAdicionales cuotas adicionales para préstamo $prestamoId")
+        android.util.Log.d("CronogramaUtils", "  - Capital pendiente: $${String.format("%,.2f", capitalPendiente)}")
+        android.util.Log.d("CronogramaUtils", "  - Interés por cuota: $${String.format("%,.2f", interesPorCuota)}")
+        android.util.Log.d("CronogramaUtils", "  - Cuotas: ${ultimaCuota + 1} a ${ultimaCuota + cuotasAdicionales}")
+        
+        return cuotasNuevas
+    }
+    
+    private fun calcularInteresPeriodo(capitalPendiente: Double, tasaInteresPorPeriodo: Double): Double {
+        return capitalPendiente * (tasaInteresPorPeriodo / 100.0)
     }
     
     /**

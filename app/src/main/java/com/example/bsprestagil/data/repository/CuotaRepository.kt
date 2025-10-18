@@ -2,7 +2,9 @@ package com.example.bsprestagil.data.repository
 
 import com.example.bsprestagil.data.database.dao.CuotaDao
 import com.example.bsprestagil.data.database.entities.CuotaEntity
+import com.example.bsprestagil.utils.AuthUtils
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.runBlocking
 import java.util.UUID
 
 class CuotaRepository(
@@ -11,29 +13,37 @@ class CuotaRepository(
     // Exponer el DAO para sincronización directa desde Firebase
     internal val dao: CuotaDao get() = cuotaDao
     
+    // NUEVO: Obtener adminId del usuario actual
+    private fun getAdminId(): String = runBlocking { AuthUtils.getCurrentAdminId() }
+    
     // Observar cuotas por préstamo
     fun getCuotasByPrestamoId(prestamoId: String): Flow<List<CuotaEntity>> {
-        return cuotaDao.getCuotasByPrestamoId(prestamoId)
+        val adminId = getAdminId()
+        return cuotaDao.getCuotasByPrestamoId(prestamoId, adminId)
     }
     
     // Observar una cuota específica
     fun getCuotaById(cuotaId: String): Flow<CuotaEntity?> {
-        return cuotaDao.getCuotaById(cuotaId)
+        val adminId = getAdminId()
+        return cuotaDao.getCuotaById(cuotaId, adminId)
     }
     
     // Observar cuotas por estado
     fun getCuotasByEstado(prestamoId: String, estado: String): Flow<List<CuotaEntity>> {
-        return cuotaDao.getCuotasByEstado(prestamoId, estado)
+        val adminId = getAdminId()
+        return cuotaDao.getCuotasByEstado(prestamoId, estado, adminId)
     }
     
     // Observar cuotas vencidas
     fun getCuotasVencidas(): Flow<List<CuotaEntity>> {
-        return cuotaDao.getCuotasVencidas()
+        val adminId = getAdminId()
+        return cuotaDao.getCuotasVencidas(adminId)
     }
     
     // Obtener próxima cuota pendiente
     suspend fun getProximaCuotaPendiente(prestamoId: String): CuotaEntity? {
-        return cuotaDao.getProximaCuotaPendiente(prestamoId)
+        val adminId = AuthUtils.getCurrentAdminId()
+        return cuotaDao.getProximaCuotaPendiente(prestamoId, adminId)
     }
     
     // Insertar cuota
@@ -85,22 +95,26 @@ class CuotaRepository(
     
     // Eliminar cuotas por préstamo
     suspend fun deleteCuotasByPrestamoId(prestamoId: String) {
-        cuotaDao.deleteCuotasByPrestamoId(prestamoId)
+        val adminId = AuthUtils.getCurrentAdminId()
+        cuotaDao.deleteCuotasByPrestamoId(prestamoId, adminId)
     }
     
     // Obtener cuotas pendientes de sincronizar
     suspend fun getCuotasPendingSync(): List<CuotaEntity> {
-        return cuotaDao.getCuotasPendingSync()
+        val adminId = AuthUtils.getCurrentAdminId()
+        return cuotaDao.getCuotasPendingSync(adminId)
     }
     
     // Marcar como sincronizado
     suspend fun markAsSynced(cuotaId: String): Int {
-        return cuotaDao.markAsSynced(cuotaId, System.currentTimeMillis())
+        val adminId = AuthUtils.getCurrentAdminId()
+        return cuotaDao.markAsSynced(cuotaId, adminId, System.currentTimeMillis())
     }
     
     // Contar cuotas pagadas
     suspend fun countCuotasPagadas(prestamoId: String): Int {
-        return cuotaDao.countCuotasPagadas(prestamoId)
+        val adminId = AuthUtils.getCurrentAdminId()
+        return cuotaDao.countCuotasPagadas(prestamoId, adminId)
     }
 }
 

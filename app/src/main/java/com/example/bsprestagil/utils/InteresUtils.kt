@@ -1,6 +1,7 @@
 package com.example.bsprestagil.utils
 
 import com.example.bsprestagil.data.models.FrecuenciaPago
+import com.example.bsprestagil.data.models.TipoPago
 import java.util.concurrent.TimeUnit
 
 /**
@@ -45,6 +46,102 @@ object InteresUtils {
         val montoACapitalFinal = minOf(montoACapital, capitalPendiente)
         
         return Pair(montoAInteres, montoACapitalFinal)
+    }
+    
+    /**
+     * Distribuye un pago según el tipo seleccionado por el usuario
+     * NUEVO: Permite pagos flexibles (solo interés, solo capital, personalizado)
+     * 
+     * @param montoPagado Monto total que paga el cliente
+     * @param interesAcumulado Interés acumulado hasta la fecha
+     * @param capitalPendiente Capital que aún debe
+     * @param tipoPago Tipo de pago que desea realizar
+     * @param montoInteres (Opcional) Para tipo PERSONALIZADO: cuánto va a interés
+     * @param montoCapital (Opcional) Para tipo PERSONALIZADO: cuánto va a capital
+     * @return Triple(montoAInteres, montoACapital, advertencia)
+     */
+    fun distribuirPagoFlexible(
+        montoPagado: Double,
+        interesAcumulado: Double,
+        capitalPendiente: Double,
+        tipoPago: TipoPago,
+        montoInteres: Double = 0.0,
+        montoCapital: Double = 0.0
+    ): Triple<Double, Double, String?> {
+        
+        return when (tipoPago) {
+            TipoPago.NORMAL -> {
+                // Distribución estándar: primero interés, luego capital
+                val aInteres = minOf(montoPagado, interesAcumulado)
+                val aCapital = minOf(maxOf(0.0, montoPagado - interesAcumulado), capitalPendiente)
+                Triple(aInteres, aCapital, null)
+            }
+            
+            TipoPago.SOLO_INTERES -> {
+                // TODO el pago va al interés acumulado
+                val aInteres = minOf(montoPagado, interesAcumulado)
+                val advertencia = if (montoPagado < interesAcumulado) {
+                    "Solo cubriste parte del interés. Aún debes $${String.format("%.2f", interesAcumulado - aInteres)} de interés."
+                } else if (montoPagado > interesAcumulado) {
+                    "Pagaste más del interés. El excedente de $${String.format("%.2f", montoPagado - aInteres)} no se aplicó."
+                } else null
+                
+                Triple(aInteres, 0.0, advertencia)
+            }
+            
+            TipoPago.SOLO_CAPITAL -> {
+                // TODO el pago va al capital (solo si NO hay interés pendiente)
+                if (interesAcumulado > 0) {
+                    // No permitir pago de capital si hay interés pendiente
+                    Triple(
+                        0.0,
+                        0.0,
+                        "⚠️ Debes pagar primero el interés acumulado de $${String.format("%.2f", interesAcumulado)}"
+                    )
+                } else {
+                    val aCapital = minOf(montoPagado, capitalPendiente)
+                    Triple(0.0, aCapital, null)
+                }
+            }
+            
+            TipoPago.PERSONALIZADO -> {
+                // Usuario especifica manualmente la distribución
+                val totalDistribuido = montoInteres + montoCapital
+                
+                if (totalDistribuido > montoPagado) {
+                    Triple(
+                        0.0,
+                        0.0,
+                        "❌ La distribución ($${String.format("%.2f", totalDistribuido)}) excede el monto pagado ($${String.format("%.2f", montoPagado)})"
+                    )
+                } else {
+                    val aInteres = minOf(montoInteres, interesAcumulado)
+                    val aCapital = minOf(montoCapital, capitalPendiente)
+                    
+                    val advertencia = if (montoInteres > interesAcumulado) {
+                        "⚠️ El monto a interés excede el interés acumulado"
+                    } else if (montoCapital > capitalPendiente) {
+                        "⚠️ El monto a capital excede el capital pendiente"
+                    } else null
+                    
+                    Triple(aInteres, aCapital, advertencia)
+                }
+            }
+            
+            TipoPago.EXONERAR_INTERES -> {
+                // Exonerar interés: Todo el pago va al capital, el interés se perdona
+                val aCapital = minOf(montoPagado, capitalPendiente)
+                val interesExonerado = interesAcumulado
+                
+                val advertencia = if (interesExonerado > 0) {
+                    "✅ Interés exonerado: $${String.format("%.2f", interesExonerado)}. Todo el pago ($${String.format("%.2f", montoPagado)}) se aplicó al capital."
+                } else {
+                    "✅ Todo el pago se aplicó al capital."
+                }
+                
+                Triple(0.0, aCapital, advertencia)
+            }
+        }
     }
     
     /**

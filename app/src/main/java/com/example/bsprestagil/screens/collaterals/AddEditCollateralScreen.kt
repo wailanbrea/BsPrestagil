@@ -34,6 +34,7 @@ import com.example.bsprestagil.data.models.TipoGarantia
 import com.example.bsprestagil.data.models.EstadoGarantia
 import com.example.bsprestagil.utils.PhotoUtils
 import com.example.bsprestagil.viewmodels.CollateralsViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,6 +44,7 @@ fun AddEditCollateralScreen(
     viewModel: CollateralsViewModel = viewModel()
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val isEditing = collateralId != null
     
     // Cargar garantía existente si estamos editando
@@ -403,15 +405,23 @@ fun AddEditCollateralScreen(
                             )
                         } else {
                             // Crear nueva garantía
-                            viewModel.crearGarantia(
-                                tipo = tipo,
-                                descripcion = descripcion,
-                                valorEstimado = valorNum,
-                                fotosUrls = fotosUris,
-                                notas = notas
-                            )
+                            scope.launch {
+                                val garantiaId = viewModel.crearGarantia(
+                                    tipo = tipo,
+                                    descripcion = descripcion,
+                                    valorEstimado = valorNum,
+                                    fotosUrls = fotosUris,
+                                    notas = notas
+                                )
+                                
+                                // Devolver el resultado a la pantalla anterior
+                                navController.previousBackStackEntry?.savedStateHandle?.set("garantiaId", garantiaId)
+                                navController.previousBackStackEntry?.savedStateHandle?.set("garantiaDescripcion", descripcion)
+                                android.util.Log.d("AddEditCollateral", "✅ Garantía creada: $garantiaId - $descripcion")
+                                
+                                showSuccessDialog = true
+                            }
                         }
-                        showSuccessDialog = true
                     }
                 },
                 modifier = Modifier

@@ -18,6 +18,10 @@ import androidx.navigation.NavController
 import com.example.bsprestagil.components.TopAppBarComponent
 import com.example.bsprestagil.data.models.FrecuenciaPago
 import com.example.bsprestagil.data.models.MetodoPago
+import com.example.bsprestagil.data.models.TipoPago
+import com.example.bsprestagil.ui.theme.ErrorColor
+import com.example.bsprestagil.ui.theme.SuccessColor
+import com.example.bsprestagil.ui.theme.WarningColor
 import com.example.bsprestagil.utils.InteresUtils
 import com.example.bsprestagil.viewmodels.ConfiguracionViewModel
 import com.example.bsprestagil.viewmodels.LoansViewModel
@@ -47,6 +51,12 @@ fun RegisterPaymentScreen(
     var showCobradorSelector by remember { mutableStateOf(false) }
     var cobradorSeleccionado by remember { mutableStateOf<String?>(null) }
     var cobradorNombre by remember { mutableStateOf<String?>(null) }
+    
+    // NUEVO: Variables para pagos flexibles
+    var tipoPago by remember { mutableStateOf(TipoPago.NORMAL) }
+    var montoInteresPersonalizado by remember { mutableStateOf("") }
+    var montoCapitalPersonalizado by remember { mutableStateOf("") }
+    var notaExoneracion by remember { mutableStateOf("") }
     
     val metodosDisponibles = MetodoPago.values().toList()
     
@@ -123,30 +133,49 @@ fun RegisterPaymentScreen(
         } ?: 0.0
     }
     
-    // Calcular distribución del pago usando cronograma
+    // Calcular distribución del pago según el tipo seleccionado
     val montoPagadoNum = montoPagado.toDoubleOrNull() ?: 0.0
-    val (montoAInteres, montoACapital) = if (cuotaSeleccionada != null && montoPagadoNum >= cuotaSeleccionada.montoCuotaMinimo) {
-        // Paga cuota completa o más: usar distribución exacta del cronograma
-        val excedente = montoPagadoNum - cuotaSeleccionada.montoCuotaMinimo
-        Pair(
-            interesProyectado,
-            capitalProyectado + excedente
-        )
-    } else if (cuotaSeleccionada != null && montoPagadoNum > 0 && interesProyectado > 0) {
-        // Pago parcial: distribución proporcional del cronograma
-        val proporcion = montoPagadoNum / cuotaSeleccionada.montoCuotaMinimo
-        Pair(
-            interesProyectado * proporcion,
-            capitalProyectado * proporcion
+    val montoInteresPersonalizadoNum = montoInteresPersonalizado.toDoubleOrNull() ?: 0.0
+    val montoCapitalPersonalizadoNum = montoCapitalPersonalizado.toDoubleOrNull() ?: 0.0
+    
+    // Usar distribución flexible si se seleccionó un tipo específico
+    val (montoAInteres, montoACapital, advertenciaPago) = if (tipoPago != TipoPago.NORMAL) {
+        // Usar la nueva lógica flexible
+        InteresUtils.distribuirPagoFlexible(
+            montoPagado = montoPagadoNum,
+            interesAcumulado = interesCalculado,
+            capitalPendiente = capitalPendiente,
+            tipoPago = tipoPago,
+            montoInteres = montoInteresPersonalizadoNum,
+            montoCapital = montoCapitalPersonalizadoNum
         )
     } else {
-        // Fallback: cálculo tradicional
-        InteresUtils.distribuirPago(
-            montoPagado = montoPagadoNum,
-            interesDelPeriodo = interesCalculado,
-            capitalPendiente = capitalPendiente
-        )
+        // Lógica original para pago NORMAL
+        val (interes, capital) = if (cuotaSeleccionada != null && montoPagadoNum >= cuotaSeleccionada.montoCuotaMinimo) {
+            // Paga cuota completa o más: usar distribución exacta del cronograma
+            val excedente = montoPagadoNum - cuotaSeleccionada.montoCuotaMinimo
+            Pair(
+                interesProyectado,
+                capitalProyectado + excedente
+            )
+        } else if (cuotaSeleccionada != null && montoPagadoNum > 0 && interesProyectado > 0) {
+            // Pago parcial: distribución proporcional del cronograma
+            val proporcion = montoPagadoNum / cuotaSeleccionada.montoCuotaMinimo
+            Pair(
+                interesProyectado * proporcion,
+                capitalProyectado * proporcion
+            )
+        } else {
+            // Fallback: cálculo tradicional
+            InteresUtils.distribuirPago(
+                montoPagado = montoPagadoNum,
+                interesDelPeriodo = interesCalculado,
+                capitalPendiente = capitalPendiente
+            )
+        }
+        Triple(interes, capital, null)
     }
+    
     val nuevoCapitalPendiente = (capitalPendiente - montoACapital).coerceAtLeast(0.0)
     
     // ⭐ Usuario actual (siempre email para filtrado consistente)
@@ -437,6 +466,336 @@ fun RegisterPaymentScreen(
                 }
             )
             
+            // NUEVO: Selector de tipo de pago
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                )
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "Tipo de pago",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    
+                    // Pago NORMAL
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = tipoPago == TipoPago.NORMAL,
+                            onClick = { tipoPago = TipoPago.NORMAL }
+                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Normal (Interés + Capital)",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Text(
+                                text = "Distribución automática",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            )
+                        }
+                    }
+                    
+                    Divider()
+                    
+                    // SOLO INTERÉS
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = tipoPago == TipoPago.SOLO_INTERES,
+                            onClick = { tipoPago = TipoPago.SOLO_INTERES }
+                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Solo Interés",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Text(
+                                text = "El capital no se reduce",
+                                fontSize = 12.sp,
+                                color = WarningColor
+                            )
+                        }
+                    }
+                    
+                    Divider()
+                    
+                    // SOLO CAPITAL
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = tipoPago == TipoPago.SOLO_CAPITAL,
+                            onClick = { tipoPago = TipoPago.SOLO_CAPITAL },
+                            enabled = interesCalculado < 1.0 // Solo si no hay interés pendiente
+                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Solo Capital",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = if (interesCalculado >= 1.0) 
+                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                                else 
+                                    MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = if (interesCalculado >= 1.0) 
+                                    "Debes pagar el interés primero"
+                                else 
+                                    "Reduce el plazo del préstamo",
+                                fontSize = 12.sp,
+                                color = if (interesCalculado >= 1.0) 
+                                    ErrorColor
+                                else 
+                                    SuccessColor
+                            )
+                        }
+                    }
+                    
+                    Divider()
+                    
+                    // PERSONALIZADO
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = tipoPago == TipoPago.PERSONALIZADO,
+                            onClick = { tipoPago = TipoPago.PERSONALIZADO }
+                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Personalizado",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Text(
+                                text = "Tú decides la distribución",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                    
+                    Divider()
+                    
+                    // EXONERAR INTERÉS
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = tipoPago == TipoPago.EXONERAR_INTERES,
+                            onClick = { tipoPago = TipoPago.EXONERAR_INTERES }
+                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Exonerar Interés ✨",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "El interés se perdona, todo va al capital",
+                                fontSize = 12.sp,
+                                color = SuccessColor
+                            )
+                        }
+                    }
+                }
+            }
+            
+            // Campos adicionales para tipo PERSONALIZADO
+            if (tipoPago == TipoPago.PERSONALIZADO) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.3f)
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Text(
+                            text = "Distribución manual",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        
+                        OutlinedTextField(
+                            value = montoInteresPersonalizado,
+                            onValueChange = { montoInteresPersonalizado = it },
+                            label = { Text("Monto a interés") },
+                            leadingIcon = { Icon(Icons.Default.TrendingUp, contentDescription = null) },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            prefix = { Text("$") },
+                            supportingText = {
+                                Text("Interés acumulado: $${String.format("%.2f", interesCalculado)}")
+                            }
+                        )
+                        
+                        OutlinedTextField(
+                            value = montoCapitalPersonalizado,
+                            onValueChange = { montoCapitalPersonalizado = it },
+                            label = { Text("Monto a capital") },
+                            leadingIcon = { Icon(Icons.Default.AccountBalance, contentDescription = null) },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            prefix = { Text("$") },
+                            supportingText = {
+                                Text("Capital pendiente: $${String.format("%.2f", capitalPendiente)}")
+                            }
+                        )
+                        
+                        // Validación de suma
+                        val totalPersonalizado = montoInteresPersonalizadoNum + montoCapitalPersonalizadoNum
+                        if (totalPersonalizado > 0) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text("Total distribuido:", fontSize = 12.sp)
+                                Text(
+                                    text = "$${String.format("%.2f", totalPersonalizado)}",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (totalPersonalizado == montoPagadoNum) 
+                                        SuccessColor 
+                                    else if (totalPersonalizado > montoPagadoNum)
+                                        ErrorColor
+                                    else
+                                        WarningColor
+                                )
+                            }
+                            
+                            if (totalPersonalizado != montoPagadoNum) {
+                                Text(
+                                    text = if (totalPersonalizado > montoPagadoNum)
+                                        "❌ Excede el monto pagado"
+                                    else
+                                        "⚠️ No distribuiste todo el monto",
+                                    fontSize = 11.sp,
+                                    color = if (totalPersonalizado > montoPagadoNum) ErrorColor else WarningColor
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Campo de nota obligatorio para EXONERAR_INTERES
+            if (tipoPago == TipoPago.EXONERAR_INTERES) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = SuccessColor.copy(alpha = 0.1f)
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = null,
+                                tint = SuccessColor
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Exoneración de Interés",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = SuccessColor
+                            )
+                        }
+                        
+                        Text(
+                            text = "El interés de $${String.format("%.2f", interesCalculado)} será exonerado (perdonado). Todo el pago irá directo al capital.",
+                            fontSize = 13.sp,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                        )
+                        
+                        OutlinedTextField(
+                            value = notaExoneracion,
+                            onValueChange = { notaExoneracion = it },
+                            label = { Text("Motivo de exoneración *") },
+                            leadingIcon = { Icon(Icons.Default.Notes, contentDescription = null) },
+                            modifier = Modifier.fillMaxWidth(),
+                            minLines = 3,
+                            maxLines = 5,
+                            placeholder = {
+                                Text("Ej: Cliente preferencial, situación especial, buen historial, promoción, etc.")
+                            },
+                            supportingText = {
+                                Text(
+                                    text = "⚠️ Campo obligatorio - Justifica por qué se exonera el interés",
+                                    fontSize = 11.sp,
+                                    color = if (notaExoneracion.isBlank()) ErrorColor else SuccessColor
+                                )
+                            },
+                            isError = notaExoneracion.isBlank()
+                        )
+                    }
+                }
+            }
+            
+            // Advertencia del tipo de pago (si hay)
+            if (advertenciaPago != null && montoPagadoNum > 0) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = WarningColor.copy(alpha = 0.1f)
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Warning,
+                            contentDescription = null,
+                            tint = WarningColor
+                        )
+                        Text(
+                            text = advertenciaPago,
+                            fontSize = 13.sp,
+                            color = WarningColor,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+            }
+            
             // Desglose automático del pago
             if (montoPagadoNum > 0) {
                 Card(
@@ -721,6 +1080,15 @@ fun RegisterPaymentScreen(
                         val montoNum = montoPagado.toDoubleOrNull() ?: 0.0
                         val moraNum = if (cobrarMora) (montoMora.toDoubleOrNull() ?: 0.0) else 0.0
                         
+                        // Agregar nota de exoneración si aplica
+                        val notasFinal = if (tipoPago == TipoPago.EXONERAR_INTERES) {
+                            val exoneracionInfo = "🎁 INTERÉS EXONERADO: $${String.format("%.2f", interesCalculado)}\n" +
+                                                  "Motivo: $notaExoneracion\n\n"
+                            if (notas.isNotBlank()) exoneracionInfo + notas else exoneracionInfo.trim()
+                        } else {
+                            notas
+                        }
+                        
                         paymentsViewModel.registrarPago(
                             prestamoId = loanId,
                             cuotaId = cuotaSeleccionada?.id,
@@ -731,7 +1099,7 @@ fun RegisterPaymentScreen(
                             montoMora = moraNum,
                             metodoPago = metodoPago,
                             recibidoPor = usuarioActualEmail,
-                            notas = notas
+                            notas = notasFinal
                         )
                         showSuccessDialog = true
                     }
@@ -739,7 +1107,8 @@ fun RegisterPaymentScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                enabled = montoPagado.isNotBlank() && prestamo != null
+                enabled = montoPagado.isNotBlank() && prestamo != null && 
+                         (tipoPago != TipoPago.EXONERAR_INTERES || notaExoneracion.isNotBlank())
             ) {
                 Icon(Icons.Default.Save, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))

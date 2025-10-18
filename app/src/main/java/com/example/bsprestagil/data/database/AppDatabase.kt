@@ -20,7 +20,7 @@ import com.example.bsprestagil.data.database.entities.*
         ConfiguracionEntity::class,
         NotificacionEntity::class
     ],
-    version = 10,
+    version = 11, // NUEVO: Agregado campo adminId a todas las entidades para multi-tenancy
     exportSchema = false
 )
 @TypeConverters(Converters::class)

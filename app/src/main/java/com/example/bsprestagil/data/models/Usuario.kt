@@ -10,6 +10,7 @@ data class Usuario(
 
 enum class RolUsuario {
     ADMIN,
+    SUPERVISOR,
     COBRADOR
 }
 

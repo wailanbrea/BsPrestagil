@@ -19,8 +19,10 @@ import com.example.bsprestagil.components.TopAppBarComponent
 import com.example.bsprestagil.components.ValidatedTextField
 import com.example.bsprestagil.components.validateForm
 import com.example.bsprestagil.data.mappers.toEntity
+import com.example.bsprestagil.utils.AuthUtils
 import com.example.bsprestagil.utils.ValidationUtils
 import com.example.bsprestagil.viewmodels.ClientsViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,6 +32,7 @@ fun AddEditClientScreen(
     clientsViewModel: ClientsViewModel = viewModel()
 ) {
     val isEditing = clientId != null
+    val scope = rememberCoroutineScope()
     
     var nombre by remember { mutableStateOf("") }
     var telefono by remember { mutableStateOf("") }
@@ -351,10 +354,12 @@ fun AddEditClientScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        cliente?.let { c ->
-                            clientsViewModel.deleteCliente(c.toEntity())
-                            showDeleteDialog = false
-                            navController.navigateUp()
+                        scope.launch {
+                            cliente?.let { c ->
+                                clientsViewModel.deleteClienteById(c.id)
+                                showDeleteDialog = false
+                                navController.navigateUp()
+                            }
                         }
                     }
                 ) {

@@ -47,6 +47,7 @@ class FirebaseService {
                 "fechaRegistro" to cliente.fechaRegistro,
                 "prestamosActivos" to cliente.prestamosActivos,
                 "historialPagos" to cliente.historialPagos,
+                "adminId" to cliente.adminId, // NUEVO: Multi-tenant
                 "lastSyncTime" to System.currentTimeMillis()
             )
             
@@ -80,6 +81,17 @@ class FirebaseService {
     
     // ==================== PRÉSTAMOS ====================
     
+    suspend fun deletePrestamo(prestamoId: String, firebaseId: String?): Result<Unit> {
+        return try {
+            if (firebaseId != null) {
+                firestore.collection(COLLECTION_PRESTAMOS).document(firebaseId).delete().await()
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
     suspend fun syncPrestamo(prestamo: PrestamoEntity): Result<String> {
         return try {
             val docRef = if (prestamo.firebaseId != null) {
@@ -110,6 +122,7 @@ class FirebaseService {
                 "totalCapitalPagado" to prestamo.totalCapitalPagado,
                 "totalMorasPagadas" to prestamo.totalMorasPagadas,
                 "notas" to prestamo.notas,
+                "adminId" to prestamo.adminId, // NUEVO: Multi-tenant
                 "lastSyncTime" to System.currentTimeMillis()
             )
             
@@ -131,6 +144,17 @@ class FirebaseService {
     }
     
     // ==================== PAGOS ====================
+    
+    suspend fun deletePago(pagoId: String, firebaseId: String?): Result<Unit> {
+        return try {
+            if (firebaseId != null) {
+                firestore.collection(COLLECTION_PAGOS).document(firebaseId).delete().await()
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
     
     suspend fun syncPago(pago: PagoEntity): Result<String> {
         return try {
@@ -160,6 +184,7 @@ class FirebaseService {
                 "recibidoPor" to pago.recibidoPor,
                 "notas" to pago.notas,
                 "reciboUrl" to pago.reciboUrl,
+                "adminId" to pago.adminId, // NUEVO: Multi-tenant
                 "lastSyncTime" to System.currentTimeMillis()
             )
             
@@ -204,6 +229,7 @@ class FirebaseService {
                 "fechaPago" to cuota.fechaPago,
                 "estado" to cuota.estado,
                 "notas" to cuota.notas,
+                "adminId" to cuota.adminId, // NUEVO: Multi-tenant
                 "lastSyncTime" to System.currentTimeMillis()
             )
             
@@ -226,6 +252,17 @@ class FirebaseService {
     
     // ==================== GARANTÍAS ====================
     
+    suspend fun deleteGarantia(garantiaId: String, firebaseId: String?): Result<Unit> {
+        return try {
+            if (firebaseId != null) {
+                firestore.collection(COLLECTION_GARANTIAS).document(firebaseId).delete().await()
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
     suspend fun syncGarantia(garantia: GarantiaEntity): Result<String> {
         return try {
             val docRef = if (garantia.firebaseId != null) {
@@ -243,6 +280,7 @@ class FirebaseService {
                 "estado" to garantia.estado,
                 "fechaRegistro" to garantia.fechaRegistro,
                 "notas" to garantia.notas,
+                "adminId" to garantia.adminId, // NUEVO: Multi-tenant
                 "lastSyncTime" to System.currentTimeMillis()
             )
             

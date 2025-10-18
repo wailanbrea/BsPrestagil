@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -14,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.bsprestagil.components.SwipeToDeleteItem
 import com.example.bsprestagil.data.database.entities.UsuarioEntity
 import com.example.bsprestagil.data.models.EstadoPrestamo
 import com.example.bsprestagil.navigation.Screen
@@ -53,7 +55,7 @@ fun GestionCobradoresScreen(
                 title = { Text("Gestionar Cobradores") },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -142,13 +144,27 @@ fun GestionCobradoresScreen(
                     }
                 }
             } else {
-                items(usuarios) { usuario ->
-                    CobradorCard(
-                        usuario = usuario,
-                        loansViewModel = loansViewModel,
-                        onEdit = { showEditDialog = usuario },
-                        onDelete = { showDeleteDialog = usuario }
-                    )
+                items(
+                    items = usuarios,
+                    key = { it.id }
+                ) { usuario ->
+                    SwipeToDeleteItem(
+                        isAdmin = true, // Esta pantalla solo es visible para ADMIN
+                        itemName = usuario.nombre,
+                        itemType = "usuario",
+                        onDelete = {
+                            kotlinx.coroutines.runBlocking {
+                                viewModel.deleteUsuario(usuario)
+                            }
+                        }
+                    ) {
+                        CobradorCard(
+                            usuario = usuario,
+                            loansViewModel = loansViewModel,
+                            onEdit = { showEditDialog = usuario },
+                            onDelete = { showDeleteDialog = usuario }
+                        )
+                    }
                 }
             }
             
@@ -536,7 +552,7 @@ fun AddCobradorDialog(
     var mostrarPassword by remember { mutableStateOf(false) }
     var errorPassword by remember { mutableStateOf("") }
     
-    val roles = listOf("ADMIN", "COBRADOR")
+    val roles = listOf("ADMIN", "SUPERVISOR", "COBRADOR")
     
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -728,7 +744,7 @@ fun EditCobradorDialog(
     var expanded by remember { mutableStateOf(false) }
     var errorMensaje by remember { mutableStateOf("") }
     
-    val roles = listOf("ADMIN", "COBRADOR")
+    val roles = listOf("ADMIN", "SUPERVISOR", "COBRADOR")
     
     AlertDialog(
         onDismissRequest = onDismiss,

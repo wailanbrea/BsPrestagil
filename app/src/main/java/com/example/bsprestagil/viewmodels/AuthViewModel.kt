@@ -111,9 +111,14 @@ class AuthViewModel : ViewModel() {
                         "email" to email,
                         "telefono" to "",
                         "rol" to "ADMIN", // Usuarios existentes → ADMIN por defecto
+                        "adminId" to userId, // NUEVO: adminId = su propio UID
                         "activo" to true,
                         "fechaCreacion" to System.currentTimeMillis(),
-                        "ultimaActualizacion" to System.currentTimeMillis()
+                        "ultimaActualizacion" to System.currentTimeMillis(),
+                        "porcentajeComision" to 3.0,
+                        "totalComisionesGeneradas" to 0.0,
+                        "totalComisionesPagadas" to 0.0,
+                        "ultimoPagoComision" to 0L
                     )
                     
                     firestore.collection("usuarios")
@@ -121,7 +126,7 @@ class AuthViewModel : ViewModel() {
                         .set(datosUsuario)
                         .await()
                     
-                    android.util.Log.d("AuthViewModel", "✅ Documento creado automáticamente con rol ADMIN")
+                    android.util.Log.d("AuthViewModel", "✅ Documento creado automáticamente con rol ADMIN y adminId")
                     return "ADMIN"
                 } catch (createError: Exception) {
                     android.util.Log.e("AuthViewModel", "❌ Error al crear documento", createError)
@@ -130,10 +135,26 @@ class AuthViewModel : ViewModel() {
             }
             
             val rol = userDoc.getString("rol")
+            val adminIdExistente = userDoc.getString("adminId")
             
             android.util.Log.d("AuthViewModel", "✅ Rol obtenido de Firestore: $rol")
-            android.util.Log.d("AuthViewModel", "📄 Documento existe: ${userDoc.exists()}")
-            android.util.Log.d("AuthViewModel", "📊 Datos del documento: ${userDoc.data}")
+            android.util.Log.d("AuthViewModel", "📄 adminId existente: $adminIdExistente")
+            
+            // NUEVO: Si el documento existe pero NO tiene adminId, actualizarlo
+            if (adminIdExistente.isNullOrBlank()) {
+                try {
+                    val adminIdNuevo = if (rol == "ADMIN") userId else userId // Asumir que es ADMIN si no tiene adminId
+                    
+                    firestore.collection("usuarios")
+                        .document(userId)
+                        .update("adminId", adminIdNuevo)
+                        .await()
+                    
+                    android.util.Log.d("AuthViewModel", "✅ adminId actualizado en Firestore: $adminIdNuevo")
+                } catch (updateError: Exception) {
+                    android.util.Log.e("AuthViewModel", "⚠️ Error al actualizar adminId: ${updateError.message}")
+                }
+            }
             
             rol
         } catch (e: Exception) {
@@ -156,6 +177,17 @@ class AuthViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 _authState.value = AuthState.Loading
+                
+                // NUEVO: Verificar si es el primer usuario (será ADMIN automáticamente)
+                val usuariosExistentes = firestore.collection("usuarios").get().await()
+                val esElPrimero = usuariosExistentes.isEmpty
+                
+                if (!esElPrimero) {
+                    // NO es el primer usuario, no puede auto-registrarse
+                    _authState.value = AuthState.Error("⚠️ Solo el administrador puede crear nuevos usuarios.\n\nContacta al administrador de tu empresa para que te cree una cuenta.")
+                    return@launch
+                }
+                
                 val result = auth.createUserWithEmailAndPassword(email, password).await()
                 result.user?.let { user ->
                     // 1. Actualizar perfil en Firebase Auth con el nombre
@@ -165,24 +197,33 @@ class AuthViewModel : ViewModel() {
                     user.updateProfile(profileUpdates).await()
                     
                     // 2. Crear documento en Firestore con datos completos
+                    // NUEVO: Si es el primero, es ADMIN con adminId = su propio UID
                     try {
                         val datosUsuario = hashMapOf(
                             "nombre" to nombre,
                             "email" to email,
                             "telefono" to "",
-                            "rol" to "ADMIN", // Por defecto ADMIN
+                            "rol" to "ADMIN", // Primer usuario = ADMIN
+                            "adminId" to user.uid, // NUEVO: adminId = su propio UID
                             "activo" to true,
                             "fechaCreacion" to System.currentTimeMillis(),
-                            "ultimaActualizacion" to System.currentTimeMillis()
+                            "ultimaActualizacion" to System.currentTimeMillis(),
+                            "porcentajeComision" to 3.0,
+                            "totalComisionesGeneradas" to 0.0,
+                            "totalComisionesPagadas" to 0.0,
+                            "ultimoPagoComision" to 0L
                         )
                         
                         firestore.collection("usuarios")
                             .document(user.uid)
                             .set(datosUsuario)
                             .await()
+                        
+                        android.util.Log.d("AuthViewModel", "✅ Primer usuario creado como ADMIN: ${user.uid}")
                     } catch (e: Exception) {
                         // Si falla Firestore, no bloqueamos el registro
                         // El documento se creará después desde el perfil
+                        android.util.Log.e("AuthViewModel", "Error creando documento en Firestore: ${e.message}")
                     }
                     
                     // 3. Enviar email de verificación automáticamente

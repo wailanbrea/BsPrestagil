@@ -41,6 +41,9 @@ data class PrestamoEntity(
     val totalMorasPagadas: Double,
     val notas: String,
     
+    // NUEVO: Multi-tenant - Empresa a la que pertenece
+    val adminId: String, // UID del ADMIN dueño
+    
     // Campos de sincronización
     val pendingSync: Boolean = true,
     val lastSyncTime: Long = 0L,

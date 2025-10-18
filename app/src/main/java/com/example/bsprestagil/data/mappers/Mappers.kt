@@ -22,7 +22,7 @@ fun ClienteEntity.toCliente() = Cliente(
     }
 )
 
-fun Cliente.toEntity() = ClienteEntity(
+fun Cliente.toEntity(adminId: String, firebaseId: String? = null, pendingSync: Boolean = false, lastSyncTime: Long = 0L) = ClienteEntity(
     id = id,
     nombre = nombre,
     telefono = telefono,
@@ -32,7 +32,11 @@ fun Cliente.toEntity() = ClienteEntity(
     referencias = referencias.map { it.toEntity() },
     fechaRegistro = fechaRegistro,
     prestamosActivos = prestamosActivos,
-    historialPagos = historialPagos.name
+    historialPagos = historialPagos.name,
+    adminId = adminId, // NUEVO: Multi-tenant
+    pendingSync = pendingSync,
+    lastSyncTime = lastSyncTime,
+    firebaseId = firebaseId
 )
 
 fun ReferenciaEntity.toReferencia() = Referencia(
@@ -86,7 +90,7 @@ fun PrestamoEntity.toPrestamo() = Prestamo(
     notas = notas
 )
 
-fun Prestamo.toEntity() = PrestamoEntity(
+fun Prestamo.toEntity(adminId: String) = PrestamoEntity(
     id = id,
     clienteId = clienteId,
     clienteNombre = clienteNombre,
@@ -107,7 +111,8 @@ fun Prestamo.toEntity() = PrestamoEntity(
     totalInteresesPagados = totalInteresesPagados,
     totalCapitalPagado = totalCapitalPagado,
     totalMorasPagadas = totalMorasPagadas,
-    notas = notas
+    notas = notas,
+    adminId = adminId // NUEVO: Multi-tenant
 )
 
 // Pago Mappers
@@ -139,7 +144,7 @@ fun PagoEntity.toPago() = Pago(
     reciboUrl = reciboUrl
 )
 
-fun Pago.toEntity() = PagoEntity(
+fun Pago.toEntity(adminId: String) = PagoEntity(
     id = id,
     prestamoId = prestamoId,
     cuotaId = cuotaId,
@@ -158,7 +163,8 @@ fun Pago.toEntity() = PagoEntity(
     metodoPago = metodoPago.name,
     recibidoPor = recibidoPor,
     notas = notas,
-    reciboUrl = reciboUrl
+    reciboUrl = reciboUrl,
+    adminId = adminId // NUEVO: Multi-tenant
 )
 
 // Cuota Mappers
@@ -184,7 +190,7 @@ fun CuotaEntity.toCuota() = Cuota(
     notas = notas
 )
 
-fun Cuota.toEntity() = CuotaEntity(
+fun Cuota.toEntity(adminId: String) = CuotaEntity(
     id = id,
     prestamoId = prestamoId,
     numeroCuota = numeroCuota,
@@ -197,7 +203,8 @@ fun Cuota.toEntity() = CuotaEntity(
     montoMora = montoMora,
     fechaPago = fechaPago,
     estado = estado.name,
-    notas = notas
+    notas = notas,
+    adminId = adminId // NUEVO: Multi-tenant
 )
 
 // Garantía Mappers
@@ -225,7 +232,7 @@ fun GarantiaEntity.toGarantia() = Garantia(
     notas = notas
 )
 
-fun Garantia.toEntity() = GarantiaEntity(
+fun Garantia.toEntity(adminId: String) = GarantiaEntity(
     id = id,
     tipo = tipo.name,
     descripcion = descripcion,
@@ -233,7 +240,8 @@ fun Garantia.toEntity() = GarantiaEntity(
     fotosUrls = fotosUrls,
     estado = estado.name,
     fechaRegistro = fechaRegistro,
-    notas = notas
+    notas = notas,
+    adminId = adminId // NUEVO: Multi-tenant
 )
 
 // Usuario Mappers
@@ -243,18 +251,20 @@ fun UsuarioEntity.toUsuario() = Usuario(
     email = email,
     rol = when (rol) {
         "ADMIN" -> RolUsuario.ADMIN
+        "SUPERVISOR" -> RolUsuario.SUPERVISOR
         "COBRADOR" -> RolUsuario.COBRADOR
-        else -> RolUsuario.ADMIN
+        else -> RolUsuario.COBRADOR
     },
     fechaCreacion = fechaCreacion
 )
 
-fun Usuario.toEntity() = UsuarioEntity(
+fun Usuario.toEntity(adminId: String) = UsuarioEntity(
     id = id,
     nombre = nombre,
     email = email,
     rol = rol.name,
-    fechaCreacion = fechaCreacion
+    fechaCreacion = fechaCreacion,
+    adminId = adminId // NUEVO: Multi-tenant
 )
 
 // Configuración Mappers

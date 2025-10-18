@@ -27,6 +27,9 @@ class BsPrestagilApp : Application() {
         
         // Configurar sincronización periódica
         SyncManager.setupPeriodicSync(this)
+        
+        // NUEVO: Configurar worker de extensión automática de plazos
+        SyncManager.setupExtensionPlazoWorker(this)
     }
     
     private suspend fun initializeDatabase() {

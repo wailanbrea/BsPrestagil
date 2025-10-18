@@ -9,6 +9,7 @@ import com.example.bsprestagil.data.database.entities.ReferenciaEntity
 import com.example.bsprestagil.data.mappers.toCliente
 import com.example.bsprestagil.data.models.Cliente
 import com.example.bsprestagil.data.repository.ClienteRepository
+import com.example.bsprestagil.utils.AuthUtils
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -17,8 +18,13 @@ class ClientsViewModel(application: Application) : AndroidViewModel(application)
     private val database = AppDatabase.getDatabase(application)
     private val clienteRepository = ClienteRepository(database.clienteDao())
     
+    // Método actual: Flow<List> para filtros y búsquedas
+    // Nota: Para listas sin filtros >100 items, considera usar clientesPaged
     private val _clientes = MutableStateFlow<List<Cliente>>(emptyList())
     val clientes: StateFlow<List<Cliente>> = _clientes.asStateFlow()
+    
+    // TODO FUTURO: Paging 3 para listas muy grandes (actualmente se usa Flow<List> por los filtros)
+    // val clientesPaged = clienteRepository.getAllClientesPaged().cachedIn(viewModelScope)
     
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
@@ -116,6 +122,8 @@ class ClientsViewModel(application: Application) : AndroidViewModel(application)
                     )
                 }
                 
+                val adminId = AuthUtils.getCurrentAdminId()
+                
                 val cliente = ClienteEntity(
                     id = "",
                     nombre = nombre,
@@ -126,7 +134,8 @@ class ClientsViewModel(application: Application) : AndroidViewModel(application)
                     referencias = referencias,
                     fechaRegistro = System.currentTimeMillis(),
                     prestamosActivos = 0,
-                    historialPagos = "AL_DIA"
+                    historialPagos = "AL_DIA",
+                    adminId = adminId // NUEVO: Multi-tenant
                 )
                 
                 clienteRepository.insertCliente(cliente)
@@ -157,6 +166,26 @@ class ClientsViewModel(application: Application) : AndroidViewModel(application)
                 clienteRepository.deleteCliente(cliente)
             } catch (e: Exception) {
                 // Manejar error
+            }
+        }
+    }
+    
+    // Eliminar cliente por ID (obtiene el entity completo de Room con firebaseId)
+    fun deleteClienteById(clienteId: String) {
+        viewModelScope.launch {
+            try {
+                val adminId = AuthUtils.getCurrentAdminId()
+                // Obtener el cliente COMPLETO de Room (con firebaseId)
+                val clienteEntity = database.clienteDao().getClienteByIdSync(clienteId, adminId)
+                
+                if (clienteEntity != null) {
+                    android.util.Log.d("ClientsViewModel", "🗑️ Eliminando cliente: ${clienteEntity.nombre}, firebaseId: ${clienteEntity.firebaseId}")
+                    clienteRepository.deleteCliente(clienteEntity)
+                } else {
+                    android.util.Log.w("ClientsViewModel", "⚠️ Cliente no encontrado: $clienteId")
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("ClientsViewModel", "❌ Error eliminando cliente: ${e.message}")
             }
         }
     }

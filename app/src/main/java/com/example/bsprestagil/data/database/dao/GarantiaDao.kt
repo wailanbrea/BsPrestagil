@@ -6,20 +6,21 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface GarantiaDao {
-    @Query("SELECT * FROM garantias ORDER BY fechaRegistro DESC")
-    fun getAllGarantias(): Flow<List<GarantiaEntity>>
+    // NUEVO: Filtrado por adminId para multi-tenancy
+    @Query("SELECT * FROM garantias WHERE adminId = :adminId ORDER BY fechaRegistro DESC")
+    fun getAllGarantias(adminId: String): Flow<List<GarantiaEntity>>
     
-    @Query("SELECT * FROM garantias WHERE id = :garantiaId")
-    fun getGarantiaById(garantiaId: String): Flow<GarantiaEntity?>
+    @Query("SELECT * FROM garantias WHERE id = :garantiaId AND adminId = :adminId")
+    fun getGarantiaById(garantiaId: String, adminId: String): Flow<GarantiaEntity?>
     
-    @Query("SELECT * FROM garantias WHERE id = :garantiaId")
-    suspend fun getGarantiaByIdSync(garantiaId: String): GarantiaEntity?
+    @Query("SELECT * FROM garantias WHERE id = :garantiaId AND adminId = :adminId")
+    suspend fun getGarantiaByIdSync(garantiaId: String, adminId: String): GarantiaEntity?
     
-    @Query("SELECT * FROM garantias WHERE estado = :estado")
-    fun getGarantiasByEstado(estado: String): Flow<List<GarantiaEntity>>
+    @Query("SELECT * FROM garantias WHERE estado = :estado AND adminId = :adminId")
+    fun getGarantiasByEstado(estado: String, adminId: String): Flow<List<GarantiaEntity>>
     
-    @Query("SELECT * FROM garantias WHERE pendingSync = 1")
-    suspend fun getGarantiasPendingSync(): List<GarantiaEntity>
+    @Query("SELECT * FROM garantias WHERE pendingSync = 1 AND adminId = :adminId")
+    suspend fun getGarantiasPendingSync(adminId: String): List<GarantiaEntity>
     
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertGarantia(garantia: GarantiaEntity)
@@ -33,7 +34,7 @@ interface GarantiaDao {
     @Delete
     suspend fun deleteGarantia(garantia: GarantiaEntity)
     
-    @Query("UPDATE garantias SET pendingSync = 0, lastSyncTime = :syncTime WHERE id = :garantiaId")
-    suspend fun markAsSynced(garantiaId: String, syncTime: Long)
+    @Query("UPDATE garantias SET pendingSync = 0, lastSyncTime = :syncTime WHERE id = :garantiaId AND adminId = :adminId")
+    suspend fun markAsSynced(garantiaId: String, adminId: String, syncTime: Long)
 }
 

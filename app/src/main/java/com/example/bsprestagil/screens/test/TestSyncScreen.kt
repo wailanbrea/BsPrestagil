@@ -19,6 +19,7 @@ import com.example.bsprestagil.data.models.FrecuenciaPago
 import com.example.bsprestagil.data.models.TipoAmortizacion
 import com.example.bsprestagil.sync.SyncManager
 import com.example.bsprestagil.utils.AmortizacionUtils
+import com.example.bsprestagil.utils.AuthUtils
 import com.example.bsprestagil.utils.CronogramaUtils
 import kotlinx.coroutines.launch
 
@@ -109,6 +110,9 @@ fun TestSyncScreen(
                         loading = true
                         scope.launch {
                             try {
+                                // NUEVO: Obtener adminId del usuario actual
+                                val adminId = AuthUtils.getCurrentAdminId()
+                                
                                 // Crear cliente de prueba
                                 val clienteId = clienteRepository.insertCliente(
                                     ClienteEntity(
@@ -123,7 +127,8 @@ fun TestSyncScreen(
                                         ),
                                         fechaRegistro = System.currentTimeMillis(),
                                         prestamosActivos = 0,
-                                        historialPagos = "AL_DIA"
+                                        historialPagos = "AL_DIA",
+                                        adminId = adminId // NUEVO: Multi-tenant
                                     )
                                 )
                                 clienteIdCreado = clienteId
@@ -165,6 +170,9 @@ fun TestSyncScreen(
                                 
                                 val fechaInicio = System.currentTimeMillis()
                                 
+                                // NUEVO: Obtener adminId del usuario actual
+                                val adminId = AuthUtils.getCurrentAdminId()
+                                
                                 val prestamoId = prestamoRepository.insertPrestamo(
                                     PrestamoEntity(
                                         id = "",
@@ -185,7 +193,8 @@ fun TestSyncScreen(
                                         totalInteresesPagados = 0.0,
                                         totalCapitalPagado = 0.0,
                                         totalMorasPagadas = 0.0,
-                                        notas = "Préstamo de prueba - 10% mensual x 12 cuotas - Sistema Francés"
+                                        notas = "Préstamo de prueba - 10% mensual x 12 cuotas - Sistema Francés",
+                                        adminId = adminId // NUEVO: Multi-tenant
                                     )
                                 )
                                 
@@ -197,7 +206,8 @@ fun TestSyncScreen(
                                     frecuenciaPago = FrecuenciaPago.MENSUAL,
                                     tipoAmortizacion = TipoAmortizacion.FRANCES,
                                     numeroCuotas = 12,
-                                    fechaInicio = fechaInicio
+                                    fechaInicio = fechaInicio,
+                                    adminId = adminId // NUEVO: Multi-tenant
                                 )
                                 
                                 // Insertar todas las cuotas
@@ -233,6 +243,9 @@ fun TestSyncScreen(
                         loading = true
                         scope.launch {
                             try {
+                                // NUEVO: Obtener adminId del usuario actual
+                                val adminId = AuthUtils.getCurrentAdminId()
+                                
                                 val pagoId = pagoRepository.insertPago(
                                     PagoEntity(
                                         id = "",
@@ -253,7 +266,8 @@ fun TestSyncScreen(
                                         metodoPago = "EFECTIVO",
                                         recibidoPor = "Admin",
                                         notas = "Pago cuota 1 - $1000 interés + $500 capital",
-                                        reciboUrl = ""
+                                        reciboUrl = "",
+                                        adminId = adminId // NUEVO: Multi-tenant
                                     )
                                 )
                                 mensaje = "✅ Pago registrado con ID: $pagoId"

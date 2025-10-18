@@ -2,26 +2,35 @@ package com.example.bsprestagil.data.repository
 
 import com.example.bsprestagil.data.database.dao.UsuarioDao
 import com.example.bsprestagil.data.database.entities.UsuarioEntity
+import com.example.bsprestagil.utils.AuthUtils
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.runBlocking
 
 class UsuarioRepository(
     internal val usuarioDao: UsuarioDao
 ) {
     
+    // NUEVO: Obtener adminId del usuario actual
+    private fun getAdminId(): String = runBlocking { AuthUtils.getCurrentAdminId() }
+    
     fun getAllUsuarios(): Flow<List<UsuarioEntity>> {
-        return usuarioDao.getAllUsuarios()
+        val adminId = getAdminId()
+        return usuarioDao.getAllUsuarios(adminId)
     }
     
+    // Sin filtro adminId (se usa para auth y perfil)
     fun getUsuarioById(usuarioId: String): Flow<UsuarioEntity?> {
         return usuarioDao.getUsuarioById(usuarioId)
     }
     
+    // Sin filtro adminId (se usa para login)
     suspend fun getUsuarioByEmail(email: String): UsuarioEntity? {
         return usuarioDao.getUsuarioByEmail(email)
     }
     
     suspend fun getUsuariosPendingSync(): List<UsuarioEntity> {
-        return usuarioDao.getUsuariosPendingSync()
+        val adminId = AuthUtils.getCurrentAdminId()
+        return usuarioDao.getUsuariosPendingSync(adminId)
     }
     
     suspend fun insertUsuario(usuario: UsuarioEntity) {
@@ -37,7 +46,8 @@ class UsuarioRepository(
     }
     
     suspend fun markAsSynced(usuarioId: String) {
-        usuarioDao.markAsSynced(usuarioId, System.currentTimeMillis())
+        val adminId = AuthUtils.getCurrentAdminId()
+        usuarioDao.markAsSynced(usuarioId, adminId, System.currentTimeMillis())
     }
 }
 
