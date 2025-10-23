@@ -1,13 +1,27 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-   Sample backup rules file; uncomment and customize as necessary.
-   See https://developer.android.com/guide/topics/data/autobackup
-   for details.
-   Note: This file is ignored for devices older than API 31
-   See https://developer.android.com/about/versions/12/backup-restore
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+   Reglas de respaldo automático para BsPrestagil
+   Protege datos sensibles del respaldo automático de Android
 -->
 <full-backup-content>
-    <!--
-   <include domain="sharedpref" path="."/>
-   <exclude domain="sharedpref" path="device.xml"/>
--->
+    <!-- ✅ Incluir base de datos local -->
+    <include domain="database" path="." />
+    
+    <!-- ❌ EXCLUIR datos sensibles de respaldo -->
+    <!-- SharedPreferences encriptadas (credenciales biométricas) -->
+    <exclude domain="sharedpref" path="encrypted_prefs.xml" />
+    <exclude domain="sharedpref" path="secure_prefs.xml" />
+    
+    <!-- Archivos de sesión y tokens -->
+    <exclude domain="file" path="session/" />
+    <exclude domain="file" path="tokens/" />
+    
+    <!-- Fotos de garantías (pueden ser pesadas) -->
+    <exclude domain="file" path="garantias/" />
+    
+    <!-- Cache -->
+    <exclude domain="cache" path="." />
+    
+    <!-- ✅ Incluir configuraciones generales -->
+    <include domain="sharedpref" path="app_preferences.xml" />
 </full-backup-content>

@@ -18,9 +18,10 @@ import com.example.bsprestagil.data.database.entities.*
         GarantiaEntity::class,
         UsuarioEntity::class,
         ConfiguracionEntity::class,
-        NotificacionEntity::class
+        NotificacionEntity::class,
+        ExtensionPrestamoEntity::class
     ],
-    version = 11, // NUEVO: Agregado campo adminId a todas las entidades para multi-tenancy
+    version = 12, // NUEVO: Agregado sistema de extensiones de préstamo
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -34,6 +35,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun usuarioDao(): UsuarioDao
     abstract fun configuracionDao(): ConfiguracionDao
     abstract fun notificacionDao(): NotificacionDao
+    abstract fun extensionPrestamoDao(): ExtensionPrestamoDao
     
     companion object {
         @Volatile

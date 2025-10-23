@@ -87,7 +87,15 @@ fun PrestamoEntity.toPrestamo() = Prestamo(
     totalInteresesPagados = totalInteresesPagados,
     totalCapitalPagado = totalCapitalPagado,
     totalMorasPagadas = totalMorasPagadas,
-    notas = notas
+    notas = notas,
+    // Campos de extensión
+    montoExtendido = montoExtendido,
+    montoTotal = montoTotal,
+    fechaUltimaExtension = fechaUltimaExtension,
+    razonUltimaExtension = razonUltimaExtension,
+    numeroExtensiones = numeroExtensiones,
+    esExtension = esExtension,
+    prestamoPadreId = prestamoPadreId
 )
 
 fun Prestamo.toEntity(adminId: String) = PrestamoEntity(
@@ -112,6 +120,14 @@ fun Prestamo.toEntity(adminId: String) = PrestamoEntity(
     totalCapitalPagado = totalCapitalPagado,
     totalMorasPagadas = totalMorasPagadas,
     notas = notas,
+    // Campos de extensión
+    montoExtendido = montoExtendido,
+    montoTotal = montoTotal,
+    fechaUltimaExtension = fechaUltimaExtension,
+    razonUltimaExtension = razonUltimaExtension,
+    numeroExtensiones = numeroExtensiones,
+    esExtension = esExtension,
+    prestamoPadreId = prestamoPadreId,
     adminId = adminId // NUEVO: Multi-tenant
 )
 
@@ -267,8 +283,57 @@ fun Usuario.toEntity(adminId: String) = UsuarioEntity(
     adminId = adminId // NUEVO: Multi-tenant
 )
 
+// Extensión de Préstamo Mappers
+fun ExtensionPrestamoEntity.toExtensionPrestamo() = ExtensionPrestamo(
+    id = id,
+    prestamoId = prestamoId,
+    montoAnterior = montoAnterior,
+    montoAdicional = montoAdicional,
+    montoNuevo = montoNuevo,
+    fechaExtension = fechaExtension,
+    razonExtension = razonExtension,
+    interesesRecalculados = interesesRecalculados,
+    cuotasRecalculadas = cuotasRecalculadas,
+    cuotaAnterior = cuotaAnterior,
+    cuotaNueva = cuotaNueva,
+    capitalPendienteAnterior = capitalPendienteAnterior,
+    capitalPendienteNuevo = capitalPendienteNuevo,
+    numeroExtension = numeroExtension,
+    estado = when (estado) {
+        "PENDIENTE" -> EstadoExtension.PENDIENTE
+        "APROBADA" -> EstadoExtension.APROBADA
+        "RECHAZADA" -> EstadoExtension.RECHAZADA
+        "CANCELADA" -> EstadoExtension.CANCELADA
+        else -> EstadoExtension.APROBADA
+    },
+    notas = notas,
+    fechaCreacion = fechaCreacion
+)
+
+fun ExtensionPrestamo.toEntity(adminId: String) = ExtensionPrestamoEntity(
+    id = id,
+    prestamoId = prestamoId,
+    montoAnterior = montoAnterior,
+    montoAdicional = montoAdicional,
+    montoNuevo = montoNuevo,
+    fechaExtension = fechaExtension,
+    fechaCreacion = fechaCreacion,
+    razonExtension = razonExtension,
+    interesesRecalculados = interesesRecalculados,
+    cuotasRecalculadas = cuotasRecalculadas,
+    cuotaAnterior = cuotaAnterior,
+    cuotaNueva = cuotaNueva,
+    capitalPendienteAnterior = capitalPendienteAnterior,
+    capitalPendienteNuevo = capitalPendienteNuevo,
+    numeroExtension = numeroExtension,
+    estado = estado.name,
+    notas = notas,
+    adminId = adminId
+)
+
 // Configuración Mappers
 fun ConfiguracionEntity.toConfiguracion() = Configuracion(
+    // Configuración general
     tasaInteresBase = tasaInteresBase,
     tasaMoraBase = tasaMoraBase,
     nombreNegocio = nombreNegocio,
@@ -278,11 +343,28 @@ fun ConfiguracionEntity.toConfiguracion() = Configuracion(
     mensajeRecibo = mensajeRecibo,
     notificacionesActivas = notificacionesActivas,
     envioWhatsApp = envioWhatsApp,
-    envioSMS = envioSMS
+    envioSMS = envioSMS,
+    // Configuración de factura/contrato
+    rncEmpresa = rncEmpresa,
+    emailEmpresa = emailEmpresa,
+    sitioWebEmpresa = sitioWebEmpresa,
+    tituloContrato = tituloContrato,
+    encabezadoContrato = encabezadoContrato,
+    terminosCondiciones = terminosCondiciones,
+    clausulasPenalizacion = clausulasPenalizacion,
+    clausulasGarantia = clausulasGarantia,
+    clausulasLegales = clausulasLegales,
+    pieContrato = pieContrato,
+    mensajeAdicionalContrato = mensajeAdicionalContrato,
+    mostrarTablaAmortizacion = mostrarTablaAmortizacion,
+    mostrarDesglosePago = mostrarDesglosePago,
+    incluirEspacioFirmas = incluirEspacioFirmas,
+    numeroCopiasContrato = numeroCopiasContrato
 )
 
 fun Configuracion.toEntity() = ConfiguracionEntity(
     id = 1,
+    // Configuración general
     tasaInteresBase = tasaInteresBase,
     tasaMoraBase = tasaMoraBase,
     nombreNegocio = nombreNegocio,
@@ -292,6 +374,22 @@ fun Configuracion.toEntity() = ConfiguracionEntity(
     mensajeRecibo = mensajeRecibo,
     notificacionesActivas = notificacionesActivas,
     envioWhatsApp = envioWhatsApp,
-    envioSMS = envioSMS
+    envioSMS = envioSMS,
+    // Configuración de factura/contrato
+    rncEmpresa = rncEmpresa,
+    emailEmpresa = emailEmpresa,
+    sitioWebEmpresa = sitioWebEmpresa,
+    tituloContrato = tituloContrato,
+    encabezadoContrato = encabezadoContrato,
+    terminosCondiciones = terminosCondiciones,
+    clausulasPenalizacion = clausulasPenalizacion,
+    clausulasGarantia = clausulasGarantia,
+    clausulasLegales = clausulasLegales,
+    pieContrato = pieContrato,
+    mensajeAdicionalContrato = mensajeAdicionalContrato,
+    mostrarTablaAmortizacion = mostrarTablaAmortizacion,
+    mostrarDesglosePago = mostrarDesglosePago,
+    incluirEspacioFirmas = incluirEspacioFirmas,
+    numeroCopiasContrato = numeroCopiasContrato
 )
 

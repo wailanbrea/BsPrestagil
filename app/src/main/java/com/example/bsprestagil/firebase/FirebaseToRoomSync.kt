@@ -284,10 +284,66 @@ class FirebaseToRoomSync(
     }
     
     /**
+     * Descarga configuración de Firebase y actualiza Room
+     */
+    suspend fun syncConfiguracionFromFirebase(): Result<Unit> {
+        return try {
+            val snapshot = firestore.collection("configuracion")
+                .document("config")
+                .get()
+                .await()
+            
+            snapshot.data?.let { data ->
+                val configuracionEntity = ConfiguracionEntity(
+                    id = 1,
+                    // Configuración general
+                    tasaInteresBase = (data["tasaInteresBase"] as? Number)?.toDouble() ?: 10.0,
+                    tasaMoraBase = (data["tasaMoraBase"] as? Number)?.toDouble() ?: 5.0,
+                    nombreNegocio = data["nombreNegocio"] as? String ?: "Prestágil",
+                    telefonoNegocio = data["telefonoNegocio"] as? String ?: "",
+                    direccionNegocio = data["direccionNegocio"] as? String ?: "",
+                    logoUrl = data["logoUrl"] as? String ?: "",
+                    mensajeRecibo = data["mensajeRecibo"] as? String ?: "Gracias por su pago",
+                    notificacionesActivas = data["notificacionesActivas"] as? Boolean ?: true,
+                    envioWhatsApp = data["envioWhatsApp"] as? Boolean ?: true,
+                    envioSMS = data["envioSMS"] as? Boolean ?: false,
+                    // Configuración de factura/contrato
+                    rncEmpresa = data["rncEmpresa"] as? String ?: "",
+                    emailEmpresa = data["emailEmpresa"] as? String ?: "",
+                    sitioWebEmpresa = data["sitioWebEmpresa"] as? String ?: "",
+                    tituloContrato = data["tituloContrato"] as? String ?: "CONTRATO DE PRÉSTAMO PERSONAL",
+                    encabezadoContrato = data["encabezadoContrato"] as? String ?: "Entre las partes aquí identificadas, se establece el siguiente contrato de préstamo bajo los términos y condiciones que se detallan:",
+                    terminosCondiciones = data["terminosCondiciones"] as? String ?: "1. El PRESTATARIO se compromete a pagar el préstamo en las fechas acordadas.\n2. Los intereses se calculan según el sistema de amortización elegido.\n3. El no pago genera intereses moratorios según la tasa establecida.\n4. La garantía quedará retenida hasta el pago total del préstamo.",
+                    clausulasPenalizacion = data["clausulasPenalizacion"] as? String ?: "En caso de incumplimiento, se aplicará la tasa de mora establecida sobre el saldo pendiente.",
+                    clausulasGarantia = data["clausulasGarantia"] as? String ?: "El PRESTATARIO entrega como garantía los bienes descritos, los cuales quedarán bajo custodia del PRESTAMISTA hasta la liquidación total del préstamo.",
+                    clausulasLegales = data["clausulasLegales"] as? String ?: "Este contrato se rige por las leyes vigentes. Cualquier disputa será resuelta en los tribunales competentes.",
+                    pieContrato = data["pieContrato"] as? String ?: "Gracias por confiar en nosotros. Para consultas, contáctenos a los números indicados.",
+                    mensajeAdicionalContrato = data["mensajeAdicionalContrato"] as? String ?: "",
+                    mostrarTablaAmortizacion = data["mostrarTablaAmortizacion"] as? Boolean ?: true,
+                    mostrarDesglosePago = data["mostrarDesglosePago"] as? Boolean ?: true,
+                    incluirEspacioFirmas = data["incluirEspacioFirmas"] as? Boolean ?: true,
+                    numeroCopiasContrato = (data["numeroCopiasContrato"] as? Long)?.toInt() ?: 2,
+                    // Sincronización
+                    pendingSync = false,
+                    lastSyncTime = data["lastSyncTime"] as? Long ?: System.currentTimeMillis(),
+                    firebaseId = "config"
+                )
+                
+                configuracionRepository.dao.insertConfiguracion(configuracionEntity)
+            }
+            
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    /**
      * Sincronización completa bidireccional
      */
     suspend fun fullSync(): Result<Unit> {
         return try {
+            syncConfiguracionFromFirebase()
             syncUsuariosFromFirebase()
             syncClientesFromFirebase()
             syncPrestamosFromFirebase()

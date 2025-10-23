@@ -148,6 +148,29 @@ fun NavGraph(
             )
         }
         
+        composable(Screen.ConfiguracionFactura.route) {
+            com.example.bsprestagil.screens.settings.ConfiguracionFacturaScreen(
+                navController = navController
+            )
+        }
+        
+        // Extensiones de préstamo
+        composable(Screen.ExtensionPrestamo.route) { backStackEntry ->
+            val prestamoId = backStackEntry.arguments?.getString("prestamoId") ?: ""
+            com.example.bsprestagil.screens.prestamos.ExtensionPrestamoScreen(
+                navController = navController,
+                prestamoId = prestamoId
+            )
+        }
+        
+        composable(Screen.HistorialExtensiones.route) { backStackEntry ->
+            val prestamoId = backStackEntry.arguments?.getString("prestamoId") ?: ""
+            com.example.bsprestagil.screens.prestamos.HistorialExtensionesScreen(
+                navController = navController,
+                prestamoId = prestamoId
+            )
+        }
+        
         composable(Screen.GestionCobradores.route) {
             com.example.bsprestagil.screens.settings.GestionCobradoresScreen(
                 navController = navController

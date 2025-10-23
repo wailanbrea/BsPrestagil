@@ -302,6 +302,82 @@ fun LoanDetailScreen(
                 }
             }
             
+            // Información de extensiones si existen
+            prestamo?.let { p ->
+                if (p.numeroExtensiones > 0) {
+                    item {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            InfoCard(
+                                title = "Monto extendido",
+                                value = "$${String.format("%,.2f", p.montoExtendido)}",
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.weight(1f)
+                            )
+                            InfoCard(
+                                title = "Monto total",
+                                value = "$${String.format("%,.2f", p.montoTotal)}",
+                                color = MaterialTheme.colorScheme.secondary,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+                    
+                    item {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Default.TrendingUp,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(20.dp),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "Extensiones realizadas: ${p.numeroExtensiones}",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    if (p.fechaUltimaExtension != null) {
+                                        Text(
+                                            text = "Última: ${dateFormat.format(Date(p.fechaUltimaExtension))}",
+                                            fontSize = 10.sp,
+                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                        )
+                                    }
+                                }
+                                IconButton(
+                                    onClick = {
+                                        navController.navigate(Screen.HistorialExtensiones.createRoute(loanId))
+                                    }
+                                ) {
+                                    Icon(
+                                        Icons.Default.History,
+                                        contentDescription = "Ver historial",
+                                        modifier = Modifier.size(18.dp),
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -727,6 +803,8 @@ fun LoanDetailScreen(
             // Acciones
             item {
                 Spacer(modifier = Modifier.height(8.dp))
+                
+                // Botón principal: Registrar pago
                 Button(
                     onClick = {
                         navController.navigate(Screen.RegisterPayment.createRoute(loanId))
@@ -742,6 +820,83 @@ fun LoanDetailScreen(
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
                     )
+                }
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                // Botones de extensión (solo si el préstamo está activo)
+                if (prestamo?.estado == EstadoPrestamo.ACTIVO && prestamo?.capitalPendiente ?: 0.0 > 0) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // Botón: Extender préstamo
+                        OutlinedButton(
+                            onClick = {
+                                navController.navigate(Screen.ExtensionPrestamo.createRoute(loanId))
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(48.dp)
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(20.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Extender",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                        
+                        // Botón: Historial de extensiones
+                        OutlinedButton(
+                            onClick = {
+                                navController.navigate(Screen.HistorialExtensiones.createRoute(loanId))
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(48.dp)
+                        ) {
+                            Icon(Icons.Default.History, contentDescription = null, modifier = Modifier.size(20.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Historial",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+                    
+                    // Información sobre extensiones si existen
+                    if (prestamo?.numeroExtensiones ?: 0 > 0) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Default.Info,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(20.dp),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Este préstamo tiene ${prestamo?.numeroExtensiones ?: 0} extensión(es) por un total de $${String.format("%,.2f", prestamo?.montoExtendido ?: 0.0)}",
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }

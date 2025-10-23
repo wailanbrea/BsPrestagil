@@ -74,6 +74,16 @@ sealed class Screen(val route: String) {
     
     // Configuración
     object PersonalizacionRecibo : Screen("personalizacion_recibo")
+    object ConfiguracionFactura : Screen("configuracion_factura")
+    
+    // Extensiones de préstamo
+    object ExtensionPrestamo : Screen("extension_prestamo/{prestamoId}") {
+        fun createRoute(prestamoId: String) = "extension_prestamo/$prestamoId"
+    }
+    
+    object HistorialExtensiones : Screen("historial_extensiones/{prestamoId}") {
+        fun createRoute(prestamoId: String) = "historial_extensiones/$prestamoId"
+    }
     object GestionCobradores : Screen("gestion_cobradores")
     object Perfil : Screen("perfil")
     

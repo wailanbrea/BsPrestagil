@@ -120,6 +120,14 @@ fun SettingsScreen(
                 )
             }
             
+            item {
+                SettingsCard(
+                    title = "Configuración de Factura/Contrato",
+                    subtitle = "Términos, condiciones y cláusulas legales",
+                    onClick = { navController.navigate(Screen.ConfiguracionFactura.route) }
+                )
+            }
+            
             // Sincronización
             item {
                 Text(

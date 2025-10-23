@@ -44,6 +44,15 @@ data class PrestamoEntity(
     // NUEVO: Multi-tenant - Empresa a la que pertenece
     val adminId: String, // UID del ADMIN dueño
     
+    // Campos de extensión
+    val montoExtendido: Double = 0.0,        // Monto total de extensiones
+    val montoTotal: Double = montoOriginal,   // Monto original + extensiones
+    val fechaUltimaExtension: Long? = null,   // Fecha de la última extensión
+    val razonUltimaExtension: String? = null, // Razón de la última extensión
+    val numeroExtensiones: Int = 0,           // Número de extensiones realizadas
+    val esExtension: Boolean = false,         // Si este préstamo es una extensión
+    val prestamoPadreId: String? = null,      // ID del préstamo original (si es extensión)
+    
     // Campos de sincronización
     val pendingSync: Boolean = true,
     val lastSyncTime: Long = 0L,

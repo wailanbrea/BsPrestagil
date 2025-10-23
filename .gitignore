@@ -13,3 +13,47 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# ===============================================
+# ARCHIVOS SENSIBLES - NO SUBIR A GIT
+# ===============================================
+
+# Keystore de firma (MUY IMPORTANTE)
+*.keystore
+*.jks
+keystore.properties
+
+# Google Services (contiene claves API)
+# Descomentar si quieres excluirlo:
+# google-services.json
+
+# Archivos de configuración local
+local.properties
+secrets.properties
+
+# Credenciales y tokens
+*.pem
+*.p12
+*.key
+
+# Archivos de respaldo de Room
+*.db
+*.db-shm
+*.db-wal
+
+# Logs
+*.log
+pglite-debug.log
+
+# Archivos temporales
+*.tmp
+*.temp
+*.swp
+*~
+
+# ProGuard mapping files (guardar en otro lugar seguro)
+# app/build/outputs/mapping/*/mapping.txt
+
+# APK y AAB de release (opcional, puedes querer guardarlos)
+# *.apk
+# *.aab

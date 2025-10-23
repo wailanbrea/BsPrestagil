@@ -15,18 +15,54 @@ android {
         minSdk = 26
         targetSdk = 36
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        
+        // Configuración para Vector Drawables
+        vectorDrawables.useSupportLibrary = true
+    }
+
+    // Configuración de firma (keystore)
+    signingConfigs {
+        create("release") {
+            // IMPORTANTE: Antes de compilar release, debes crear tu keystore:
+            // keytool -genkey -v -keystore bsprestagil-release.keystore -alias bsprestagil -keyalg RSA -keysize 2048 -validity 10000
+            
+            // Descomentar y configurar estas líneas con tu keystore:
+            // storeFile = file("../bsprestagil-release.keystore")
+            // storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "your_store_password"
+            // keyAlias = "bsprestagil"
+            // keyPassword = System.getenv("KEY_PASSWORD") ?: "your_key_password"
+        }
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // ✅ Habilitar minificación y ofuscación
+            isMinifyEnabled = true
+            isShrinkResources = true
+            
+            // ✅ ProGuard rules
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            
+            // ✅ Firma con keystore (descomentar cuando tengas keystore)
+            // signingConfig = signingConfigs.getByName("release")
+            
+            // ✅ Configuraciones de optimización
+            isDebuggable = false
+            isJniDebuggable = false
+            isPseudoLocalesEnabled = false
+            renderscriptOptimLevel = 3
+        }
+        
+        debug {
+            isMinifyEnabled = false
+            isDebuggable = true
+            versionNameSuffix = "-DEBUG"
         }
     }
     compileOptions {

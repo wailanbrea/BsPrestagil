@@ -1,19 +1,35 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-   Sample data extraction rules file; uncomment and customize as necessary.
-   See https://developer.android.com/about/versions/12/backup-restore#xml-changes
-   for details.
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+   Reglas de extracción de datos para Android 12+ (API 31+)
+   Controla qué datos se respaldan en la nube y se transfieren entre dispositivos
 -->
 <data-extraction-rules>
-    <cloud-backup>
-        <!-- TODO: Use <include> and <exclude> to control what is backed up.
-        <include .../>
-        <exclude .../>
-        -->
+    <!-- Respaldo en la nube -->
+    <cloud-backup disableIfNoEncryptionCapabilities="true">
+        <!-- ✅ Incluir base de datos -->
+        <include domain="database" path="." />
+        
+        <!-- ❌ EXCLUIR datos sensibles -->
+        <exclude domain="sharedpref" path="encrypted_prefs.xml" />
+        <exclude domain="sharedpref" path="secure_prefs.xml" />
+        <exclude domain="file" path="session/" />
+        <exclude domain="file" path="tokens/" />
+        <exclude domain="file" path="garantias/" />
+        <exclude domain="cache" path="." />
+        
+        <!-- ✅ Incluir preferencias de app -->
+        <include domain="sharedpref" path="app_preferences.xml" />
     </cloud-backup>
-    <!--
+    
+    <!-- Transferencia entre dispositivos -->
     <device-transfer>
-        <include .../>
-        <exclude .../>
+        <!-- Solo transferir configuraciones básicas -->
+        <include domain="sharedpref" path="app_preferences.xml" />
+        
+        <!-- NO transferir datos sensibles -->
+        <exclude domain="sharedpref" path="encrypted_prefs.xml" />
+        <exclude domain="sharedpref" path="secure_prefs.xml" />
+        <exclude domain="database" path="." />
+        <exclude domain="file" path="." />
     </device-transfer>
-    -->
 </data-extraction-rules>

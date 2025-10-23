@@ -308,6 +308,7 @@ class FirebaseService {
             val docRef = firestore.collection(COLLECTION_CONFIGURACION).document("config")
             
             val configMap = mapOf(
+                // Configuración general
                 "tasaInteresBase" to config.tasaInteresBase,
                 "tasaMoraBase" to config.tasaMoraBase,
                 "nombreNegocio" to config.nombreNegocio,
@@ -318,6 +319,22 @@ class FirebaseService {
                 "notificacionesActivas" to config.notificacionesActivas,
                 "envioWhatsApp" to config.envioWhatsApp,
                 "envioSMS" to config.envioSMS,
+                // Configuración de factura/contrato
+                "rncEmpresa" to config.rncEmpresa,
+                "emailEmpresa" to config.emailEmpresa,
+                "sitioWebEmpresa" to config.sitioWebEmpresa,
+                "tituloContrato" to config.tituloContrato,
+                "encabezadoContrato" to config.encabezadoContrato,
+                "terminosCondiciones" to config.terminosCondiciones,
+                "clausulasPenalizacion" to config.clausulasPenalizacion,
+                "clausulasGarantia" to config.clausulasGarantia,
+                "clausulasLegales" to config.clausulasLegales,
+                "pieContrato" to config.pieContrato,
+                "mensajeAdicionalContrato" to config.mensajeAdicionalContrato,
+                "mostrarTablaAmortizacion" to config.mostrarTablaAmortizacion,
+                "mostrarDesglosePago" to config.mostrarDesglosePago,
+                "incluirEspacioFirmas" to config.incluirEspacioFirmas,
+                "numeroCopiasContrato" to config.numeroCopiasContrato,
                 "lastSyncTime" to System.currentTimeMillis()
             )
             

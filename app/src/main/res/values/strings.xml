@@ -1,3 +1,152 @@
 <resources>
+    <!-- Nombre de la aplicación -->
     <string name="app_name">BsPrestagil</string>
+    
+    <!-- Mensajes generales -->
+    <string name="loading">Cargando...</string>
+    <string name="error_general">Ha ocurrido un error. Intenta nuevamente.</string>
+    <string name="error_network">Error de conexión. Verifica tu internet.</string>
+    <string name="success">Operación exitosa</string>
+    <string name="cancel">Cancelar</string>
+    <string name="accept">Aceptar</string>
+    <string name="delete">Eliminar</string>
+    <string name="edit">Editar</string>
+    <string name="save">Guardar</string>
+    <string name="search">Buscar</string>
+    <string name="close">Cerrar</string>
+    
+    <!-- Login y autenticación -->
+    <string name="login_title">Iniciar Sesión</string>
+    <string name="email">Correo electrónico</string>
+    <string name="password">Contraseña</string>
+    <string name="login">Ingresar</string>
+    <string name="logout">Cerrar sesión</string>
+    <string name="forgot_password">¿Olvidaste tu contraseña?</string>
+    <string name="login_error">Email o contraseña incorrectos</string>
+    <string name="biometric_title">Autenticación biométrica</string>
+    <string name="biometric_subtitle">Usa tu huella dactilar para ingresar</string>
+    
+    <!-- Clientes -->
+    <string name="clients">Clientes</string>
+    <string name="add_client">Agregar cliente</string>
+    <string name="edit_client">Editar cliente</string>
+    <string name="delete_client">Eliminar cliente</string>
+    <string name="client_name">Nombre completo</string>
+    <string name="client_phone">Teléfono</string>
+    <string name="client_email">Correo electrónico</string>
+    <string name="client_address">Dirección</string>
+    <string name="search_client">Buscar cliente...</string>
+    <string name="no_clients">No hay clientes registrados</string>
+    <string name="client_saved">Cliente guardado exitosamente</string>
+    <string name="client_deleted">Cliente eliminado</string>
+    
+    <!-- Préstamos -->
+    <string name="loans">Préstamos</string>
+    <string name="add_loan">Agregar préstamo</string>
+    <string name="edit_loan">Editar préstamo</string>
+    <string name="delete_loan">Eliminar préstamo</string>
+    <string name="loan_amount">Monto del préstamo</string>
+    <string name="loan_interest">Tasa de interés</string>
+    <string name="loan_term">Plazo</string>
+    <string name="loan_date">Fecha del préstamo</string>
+    <string name="no_loans">No hay préstamos registrados</string>
+    <string name="loan_saved">Préstamo guardado exitosamente</string>
+    <string name="loan_deleted">Préstamo eliminado</string>
+    <string name="loan_status_active">Activo</string>
+    <string name="loan_status_paid">Pagado</string>
+    <string name="loan_status_overdue">Vencido</string>
+    
+    <!-- Pagos -->
+    <string name="payments">Pagos</string>
+    <string name="add_payment">Registrar pago</string>
+    <string name="payment_amount">Monto del pago</string>
+    <string name="payment_date">Fecha de pago</string>
+    <string name="no_payments">No hay pagos registrados</string>
+    <string name="payment_saved">Pago registrado exitosamente</string>
+    <string name="payment_deleted">Pago eliminado</string>
+    <string name="payment_receipt">Recibo de pago</string>
+    
+    <!-- Garantías -->
+    <string name="collaterals">Garantías</string>
+    <string name="add_collateral">Agregar garantía</string>
+    <string name="edit_collateral">Editar garantía</string>
+    <string name="delete_collateral">Eliminar garantía</string>
+    <string name="collateral_type">Tipo de garantía</string>
+    <string name="collateral_description">Descripción</string>
+    <string name="collateral_value">Valor estimado</string>
+    <string name="no_collaterals">No hay garantías registradas</string>
+    
+    <!-- Dashboard -->
+    <string name="dashboard">Inicio</string>
+    <string name="welcome">Bienvenido</string>
+    <string name="total_loans">Préstamos totales</string>
+    <string name="active_loans">Préstamos activos</string>
+    <string name="overdue_loans">Préstamos vencidos</string>
+    <string name="total_collected">Total cobrado</string>
+    <string name="today_payments">Pagos de hoy</string>
+    
+    <!-- Cobradores -->
+    <string name="collectors">Cobradores</string>
+    <string name="add_collector">Agregar cobrador</string>
+    <string name="collector_name">Nombre del cobrador</string>
+    <string name="collector_commission">Comisión</string>
+    <string name="no_collectors">No hay cobradores registrados</string>
+    
+    <!-- Configuración -->
+    <string name="settings">Configuración</string>
+    <string name="profile">Perfil</string>
+    <string name="edit_profile">Editar perfil</string>
+    <string name="change_password">Cambiar contraseña</string>
+    <string name="receipt_settings">Configuración de recibos</string>
+    <string name="about">Acerca de</string>
+    <string name="version">Versión</string>
+    
+    <!-- Validaciones -->
+    <string name="field_required">Este campo es obligatorio</string>
+    <string name="invalid_email">Correo electrónico inválido</string>
+    <string name="invalid_phone">Número de teléfono inválido</string>
+    <string name="invalid_amount">Monto inválido</string>
+    <string name="password_too_short">La contraseña debe tener al menos 6 caracteres</string>
+    
+    <!-- Permisos -->
+    <string name="camera_permission">Permiso de cámara</string>
+    <string name="camera_permission_rationale">La app necesita acceso a la cámara para escanear códigos QR y tomar fotos de garantías</string>
+    <string name="storage_permission">Permiso de almacenamiento</string>
+    <string name="storage_permission_rationale">La app necesita acceso al almacenamiento para guardar recibos y fotos</string>
+    
+    <!-- Notificaciones -->
+    <string name="notification_channel_name">Notificaciones de BsPrestagil</string>
+    <string name="notification_channel_description">Notificaciones de pagos vencidos y recordatorios</string>
+    <string name="notification_payment_due">Pago vencido</string>
+    
+    <!-- Diálogos -->
+    <string name="confirm_delete_title">Confirmar eliminación</string>
+    <string name="confirm_delete_message">¿Estás seguro que deseas eliminar este elemento?</string>
+    <string name="action_cannot_be_undone">Esta acción no se puede deshacer</string>
+    
+    <!-- Estados vacíos -->
+    <string name="empty_state_title">No hay datos</string>
+    <string name="empty_state_message">Comienza agregando un nuevo elemento</string>
+    
+    <!-- Sincronización -->
+    <string name="sync_in_progress">Sincronizando...</string>
+    <string name="sync_complete">Sincronización completa</string>
+    <string name="sync_error">Error de sincronización</string>
+    <string name="last_sync">Última sincronización</string>
+    
+    <!-- Calculadora -->
+    <string name="calculator">Calculadora de préstamos</string>
+    <string name="calculate">Calcular</string>
+    <string name="amortization_table">Tabla de amortización</string>
+    
+    <!-- Reportes -->
+    <string name="reports">Reportes</string>
+    <string name="generate_report">Generar reporte</string>
+    <string name="export_pdf">Exportar PDF</string>
+    <string name="share">Compartir</string>
+    
+    <!-- Roles -->
+    <string name="role_admin">Administrador</string>
+    <string name="role_collector">Cobrador</string>
+    <string name="role_viewer">Visualizador</string>
 </resources>

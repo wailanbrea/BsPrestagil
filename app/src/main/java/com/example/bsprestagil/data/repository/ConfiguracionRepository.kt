@@ -7,6 +7,8 @@ import kotlinx.coroutines.flow.Flow
 class ConfiguracionRepository(
     private val configuracionDao: ConfiguracionDao
 ) {
+    // Exponer el DAO para sincronización directa desde Firebase
+    internal val dao: ConfiguracionDao get() = configuracionDao
     
     // Observar configuración
     fun getConfiguracion(): Flow<ConfiguracionEntity?> {
@@ -52,6 +54,7 @@ class ConfiguracionRepository(
             insertConfiguracion(
                 ConfiguracionEntity(
                     id = 1,
+                    // Configuración general
                     tasaInteresBase = 10.0,
                     tasaMoraBase = 5.0,
                     nombreNegocio = "Prestágil",
@@ -62,6 +65,23 @@ class ConfiguracionRepository(
                     notificacionesActivas = true,
                     envioWhatsApp = true,
                     envioSMS = false,
+                    // Configuración de factura/contrato
+                    rncEmpresa = "",
+                    emailEmpresa = "",
+                    sitioWebEmpresa = "",
+                    tituloContrato = "CONTRATO DE PRÉSTAMO PERSONAL",
+                    encabezadoContrato = "Entre las partes aquí identificadas, se establece el siguiente contrato de préstamo bajo los términos y condiciones que se detallan:",
+                    terminosCondiciones = "1. El PRESTATARIO se compromete a pagar el préstamo en las fechas acordadas.\n2. Los intereses se calculan según el sistema de amortización elegido.\n3. El no pago genera intereses moratorios según la tasa establecida.\n4. La garantía quedará retenida hasta el pago total del préstamo.",
+                    clausulasPenalizacion = "En caso de incumplimiento, se aplicará la tasa de mora establecida sobre el saldo pendiente.",
+                    clausulasGarantia = "El PRESTATARIO entrega como garantía los bienes descritos, los cuales quedarán bajo custodia del PRESTAMISTA hasta la liquidación total del préstamo.",
+                    clausulasLegales = "Este contrato se rige por las leyes vigentes. Cualquier disputa será resuelta en los tribunales competentes.",
+                    pieContrato = "Gracias por confiar en nosotros. Para consultas, contáctenos a los números indicados.",
+                    mensajeAdicionalContrato = "",
+                    mostrarTablaAmortizacion = true,
+                    mostrarDesglosePago = true,
+                    incluirEspacioFirmas = true,
+                    numeroCopiasContrato = 2,
+                    // Sincronización
                     pendingSync = true,
                     lastSyncTime = System.currentTimeMillis()
                 )
