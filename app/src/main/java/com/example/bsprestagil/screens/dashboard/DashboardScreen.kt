@@ -10,11 +10,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.bsprestagil.R
 import com.example.bsprestagil.components.BottomNavigationBar
 import com.example.bsprestagil.components.InfoCard
 import com.example.bsprestagil.components.LoanCard
@@ -64,12 +66,12 @@ fun DashboardScreen(
                 title = {
                     Column {
                         Text(
-                            text = "Dashboard",
+                            text = stringResource(R.string.dashboard),
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "Resumen de tu negocio",
+                            text = stringResource(R.string.business_summary),
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                         )
@@ -82,7 +84,7 @@ fun DashboardScreen(
                     }) {
                         Icon(
                             Icons.Default.BugReport, 
-                            contentDescription = "Prueba de datos",
+                            contentDescription = stringResource(R.string.test_data),
                             tint = WarningColor
                         )
                     }
@@ -93,7 +95,7 @@ fun DashboardScreen(
                         Badge(
                             containerColor = ErrorColor
                         ) {
-                            Icon(Icons.Default.Notifications, contentDescription = "Notificaciones")
+                            Icon(Icons.Default.Notifications, contentDescription = stringResource(R.string.notifications))
                         }
                     }
                 },
@@ -113,7 +115,7 @@ fun DashboardScreen(
                 onClick = { navController.navigate(Screen.AddLoan.createRoute()) },
                 containerColor = MaterialTheme.colorScheme.primary
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Nuevo préstamo")
+                Icon(Icons.Default.Add, contentDescription = "${stringResource(R.string.new_item)} ${stringResource(R.string.loans)}")
             }
         }
     ) { paddingValues ->
@@ -130,7 +132,7 @@ fun DashboardScreen(
             // Estadísticas principales
             item {
                 Text(
-                    text = "Resumen general",
+                    text = stringResource(R.string.general_summary),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground
@@ -143,7 +145,7 @@ fun DashboardScreen(
                 ) {
                     item {
                         InfoCard(
-                            title = "Capital prestado",
+                            title = stringResource(R.string.loaned_capital),
                             value = "$${String.format("%,.0f", stats.totalPrestado)}",
                             subtitle = "${stats.prestamosActivos} préstamos activos",
                             color = MaterialTheme.colorScheme.primary,
@@ -153,9 +155,9 @@ fun DashboardScreen(
                     
                     item {
                         InfoCard(
-                            title = "Intereses generados",
+                            title = stringResource(R.string.generated_interest),
                             value = "$${String.format("%,.0f", stats.interesesGenerados)}",
-                            subtitle = "Mes actual",
+                            subtitle = stringResource(R.string.current_month),
                             color = SuccessColor,
                             modifier = Modifier.width(200.dp)
                         )
@@ -163,7 +165,7 @@ fun DashboardScreen(
                     
                     item {
                         InfoCard(
-                            title = "Cartera vencida",
+                            title = stringResource(R.string.overdue_portfolio),
                             value = "$${String.format("%,.0f", stats.carteraVencida)}",
                             subtitle = "${stats.prestamosAtrasados} préstamos atrasados",
                             color = ErrorColor,
@@ -176,7 +178,7 @@ fun DashboardScreen(
             // Accesos rápidos
             item {
                 Text(
-                    text = "Accesos rápidos",
+                    text = stringResource(R.string.quick_access),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground,
@@ -191,14 +193,14 @@ fun DashboardScreen(
                 ) {
                     QuickAccessCard(
                         icon = Icons.Default.PersonAdd,
-                        label = "Nuevo cliente",
+                        label = "${stringResource(R.string.new_item)} ${stringResource(R.string.clients)}",
                         modifier = Modifier.weight(1f),
                         onClick = { navController.navigate(Screen.AddEditClient.createRoute()) }
                     )
                     
                     QuickAccessCard(
                         icon = Icons.Default.AccountBalance,
-                        label = "Nuevo préstamo",
+                        label = "${stringResource(R.string.new_item)} ${stringResource(R.string.loans)}",
                         modifier = Modifier.weight(1f),
                         onClick = { navController.navigate(Screen.AddLoan.createRoute()) }
                     )
@@ -212,14 +214,14 @@ fun DashboardScreen(
                 ) {
                     QuickAccessCard(
                         icon = Icons.Default.Calculate,
-                        label = "Calculadora",
+                        label = stringResource(R.string.calculator),
                         modifier = Modifier.weight(1f),
                         onClick = { navController.navigate(Screen.CalculadoraPrestamo.route) }
                     )
                     
                     QuickAccessCard(
                         icon = Icons.Default.QrCodeScanner,
-                        label = "Escanear QR",
+                        label = stringResource(R.string.scan_qr),
                         modifier = Modifier.weight(1f),
                         onClick = { navController.navigate(Screen.QRScanner.route) }
                     )
@@ -233,14 +235,14 @@ fun DashboardScreen(
                 ) {
                     QuickAccessCard(
                         icon = Icons.Default.People,
-                        label = "Gestionar Cobradores",
+                        label = stringResource(R.string.manage_collectors),
                         modifier = Modifier.weight(1f),
                         onClick = { navController.navigate(Screen.GestionCobradores.route) }
                     )
                     
                     QuickAccessCard(
                         icon = Icons.Default.Leaderboard,
-                        label = "Reporte Cobradores",
+                        label = stringResource(R.string.collector_report),
                         modifier = Modifier.weight(1f),
                         onClick = { navController.navigate(Screen.ReporteCobradores.route) }
                     )
@@ -254,14 +256,14 @@ fun DashboardScreen(
                 ) {
                     QuickAccessCard(
                         icon = Icons.Default.Payments,
-                        label = "Comisiones",
+                        label = stringResource(R.string.commissions),
                         modifier = Modifier.weight(1f),
                         onClick = { navController.navigate(Screen.Comisiones.route) }
                     )
                     
                     QuickAccessCard(
                         icon = Icons.Default.Assessment,
-                        label = "Reportes",
+                        label = stringResource(R.string.reports),
                         modifier = Modifier.weight(1f),
                         onClick = { navController.navigate(Screen.Reports.route) }
                     )
@@ -275,14 +277,14 @@ fun DashboardScreen(
                 ) {
                     QuickAccessCard(
                         icon = Icons.Default.History,
-                        label = "Historial",
+                        label = stringResource(R.string.history),
                         modifier = Modifier.weight(1f),
                         onClick = { navController.navigate(Screen.HistorialGarantias.route) }
                     )
                     
                     QuickAccessCard(
                         icon = Icons.Default.Security,
-                        label = "Garantías",
+                        label = stringResource(R.string.collaterals),
                         modifier = Modifier.weight(1f),
                         onClick = { navController.navigate(Screen.Collaterals.route) }
                     )
@@ -297,7 +299,7 @@ fun DashboardScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Préstamos recientes",
+                        text = stringResource(R.string.recent_loans),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onBackground,
@@ -318,10 +320,10 @@ fun DashboardScreen(
                 }
                 
                 val estadoTexto = when (prestamo.estado) {
-                    EstadoPrestamo.ACTIVO -> "Activo"
-                    EstadoPrestamo.ATRASADO -> "Atrasado"
-                    EstadoPrestamo.COMPLETADO -> "Completado"
-                    EstadoPrestamo.CANCELADO -> "Cancelado"
+                    EstadoPrestamo.ACTIVO -> stringResource(R.string.active)
+                    EstadoPrestamo.ATRASADO -> stringResource(R.string.overdue)
+                    EstadoPrestamo.COMPLETADO -> stringResource(R.string.completed)
+                    EstadoPrestamo.CANCELADO -> stringResource(R.string.cancelled)
                 }
                 
                 LoanCard(

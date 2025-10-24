@@ -9,6 +9,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -16,6 +17,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
+import com.example.bsprestagil.R
 import com.example.bsprestagil.components.BottomNavigationBar
 import com.example.bsprestagil.components.SettingsCard
 import com.example.bsprestagil.navigation.Screen
@@ -70,7 +72,7 @@ fun SettingsScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Configuración",
+                        text = stringResource(R.string.settings),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -97,7 +99,7 @@ fun SettingsScreen(
             // General
             item {
                 Text(
-                    text = "GENERAL",
+                    text = stringResource(R.string.general),
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
@@ -106,7 +108,7 @@ fun SettingsScreen(
             
             item {
                 SettingsCard(
-                    title = "Tasa de interés base",
+                    title = stringResource(R.string.base_interest_rate),
                     subtitle = "${configuracion?.tasaInteresBase ?: 10.0}%",
                     onClick = { showInterestDialog = true }
                 )
@@ -114,24 +116,32 @@ fun SettingsScreen(
             
             item {
                 SettingsCard(
-                    title = "Personalización de recibos",
-                    subtitle = "Logo, datos del negocio",
+                    title = stringResource(R.string.receipt_customization),
+                    subtitle = stringResource(R.string.logo_business_data),
                     onClick = { navController.navigate(Screen.PersonalizacionRecibo.route) }
                 )
             }
             
             item {
                 SettingsCard(
-                    title = "Configuración de Factura/Contrato",
-                    subtitle = "Términos, condiciones y cláusulas legales",
+                    title = stringResource(R.string.invoice_contract_config),
+                    subtitle = stringResource(R.string.terms_conditions_legal_clauses),
                     onClick = { navController.navigate(Screen.ConfiguracionFactura.route) }
+                )
+            }
+            
+            item {
+                SettingsCard(
+                    title = stringResource(R.string.language),
+                    subtitle = stringResource(R.string.spanish_english),
+                    onClick = { navController.navigate(Screen.LanguageSettings.route) }
                 )
             }
             
             // Sincronización
             item {
                 Text(
-                    text = "SINCRONIZACIÓN",
+                    text = stringResource(R.string.synchronization),
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
@@ -154,26 +164,26 @@ fun SettingsScreen(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "Estado de sincronización",
+                                    text = stringResource(R.string.sync_status),
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Medium
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 if (syncStatus.enSincronizacion) {
                                     Text(
-                                        text = "Sincronizando...",
+                                        text = stringResource(R.string.syncing),
                                         fontSize = 14.sp,
                                         color = MaterialTheme.colorScheme.primary
                                     )
                                 } else if (syncStatus.totalPendientes > 0) {
                                     Text(
-                                        text = "${syncStatus.totalPendientes} elementos pendientes",
+                                        text = "${syncStatus.totalPendientes} ${stringResource(R.string.pending_elements)}",
                                         fontSize = 14.sp,
                                         color = MaterialTheme.colorScheme.error
                                     )
                                 } else {
                                     Text(
-                                        text = "Todo sincronizado ✓",
+                                        text = stringResource(R.string.all_synced),
                                         fontSize = 14.sp,
                                         color = com.example.bsprestagil.ui.theme.SuccessColor
                                     )
@@ -220,7 +230,7 @@ fun SettingsScreen(
                                         strokeWidth = 2.dp
                                     )
                                 } else {
-                                    Icon(Icons.Default.Sync, contentDescription = "Sincronizar ahora")
+                                    Icon(Icons.Default.Sync, contentDescription = stringResource(R.string.sync_now))
                                 }
                             }
                         }
@@ -230,25 +240,25 @@ fun SettingsScreen(
                             Divider()
                             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                 Text(
-                                    text = "Pendientes de sincronizar:",
+                                    text = stringResource(R.string.pending_to_sync),
                                     fontSize = 12.sp,
                                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                                 )
                                 if (syncStatus.clientesPendientes > 0) {
                                     Text(
-                                        text = "• ${syncStatus.clientesPendientes} Clientes",
+                                        text = "• ${syncStatus.clientesPendientes} ${stringResource(R.string.clients)}",
                                         fontSize = 12.sp
                                     )
                                 }
                                 if (syncStatus.prestamosPendientes > 0) {
                                     Text(
-                                        text = "• ${syncStatus.prestamosPendientes} Préstamos",
+                                        text = "• ${syncStatus.prestamosPendientes} ${stringResource(R.string.loans)}",
                                         fontSize = 12.sp
                                     )
                                 }
                                 if (syncStatus.pagosPendientes > 0) {
                                     Text(
-                                        text = "• ${syncStatus.pagosPendientes} Pagos",
+                                        text = "• ${syncStatus.pagosPendientes} ${stringResource(R.string.payments)}",
                                         fontSize = 12.sp
                                     )
                                 }
@@ -260,7 +270,7 @@ fun SettingsScreen(
                                 }
                                 if (syncStatus.garantiasPendientes > 0) {
                                     Text(
-                                        text = "• ${syncStatus.garantiasPendientes} Garantías",
+                                        text = "• ${syncStatus.garantiasPendientes} ${stringResource(R.string.collaterals)}",
                                         fontSize = 12.sp
                                     )
                                 }
@@ -272,7 +282,7 @@ fun SettingsScreen(
                             Divider()
                             val dateFormat = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault())
                             Text(
-                                text = "Última sincronización: ${dateFormat.format(java.util.Date(syncStatus.ultimaSync))}",
+                                text = "${stringResource(R.string.last_sync)} ${dateFormat.format(java.util.Date(syncStatus.ultimaSync))}",
                                 fontSize = 11.sp,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                             )
@@ -284,7 +294,7 @@ fun SettingsScreen(
             // Cobradores
             item {
                 Text(
-                    text = "COBRADORES",
+                    text = stringResource(R.string.collectors),
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
@@ -294,8 +304,8 @@ fun SettingsScreen(
             
             item {
                 SettingsCard(
-                    title = "Gestionar cobradores",
-                    subtitle = "Agregar o eliminar usuarios",
+                    title = stringResource(R.string.manage_collectors),
+                    subtitle = stringResource(R.string.add_or_remove_users),
                     onClick = { navController.navigate(Screen.GestionCobradores.route) }
                 )
             }
@@ -303,7 +313,7 @@ fun SettingsScreen(
             // Notificaciones
             item {
                 Text(
-                    text = "NOTIFICACIONES",
+                    text = stringResource(R.string.notifications),
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
@@ -322,13 +332,13 @@ fun SettingsScreen(
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Notificaciones",
+                                text = stringResource(R.string.notifications),
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Medium
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "Recordatorios de pago",
+                                text = stringResource(R.string.payment_reminders),
                                 fontSize = 14.sp,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                             )
@@ -352,13 +362,13 @@ fun SettingsScreen(
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Mensajes WhatsApp",
+                                text = stringResource(R.string.whatsapp_messages),
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Medium
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "Enviar recibos por WhatsApp",
+                                text = stringResource(R.string.send_receipts_whatsapp),
                                 fontSize = 14.sp,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                             )
@@ -374,7 +384,7 @@ fun SettingsScreen(
             // Cuenta
             item {
                 Text(
-                    text = "CUENTA",
+                    text = stringResource(R.string.account),
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
@@ -384,15 +394,15 @@ fun SettingsScreen(
             
             item {
                 SettingsCard(
-                    title = "Perfil",
-                    subtitle = "Editar información personal",
+                    title = stringResource(R.string.profile),
+                    subtitle = stringResource(R.string.edit_personal_info),
                     onClick = { navController.navigate(Screen.Perfil.route) }
                 )
             }
             
             item {
                 SettingsCard(
-                    title = "Cerrar sesión",
+                    title = stringResource(R.string.logout),
                     onClick = { showLogoutDialog = true },
                     showArrow = false
                 )
@@ -408,12 +418,12 @@ fun SettingsScreen(
     if (showInterestDialog) {
         AlertDialog(
             onDismissRequest = { showInterestDialog = false },
-            title = { Text("Tasa de interés base") },
+            title = { Text(stringResource(R.string.base_interest_rate)) },
             text = {
                 OutlinedTextField(
                     value = tasaInteres,
                     onValueChange = { tasaInteres = it },
-                    label = { Text("Porcentaje") },
+                    label = { Text(stringResource(R.string.percentage)) },
                     suffix = { Text("%") },
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
@@ -429,12 +439,12 @@ fun SettingsScreen(
                     }
                     showInterestDialog = false
                 }) {
-                    Text("Guardar")
+                    Text(stringResource(R.string.save))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showInterestDialog = false }) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -444,7 +454,7 @@ fun SettingsScreen(
     if (showLogoutDialog) {
         AlertDialog(
             onDismissRequest = { showLogoutDialog = false },
-            title = { Text("Cerrar sesión") },
+            title = { Text(stringResource(R.string.logout)) },
             text = { Text("¿Estás seguro que deseas cerrar sesión?") },
             confirmButton = {
                 TextButton(onClick = {
@@ -454,12 +464,12 @@ fun SettingsScreen(
                         popUpTo(0) { inclusive = true }
                     }
                 }) {
-                    Text("Cerrar sesión", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.logout), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showLogoutDialog = false }) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )

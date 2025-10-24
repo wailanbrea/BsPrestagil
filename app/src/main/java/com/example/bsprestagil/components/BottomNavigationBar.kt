@@ -15,7 +15,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.example.bsprestagil.R
 import com.example.bsprestagil.navigation.Screen
 
 data class BottomNavItem(
@@ -40,19 +42,19 @@ fun BottomNavigationBar(
     val items = if (userRole == "COBRADOR") {
         // Cobradores: Solo dashboard, clientes, préstamos y pagos (4 items, SIN Settings)
         listOf(
-            BottomNavItem(Screen.CobradorDashboard.route, Icons.Default.Dashboard, "Mi Dashboard"),
-            BottomNavItem(Screen.Clients.route, Icons.Default.Person, "Clientes"),
-            BottomNavItem(Screen.Loans.route, Icons.Default.AccountBalance, "Préstamos"),
-            BottomNavItem(Screen.Payments.route, Icons.Default.Payment, "Pagos")
+            BottomNavItem(Screen.CobradorDashboard.route, Icons.Default.Dashboard, stringResource(R.string.dashboard)),
+            BottomNavItem(Screen.Clients.route, Icons.Default.Person, stringResource(R.string.clients)),
+            BottomNavItem(Screen.Loans.route, Icons.Default.AccountBalance, stringResource(R.string.loans)),
+            BottomNavItem(Screen.Payments.route, Icons.Default.Payment, stringResource(R.string.payments))
         )
     } else {
         // Prestamistas/Admin: Menú completo (5 items, CON Settings)
         listOf(
-            BottomNavItem(Screen.Dashboard.route, Icons.Default.Home, "Dashboard"),
-            BottomNavItem(Screen.Clients.route, Icons.Default.Person, "Clientes"),
-            BottomNavItem(Screen.Loans.route, Icons.Default.AccountBalance, "Préstamos"),
-            BottomNavItem(Screen.Payments.route, Icons.Default.Payment, "Pagos"),
-            BottomNavItem(Screen.Settings.route, Icons.Default.Settings, "Ajustes")
+            BottomNavItem(Screen.Dashboard.route, Icons.Default.Home, stringResource(R.string.dashboard)),
+            BottomNavItem(Screen.Clients.route, Icons.Default.Person, stringResource(R.string.clients)),
+            BottomNavItem(Screen.Loans.route, Icons.Default.AccountBalance, stringResource(R.string.loans)),
+            BottomNavItem(Screen.Payments.route, Icons.Default.Payment, stringResource(R.string.payments)),
+            BottomNavItem(Screen.Settings.route, Icons.Default.Settings, stringResource(R.string.settings))
         )
     }
     

@@ -18,11 +18,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.bsprestagil.R
 import com.example.bsprestagil.components.BottomNavigationBar
 import com.example.bsprestagil.components.ClientCard
 import com.example.bsprestagil.components.EmptyStateComponent
@@ -87,7 +89,7 @@ fun ClientsScreen(
                 title = {
                     Column {
                         Text(
-                            text = "Clientes",
+                            text = stringResource(R.string.clients),
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -116,7 +118,7 @@ fun ClientsScreen(
                     onClick = { navController.navigate(Screen.AddEditClient.createRoute()) },
                     containerColor = MaterialTheme.colorScheme.primary
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Agregar cliente")
+                    Icon(Icons.Default.Add, contentDescription = "${stringResource(R.string.add)} ${stringResource(R.string.clients)}")
                 }
             }
         }
@@ -133,7 +135,7 @@ fun ClientsScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
-                placeholder = { Text("Buscar cliente...") },
+                placeholder = { Text(stringResource(R.string.search_client)) },
                 leadingIcon = {
                     Icon(Icons.Default.Search, contentDescription = null)
                 },
@@ -144,13 +146,13 @@ fun ClientsScreen(
             if (clientes.isEmpty() && searchQuery.isBlank()) {
                 EmptyStateComponent(
                     icon = Icons.Default.PersonAdd,
-                    title = "No hay clientes registrados",
+                    title = stringResource(R.string.no_clients),
                     message = if (userRole == "COBRADOR") {
-                        "Aún no tienes clientes asignados.\nContacta a tu administrador para que te asigne préstamos."
+                        stringResource(R.string.no_clients_cobrador)
                     } else {
-                        "Comienza agregando tu primer cliente para gestionar préstamos."
+                        stringResource(R.string.no_clients_admin)
                     },
-                    actionText = if (userRole != "COBRADOR") "Agregar cliente" else null,
+                    actionText = if (userRole != "COBRADOR") "${stringResource(R.string.add)} ${stringResource(R.string.clients)}" else null,
                     onActionClick = if (userRole != "COBRADOR") {
                         { navController.navigate(Screen.AddEditClient.createRoute()) }
                     } else null
@@ -158,7 +160,7 @@ fun ClientsScreen(
             } else if (clientes.isEmpty() && searchQuery.isNotBlank()) {
                 EmptyStateComponent(
                     icon = Icons.Default.SearchOff,
-                    title = "Sin resultados",
+                    title = stringResource(R.string.no_results),
                     message = "No se encontraron clientes que coincidan con \"$searchQuery\".\nIntenta con otro término de búsqueda.",
                     actionText = null,
                     onActionClick = null
@@ -180,9 +182,9 @@ fun ClientsScreen(
                         }
                         
                         val estadoTexto = when (cliente.historialPagos) {
-                            EstadoPagos.AL_DIA -> "Al día"
-                            EstadoPagos.ATRASADO -> "Atrasado"
-                            EstadoPagos.MOROSO -> "Moroso"
+                            EstadoPagos.AL_DIA -> stringResource(R.string.up_to_date)
+                            EstadoPagos.ATRASADO -> stringResource(R.string.overdue)
+                            EstadoPagos.MOROSO -> stringResource(R.string.delinquent)
                         }
                         
                         SwipeToDeleteItem(

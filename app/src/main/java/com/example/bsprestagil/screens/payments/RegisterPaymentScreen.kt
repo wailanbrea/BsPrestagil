@@ -9,12 +9,14 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.bsprestagil.R
 import com.example.bsprestagil.components.TopAppBarComponent
 import com.example.bsprestagil.data.models.FrecuenciaPago
 import com.example.bsprestagil.data.models.MetodoPago
@@ -184,7 +186,7 @@ fun RegisterPaymentScreen(
     Scaffold(
         topBar = {
             TopAppBarComponent(
-                title = "Registrar pago",
+                title = stringResource(R.string.register_payment),
                 onNavigateBack = { navController.navigateUp() }
             )
         }
@@ -211,7 +213,7 @@ fun RegisterPaymentScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        text = "Información del préstamo",
+                        text = stringResource(R.string.loan_information),
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                     )
@@ -446,7 +448,7 @@ fun RegisterPaymentScreen(
             }
             
             Text(
-                text = "Detalles del pago",
+                text = stringResource(R.string.payment_details),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
@@ -480,7 +482,7 @@ fun RegisterPaymentScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        text = "Tipo de pago",
+                        text = stringResource(R.string.payment_type),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -501,7 +503,7 @@ fun RegisterPaymentScreen(
                                 fontWeight = FontWeight.Medium
                             )
                             Text(
-                                text = "Distribución automática",
+                                text = stringResource(R.string.automatic_distribution),
                                 fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                             )
@@ -526,7 +528,7 @@ fun RegisterPaymentScreen(
                                 fontWeight = FontWeight.Medium
                             )
                             Text(
-                                text = "El capital no se reduce",
+                                text = stringResource(R.string.capital_not_reduced),
                                 fontSize = 12.sp,
                                 color = WarningColor
                             )
@@ -557,9 +559,9 @@ fun RegisterPaymentScreen(
                             )
                             Text(
                                 text = if (interesCalculado >= 1.0) 
-                                    "Debes pagar el interés primero"
+                                    stringResource(R.string.pay_interest_first)
                                 else 
-                                    "Reduce el plazo del préstamo",
+                                    stringResource(R.string.reduce_loan_term),
                                 fontSize = 12.sp,
                                 color = if (interesCalculado >= 1.0) 
                                     ErrorColor
@@ -582,12 +584,12 @@ fun RegisterPaymentScreen(
                         )
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Personalizado",
+                                text = stringResource(R.string.custom),
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Medium
                             )
                             Text(
-                                text = "Tú decides la distribución",
+                                text = stringResource(R.string.you_decide_distribution),
                                 fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.primary
                             )
@@ -636,7 +638,7 @@ fun RegisterPaymentScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Text(
-                            text = "Distribución manual",
+                            text = stringResource(R.string.manual_distribution),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.SemiBold
                         )
@@ -644,7 +646,7 @@ fun RegisterPaymentScreen(
                         OutlinedTextField(
                             value = montoInteresPersonalizado,
                             onValueChange = { montoInteresPersonalizado = it },
-                            label = { Text("Monto a interés") },
+                            label = { Text(stringResource(R.string.amount_to_interest)) },
                             leadingIcon = { Icon(Icons.Default.TrendingUp, contentDescription = null) },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
@@ -658,7 +660,7 @@ fun RegisterPaymentScreen(
                         OutlinedTextField(
                             value = montoCapitalPersonalizado,
                             onValueChange = { montoCapitalPersonalizado = it },
-                            label = { Text("Monto a capital") },
+                            label = { Text(stringResource(R.string.amount_to_capital)) },
                             leadingIcon = { Icon(Icons.Default.AccountBalance, contentDescription = null) },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
@@ -917,7 +919,7 @@ fun RegisterPaymentScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Cobrar mora",
+                                text = stringResource(R.string.charge_penalty),
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = if (cobrarMora)
@@ -928,7 +930,7 @@ fun RegisterPaymentScreen(
                         }
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = if (cobrarMora) "Se aplicará mora al pago" else "Sin mora",
+                            text = if (cobrarMora) stringResource(R.string.penalty_will_be_applied) else stringResource(R.string.no_penalty),
                             fontSize = 13.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                         )
@@ -971,10 +973,10 @@ fun RegisterPaymentScreen(
             ) {
                 OutlinedTextField(
                     value = when(metodoPago) {
-                        MetodoPago.EFECTIVO -> "Efectivo"
-                        MetodoPago.TRANSFERENCIA -> "Transferencia"
-                        MetodoPago.TARJETA -> "Tarjeta"
-                        MetodoPago.OTRO -> "Otro"
+                        MetodoPago.EFECTIVO -> stringResource(R.string.cash)
+                        MetodoPago.TRANSFERENCIA -> stringResource(R.string.transfer)
+                        MetodoPago.TARJETA -> stringResource(R.string.card)
+                        MetodoPago.OTRO -> stringResource(R.string.other)
                     },
                     onValueChange = {},
                     readOnly = true,
@@ -997,10 +999,10 @@ fun RegisterPaymentScreen(
                         DropdownMenuItem(
                             text = {
                                 Text(when(metodo) {
-                                    MetodoPago.EFECTIVO -> "Efectivo"
-                                    MetodoPago.TRANSFERENCIA -> "Transferencia"
-                                    MetodoPago.TARJETA -> "Tarjeta"
-                                    MetodoPago.OTRO -> "Otro"
+                                    MetodoPago.EFECTIVO -> stringResource(R.string.cash)
+                                    MetodoPago.TRANSFERENCIA -> stringResource(R.string.transfer)
+                                    MetodoPago.TARJETA -> stringResource(R.string.card)
+                                    MetodoPago.OTRO -> stringResource(R.string.other)
                                 })
                             },
                             onClick = {
@@ -1014,7 +1016,7 @@ fun RegisterPaymentScreen(
             
             // Cobrador que recibe el pago
             Text(
-                text = "Recibido por",
+                text = stringResource(R.string.received_by),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium
             )
@@ -1039,14 +1041,14 @@ fun RegisterPaymentScreen(
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(
-                                text = cobradorNombre ?: "Sin nombre",
+                                text = cobradorNombre ?: stringResource(R.string.no_name),
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Medium
                             )
                         }
                         Icon(
                             imageVector = Icons.Default.Edit,
-                            contentDescription = "Cambiar",
+                            contentDescription = stringResource(R.string.change),
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
@@ -1058,14 +1060,14 @@ fun RegisterPaymentScreen(
                 ) {
                     Icon(Icons.Default.PersonAdd, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Asignar cobrador")
+                    Text(stringResource(R.string.assign_collector))
                 }
             }
             
             OutlinedTextField(
                 value = notas,
                 onValueChange = { notas = it },
-                label = { Text("Notas adicionales") },
+                label = { Text(stringResource(R.string.additional_notes)) },
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 3,
                 maxLines = 5
@@ -1113,7 +1115,7 @@ fun RegisterPaymentScreen(
                 Icon(Icons.Default.Save, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Registrar pago",
+                    text = stringResource(R.string.register_payment),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -1160,7 +1162,7 @@ fun RegisterPaymentScreen(
     if (showCobradorSelector) {
         AlertDialog(
             onDismissRequest = { showCobradorSelector = false },
-            title = { Text("Seleccionar cobrador") },
+            title = { Text(stringResource(R.string.select_collector)) },
             text = {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
@@ -1181,7 +1183,7 @@ fun RegisterPaymentScreen(
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
-                                text = "No hay cobradores disponibles",
+                                text = stringResource(R.string.no_collectors_available),
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                             )
                         }
@@ -1227,7 +1229,7 @@ fun RegisterPaymentScreen(
             confirmButton = {},
             dismissButton = {
                 TextButton(onClick = { showCobradorSelector = false }) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )

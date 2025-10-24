@@ -12,8 +12,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.bsprestagil.R
 import com.example.bsprestagil.viewmodels.AuthViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -85,10 +87,10 @@ fun PerfilScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Mi Perfil") },
+                title = { Text(stringResource(R.string.my_profile)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -135,7 +137,7 @@ fun PerfilScreen(
                         }
                         
                         Text(
-                            text = nombre.ifEmpty { "Usuario" },
+                            text = nombre.ifEmpty { stringResource(R.string.user) },
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -155,7 +157,7 @@ fun PerfilScreen(
                         ) {
                             Icon(Icons.Default.Edit, contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Editar perfil")
+                            Text(stringResource(R.string.edit_profile))
                         }
                     }
                 }
@@ -174,24 +176,24 @@ fun PerfilScreen(
             item {
                 InfoCard(
                     icon = Icons.Default.Person,
-                    label = "Nombre completo",
-                    value = nombre.ifEmpty { "No configurado" }
+                    label = stringResource(R.string.full_name),
+                    value = nombre.ifEmpty { stringResource(R.string.not_configured) }
                 )
             }
             
             item {
                 InfoCard(
                     icon = Icons.Default.Email,
-                    label = "Correo electrónico",
-                    value = email.ifEmpty { "No configurado" }
+                    label = stringResource(R.string.email_address),
+                    value = email.ifEmpty { stringResource(R.string.not_configured) }
                 )
             }
             
             item {
                 InfoCard(
                     icon = Icons.Default.Phone,
-                    label = "Teléfono",
-                    value = telefono.ifEmpty { "No configurado" }
+                    label = stringResource(R.string.phone),
+                    value = telefono.ifEmpty { stringResource(R.string.not_configured) }
                 )
             }
             
@@ -228,7 +230,7 @@ fun PerfilScreen(
                 } else {
                     InfoCard(
                         icon = Icons.Default.Badge,
-                        label = "Tipo de cuenta",
+                        label = stringResource(R.string.account_type),
                         value = rol
                     )
                 }
@@ -237,8 +239,8 @@ fun PerfilScreen(
             item {
                 InfoCard(
                     icon = Icons.Default.VerifiedUser,
-                    label = "Estado de la cuenta",
-                    value = if (isEmailVerified) "Verificada ✓" else "No verificada"
+                    label = stringResource(R.string.account_status),
+                    value = if (isEmailVerified) stringResource(R.string.verified) else stringResource(R.string.not_verified)
                 )
             }
             
@@ -269,7 +271,7 @@ fun PerfilScreen(
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        text = "Cuenta no verificada",
+                                        text = stringResource(R.string.unverified_account),
                                         fontWeight = FontWeight.Bold,
                                         color = com.example.bsprestagil.ui.theme.WarningColor
                                     )
@@ -309,7 +311,7 @@ fun PerfilScreen(
                                 }
                                 Icon(Icons.Default.Email, contentDescription = null)
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text(if (enviandoVerificacion) "Enviando..." else "Enviar email de verificación")
+                                Text(if (enviandoVerificacion) stringResource(R.string.sending) else stringResource(R.string.send_verification_email))
                             }
                         }
                     }
@@ -320,11 +322,11 @@ fun PerfilScreen(
                 val dateFormat = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault())
                 val creationDate = currentUser?.metadata?.creationTimestamp?.let { 
                     dateFormat.format(java.util.Date(it))
-                } ?: "Desconocida"
+                } ?: stringResource(R.string.unknown)
                 
                 InfoCard(
                     icon = Icons.Default.CalendarMonth,
-                    label = "Miembro desde",
+                    label = stringResource(R.string.member_since),
                     value = creationDate
                 )
             }
@@ -351,7 +353,7 @@ fun PerfilScreen(
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(
-                                text = "Perfil actualizado correctamente",
+                                text = stringResource(R.string.profile_updated_successfully),
                                 color = com.example.bsprestagil.ui.theme.SuccessColor,
                                 fontWeight = FontWeight.Medium
                             )
@@ -432,7 +434,7 @@ fun PerfilScreen(
                             Spacer(modifier = Modifier.width(12.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "Error al enviar email",
+                                    text = stringResource(R.string.error_sending_email),
                                     color = MaterialTheme.colorScheme.error,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -476,7 +478,7 @@ fun PerfilScreen(
                             Spacer(modifier = Modifier.width(12.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "Error al actualizar perfil",
+                                    text = stringResource(R.string.error_updating_profile),
                                     color = MaterialTheme.colorScheme.error,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -615,7 +617,7 @@ fun EditPerfilDialog(
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Editar Perfil") },
+        title = { Text(stringResource(R.string.edit_profile_title)) },
         text = {
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -624,7 +626,7 @@ fun EditPerfilDialog(
                 OutlinedTextField(
                     value = nombre,
                     onValueChange = { nombre = it },
-                    label = { Text("Nombre completo") },
+                    label = { Text(stringResource(R.string.full_name)) },
                     leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
@@ -633,7 +635,7 @@ fun EditPerfilDialog(
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
-                    label = { Text("Email") },
+                    label = { Text(stringResource(R.string.email)) },
                     leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,

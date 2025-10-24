@@ -20,8 +20,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.bsprestagil.R
 import coil.compose.rememberAsyncImagePainter
 import com.example.bsprestagil.viewmodels.ConfiguracionViewModel
 
@@ -179,7 +181,7 @@ fun PersonalizacionReciboScreen(
                 OutlinedTextField(
                     value = direccion,
                     onValueChange = { direccion = it },
-                    label = { Text("Dirección") },
+                    label = { Text(stringResource(R.string.address)) },
                     leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null) },
                     modifier = Modifier.fillMaxWidth(),
                     maxLines = 2
@@ -190,7 +192,7 @@ fun PersonalizacionReciboScreen(
                 OutlinedTextField(
                     value = telefono,
                     onValueChange = { telefono = it },
-                    label = { Text("Teléfono") },
+                    label = { Text(stringResource(R.string.phone)) },
                     leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
@@ -203,7 +205,7 @@ fun PersonalizacionReciboScreen(
             // Mensaje personalizado
             item {
                 Text(
-                    text = "MENSAJE EN RECIBOS",
+                    text = stringResource(R.string.message_in_receipts),
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
@@ -215,13 +217,13 @@ fun PersonalizacionReciboScreen(
                 OutlinedTextField(
                     value = mensajeRecibo,
                     onValueChange = { mensajeRecibo = it },
-                    label = { Text("Mensaje personalizado") },
+                    label = { Text(stringResource(R.string.custom_message)) },
                     leadingIcon = { Icon(Icons.Default.Message, contentDescription = null) },
                     modifier = Modifier.fillMaxWidth(),
                     maxLines = 3,
                     supportingText = {
                         Text(
-                            text = "Este mensaje aparecerá al final de cada recibo",
+                            text = stringResource(R.string.this_message_will_appear),
                             fontSize = 12.sp
                         )
                     }
@@ -231,7 +233,7 @@ fun PersonalizacionReciboScreen(
             // Vista previa
             item {
                 Text(
-                    text = "VISTA PREVIA",
+                    text = stringResource(R.string.preview),
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),

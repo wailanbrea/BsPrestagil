@@ -154,6 +154,12 @@ fun NavGraph(
             )
         }
         
+        composable(Screen.LanguageSettings.route) {
+            com.example.bsprestagil.screens.settings.LanguageSettingsScreen(
+                navController = navController
+            )
+        }
+        
         // Extensiones de préstamo
         composable(Screen.ExtensionPrestamo.route) { backStackEntry ->
             val prestamoId = backStackEntry.arguments?.getString("prestamoId") ?: ""

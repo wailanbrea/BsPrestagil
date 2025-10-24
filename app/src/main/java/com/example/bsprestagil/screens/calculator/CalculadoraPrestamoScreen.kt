@@ -9,11 +9,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.bsprestagil.R
 import com.example.bsprestagil.components.TopAppBarComponent
 import com.example.bsprestagil.data.models.FrecuenciaPago
 import com.example.bsprestagil.data.models.TipoAmortizacion
@@ -96,13 +98,13 @@ fun CalculadoraPrestamoScreen(
                         )
                         Column {
                             Text(
-                                text = "Simulador de préstamos",
+                                text = stringResource(R.string.loan_simulator),
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                             Text(
-                                text = "Calcula cuotas y tabla de amortización antes de crear el préstamo",
+                                text = stringResource(R.string.loan_simulator_description),
                                 fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                             )
@@ -114,7 +116,7 @@ fun CalculadoraPrestamoScreen(
             // Formulario
             item {
                 Text(
-                    text = "Datos del préstamo",
+                    text = stringResource(R.string.loan_data),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -124,7 +126,7 @@ fun CalculadoraPrestamoScreen(
                 OutlinedTextField(
                     value = monto,
                     onValueChange = { monto = it },
-                    label = { Text("Monto a prestar") },
+                    label = { Text(stringResource(R.string.loan_amount)) },
                     leadingIcon = { Icon(Icons.Default.AttachMoney, contentDescription = null) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
@@ -139,9 +141,9 @@ fun CalculadoraPrestamoScreen(
                     onValueChange = { tasaInteres = it },
                     label = {
                         val periodoTexto = when(frecuenciaPago) {
-                            FrecuenciaPago.DIARIO -> "Diaria"
-                            FrecuenciaPago.QUINCENAL -> "Quincenal"
-                            FrecuenciaPago.MENSUAL -> "Mensual"
+                            FrecuenciaPago.DIARIO -> stringResource(R.string.daily)
+                            FrecuenciaPago.QUINCENAL -> stringResource(R.string.biweekly)
+                            FrecuenciaPago.MENSUAL -> stringResource(R.string.monthly)
                         }
                         Text("Tasa de interés $periodoTexto")
                     },
@@ -160,13 +162,13 @@ fun CalculadoraPrestamoScreen(
                 ) {
                     OutlinedTextField(
                         value = when(frecuenciaPago) {
-                            FrecuenciaPago.DIARIO -> "Diario"
-                            FrecuenciaPago.QUINCENAL -> "Quincenal"
-                            FrecuenciaPago.MENSUAL -> "Mensual"
+                            FrecuenciaPago.DIARIO -> stringResource(R.string.daily)
+                            FrecuenciaPago.QUINCENAL -> stringResource(R.string.biweekly)
+                            FrecuenciaPago.MENSUAL -> stringResource(R.string.monthly)
                         },
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Frecuencia de pago") },
+                        label = { Text(stringResource(R.string.payment_frequency)) },
                         trailingIcon = {
                             ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedFrecuencia)
                         },
@@ -184,9 +186,9 @@ fun CalculadoraPrestamoScreen(
                             DropdownMenuItem(
                                 text = {
                                     Text(when(frecuencia) {
-                                        FrecuenciaPago.DIARIO -> "Diario"
-                                        FrecuenciaPago.QUINCENAL -> "Quincenal"
-                                        FrecuenciaPago.MENSUAL -> "Mensual"
+                                        FrecuenciaPago.DIARIO -> stringResource(R.string.daily)
+                                        FrecuenciaPago.QUINCENAL -> stringResource(R.string.biweekly)
+                                        FrecuenciaPago.MENSUAL -> stringResource(R.string.monthly)
                                     })
                                 },
                                 onClick = {
@@ -211,7 +213,7 @@ fun CalculadoraPrestamoScreen(
                         },
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Sistema de amortización") },
+                        label = { Text(stringResource(R.string.amortization_system)) },
                         trailingIcon = {
                             ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedSistema)
                         },
@@ -247,7 +249,7 @@ fun CalculadoraPrestamoScreen(
                 OutlinedTextField(
                     value = numeroCuotas,
                     onValueChange = { numeroCuotas = it },
-                    label = { Text("Número de cuotas") },
+                    label = { Text(stringResource(R.string.number_of_installments)) },
                     leadingIcon = { Icon(Icons.Default.CalendarMonth, contentDescription = null) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
@@ -270,7 +272,7 @@ fun CalculadoraPrestamoScreen(
             
             item {
                 Text(
-                    text = "Resultado del cálculo",
+                    text = stringResource(R.string.calculation_result),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -432,7 +434,7 @@ fun CalculadoraPrestamoScreen(
                             contentDescription = null
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(if (mostrarTabla) "Ocultar tabla de amortización" else "Ver tabla de amortización")
+                        Text(if (mostrarTabla) stringResource(R.string.hide_amortization_table) else stringResource(R.string.show_amortization_table))
                     }
                 }
                 
@@ -465,25 +467,25 @@ fun CalculadoraPrestamoScreen(
                                     modifier = Modifier.weight(0.5f)
                                 )
                                 Text(
-                                    text = "Cuota",
+                                    text = stringResource(R.string.installment),
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.weight(1f)
                                 )
                                 Text(
-                                    text = "Capital",
+                                    text = stringResource(R.string.capital),
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.weight(1f)
                                 )
                                 Text(
-                                    text = "Interés",
+                                    text = stringResource(R.string.interest),
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.weight(1f)
                                 )
                                 Text(
-                                    text = "Balance",
+                                    text = stringResource(R.string.balance),
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.weight(1f)
@@ -548,7 +550,7 @@ fun CalculadoraPrestamoScreen(
                         ) {
                             Icon(Icons.Default.Add, contentDescription = null)
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Crear préstamo")
+                            Text(stringResource(R.string.create_loan))
                         }
                         
                         Button(
@@ -559,7 +561,7 @@ fun CalculadoraPrestamoScreen(
                         ) {
                             Icon(Icons.Default.Share, contentDescription = null)
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Compartir")
+                            Text(stringResource(R.string.share))
                         }
                     }
                 }
@@ -582,7 +584,7 @@ fun CalculadoraPrestamoScreen(
                                 tint = MaterialTheme.colorScheme.onSecondaryContainer
                             )
                             Text(
-                                text = "Ingresa todos los datos para ver el cálculo",
+                                text = stringResource(R.string.enter_data_to_calculate),
                                 fontSize = 14.sp,
                                 color = MaterialTheme.colorScheme.onSecondaryContainer
                             )

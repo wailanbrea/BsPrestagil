@@ -13,8 +13,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.bsprestagil.R
 import com.example.bsprestagil.components.TopAppBarComponent
 import com.example.bsprestagil.components.ValidatedTextField
 import com.example.bsprestagil.components.validateForm
@@ -76,14 +78,14 @@ fun AddEditClientScreen(
     Scaffold(
         topBar = {
             TopAppBarComponent(
-                title = if (isEditing) "Editar cliente" else "Nuevo cliente",
+                title = if (isEditing) stringResource(R.string.edit_client) else "${stringResource(R.string.new_item)} ${stringResource(R.string.clients)}",
                 onNavigateBack = { navController.navigateUp() },
                 actions = {
                     if (isEditing) {
                         IconButton(onClick = { showDeleteDialog = true }) {
                             Icon(
                                 Icons.Default.Delete,
-                                contentDescription = "Eliminar cliente",
+                                contentDescription = stringResource(R.string.delete_client),
                                 tint = MaterialTheme.colorScheme.error
                             )
                         }
@@ -102,7 +104,7 @@ fun AddEditClientScreen(
         ) {
             // Información básica
             Text(
-                text = "Información básica",
+                text = stringResource(R.string.basic_information),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
@@ -111,7 +113,7 @@ fun AddEditClientScreen(
             ValidatedTextField(
                 value = nombre,
                 onValueChange = { nombre = it },
-                label = "Nombre completo *",
+                label = "${stringResource(R.string.full_name)} *",
                 leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
                 modifier = Modifier.fillMaxWidth(),
                 validator = { ValidationUtils.validateNotEmpty(it, "Nombre") },
@@ -121,7 +123,7 @@ fun AddEditClientScreen(
             ValidatedTextField(
                 value = telefono,
                 onValueChange = { telefono = it },
-                label = "Teléfono *",
+                label = "${stringResource(R.string.phone)} *",
                 leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null) },
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
@@ -132,7 +134,7 @@ fun AddEditClientScreen(
             ValidatedTextField(
                 value = email,
                 onValueChange = { email = it },
-                label = "Correo electrónico",
+                label = stringResource(R.string.email),
                 leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
@@ -143,7 +145,7 @@ fun AddEditClientScreen(
             ValidatedTextField(
                 value = direccion,
                 onValueChange = { direccion = it },
-                label = "Dirección *",
+                label = "${stringResource(R.string.address)} *",
                 leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null) },
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 2,
@@ -157,7 +159,7 @@ fun AddEditClientScreen(
             
             // Referencias
             Text(
-                text = "Referencias",
+                text = stringResource(R.string.references),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
@@ -184,7 +186,7 @@ fun AddEditClientScreen(
                     OutlinedTextField(
                         value = referencia1Nombre,
                         onValueChange = { referencia1Nombre = it },
-                        label = { Text("Nombre") },
+                        label = { Text(stringResource(R.string.full_name)) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
@@ -192,7 +194,7 @@ fun AddEditClientScreen(
                     OutlinedTextField(
                         value = referencia1Telefono,
                         onValueChange = { referencia1Telefono = it },
-                        label = { Text("Teléfono") },
+                        label = { Text(stringResource(R.string.phone)) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
@@ -229,7 +231,7 @@ fun AddEditClientScreen(
                     OutlinedTextField(
                         value = referencia2Nombre,
                         onValueChange = { referencia2Nombre = it },
-                        label = { Text("Nombre") },
+                        label = { Text(stringResource(R.string.full_name)) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
@@ -237,7 +239,7 @@ fun AddEditClientScreen(
                     OutlinedTextField(
                         value = referencia2Telefono,
                         onValueChange = { referencia2Telefono = it },
-                        label = { Text("Teléfono") },
+                        label = { Text(stringResource(R.string.phone)) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
@@ -301,7 +303,7 @@ fun AddEditClientScreen(
                 Icon(Icons.Default.Save, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = if (isEditing) "Actualizar cliente" else "Guardar cliente",
+                    text = if (isEditing) stringResource(R.string.update_client) else stringResource(R.string.save),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -363,12 +365,12 @@ fun AddEditClientScreen(
                         }
                     }
                 ) {
-                    Text("Eliminar", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.cancel))
                 }
             },
             containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)

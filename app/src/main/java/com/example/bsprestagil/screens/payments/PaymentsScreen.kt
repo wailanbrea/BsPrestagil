@@ -10,11 +10,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.bsprestagil.R
 import com.example.bsprestagil.components.BottomNavigationBar
 import com.example.bsprestagil.components.EmptyStateComponent
 import com.example.bsprestagil.components.SwipeToDeleteItem
@@ -93,7 +95,7 @@ fun PaymentsScreen(
                 title = {
                     Column {
                         Text(
-                            text = "Pagos",
+                            text = stringResource(R.string.payments),
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -108,7 +110,7 @@ fun PaymentsScreen(
                     IconButton(onClick = { showCobradorFilterDialog = true }) {
                         Icon(
                             Icons.Default.WorkOutline,
-                            contentDescription = "Filtrar por cobrador",
+                            contentDescription = stringResource(R.string.filter_by_collector),
                             tint = if (cobradorFiltroSeleccionado != null) 
                                 MaterialTheme.colorScheme.primary 
                             else 
@@ -149,7 +151,7 @@ fun PaymentsScreen(
                             .padding(20.dp)
                     ) {
                         Text(
-                            text = "Total cobrado hoy",
+                            text = stringResource(R.string.total_collected_today),
                             fontSize = 14.sp,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                         )
@@ -192,7 +194,7 @@ fun PaymentsScreen(
             
             item {
                 Text(
-                    text = "Historial de pagos",
+                    text = stringResource(R.string.payment_history),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(top = 8.dp)
@@ -204,9 +206,9 @@ fun PaymentsScreen(
                     if (cobradorFiltroSeleccionado != null) {
                         EmptyStateComponent(
                             icon = Icons.Default.FilterList,
-                            title = "Sin pagos registrados",
-                            message = "El cobrador seleccionado no tiene pagos registrados.\nSelecciona otro cobrador o limpia el filtro.",
-                            actionText = "Limpiar filtro",
+                            title = stringResource(R.string.no_payments_registered),
+                            message = stringResource(R.string.no_payments_for_collector),
+                            actionText = stringResource(R.string.clear_filter),
                             onActionClick = {
                                 cobradorFiltroSeleccionado = null
                                 cobradorFiltroNombre = null
@@ -215,11 +217,11 @@ fun PaymentsScreen(
                     } else {
                         EmptyStateComponent(
                             icon = Icons.Default.Payment,
-                            title = "No hay pagos registrados",
+                            title = stringResource(R.string.no_payments_registered),
                             message = if (userRole == "COBRADOR") {
-                                "Aún no has registrado ningún pago.\nComienza cobrando a tus clientes."
+                                stringResource(R.string.no_payments_yet)
                             } else {
-                                "No hay pagos registrados en el sistema.\nLos pagos aparecerán aquí cuando se registren."
+                                stringResource(R.string.no_payments_in_system)
                             },
                             actionText = null,
                             onActionClick = null
@@ -265,7 +267,7 @@ fun PaymentsScreen(
                     modifier = Modifier.size(32.dp)
                 )
             },
-            title = { Text("Filtrar por cobrador") },
+            title = { Text(stringResource(R.string.filter_by_collector)) },
             text = {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -287,7 +289,7 @@ fun PaymentsScreen(
                         ) {
                             Icon(Icons.Default.People, contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Todos los cobradores", fontWeight = FontWeight.Medium)
+                            Text(stringResource(R.string.all_collectors), fontWeight = FontWeight.Medium)
                         }
                     }
                     
@@ -316,7 +318,7 @@ fun PaymentsScreen(
                     
                     if (cobradores.isEmpty()) {
                         Text(
-                            text = "No hay cobradores disponibles",
+                            text = stringResource(R.string.no_collectors_available),
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                             modifier = Modifier.padding(16.dp)
                         )
@@ -326,7 +328,7 @@ fun PaymentsScreen(
             confirmButton = {},
             dismissButton = {
                 TextButton(onClick = { showCobradorFilterDialog = false }) {
-                    Text("Cerrar")
+                    Text(stringResource(R.string.close))
                 }
             }
         )
@@ -425,10 +427,10 @@ fun PaymentCard(
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = when(pago.metodoPago) {
-                        MetodoPago.EFECTIVO -> "Efectivo"
-                        MetodoPago.TRANSFERENCIA -> "Transferencia"
-                        MetodoPago.TARJETA -> "Tarjeta"
-                        MetodoPago.OTRO -> "Otro"
+                        MetodoPago.EFECTIVO -> stringResource(R.string.cash)
+                        MetodoPago.TRANSFERENCIA -> stringResource(R.string.transfer)
+                        MetodoPago.TARJETA -> stringResource(R.string.card)
+                        MetodoPago.OTRO -> stringResource(R.string.other)
                     },
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)

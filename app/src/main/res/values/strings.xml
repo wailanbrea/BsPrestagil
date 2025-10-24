@@ -8,12 +8,112 @@
     <string name="error_network">Error de conexión. Verifica tu internet.</string>
     <string name="success">Operación exitosa</string>
     <string name="cancel">Cancelar</string>
+    <string name="back">Atrás</string>
+    <string name="synced">Sincronizado</string>
+    <string name="syncing">Sincronizando...</string>
+    <string name="not_synced">Sin sincronizar</string>
+    <string name="sync_error">Error al sincronizar</string>
+    <string name="offline">Sin conexión</string>
+    <string name="retry">Reintentar</string>
+    <string name="close">Cerrar</string>
     <string name="accept">Aceptar</string>
     <string name="delete">Eliminar</string>
     <string name="edit">Editar</string>
     <string name="save">Guardar</string>
     <string name="search">Buscar</string>
-    <string name="close">Cerrar</string>
+    <string name="new_item">Nuevo</string>
+    <string name="add">Agregar</string>
+    
+    <!-- Quick Access -->
+    <string name="scan_qr">Escanear QR</string>
+    <string name="collector_report">Reporte Cobradores</string>
+    <string name="commissions">Comisiones</string>
+    <string name="recent_loans">Préstamos recientes</string>
+    
+    <!-- Estados de préstamos -->
+    <string name="active">Activo</string>
+    <string name="overdue">Atrasado</string>
+    <string name="completed">Completado</string>
+    <string name="cancelled">Cancelado</string>
+    
+    <!-- Métodos de pago -->
+    <string name="cash">Efectivo</string>
+    <string name="transfer">Transferencia</string>
+    <string name="card">Tarjeta</string>
+    <string name="other">Otro</string>
+    
+    <!-- Pagos - Filtros y estados -->
+    <string name="filter_by_collector">Filtrar por cobrador</string>
+    <string name="total_collected_today">Total cobrado hoy</string>
+    <string name="payment_history">Historial de pagos</string>
+    <string name="no_payments_registered">Sin pagos registrados</string>
+    <string name="no_payments_for_collector">El cobrador seleccionado no tiene pagos registrados.\nSelecciona otro cobrador o limpia el filtro.</string>
+    <string name="clear_filter">Limpiar filtro</string>
+    <string name="no_payments_yet">Aún no has registrado ningún pago.\nComienza cobrando a tus clientes.</string>
+    <string name="no_payments_in_system">No hay pagos registrados en el sistema.\nLos pagos aparecerán aquí cuando se registren.</string>
+    <string name="all_collectors">Todos los cobradores</string>
+    
+    <!-- Clientes - Estados y filtros -->
+    <string name="no_results">Sin resultados</string>
+    <string name="up_to_date">Al día</string>
+    <string name="delinquent">Moroso</string>
+    
+    <!-- Préstamos - Frecuencias -->
+    <string name="daily">Diaria</string>
+    <string name="biweekly">Quincenal</string>
+    <string name="monthly">Mensual</string>
+    
+    <!-- Préstamos - Formulario -->
+    <string name="client_information">Información del cliente</string>
+    <string name="selected_client">Cliente seleccionado</string>
+    <string name="select_client">Seleccionar cliente</string>
+    
+    <!-- Calculadora -->
+    <string name="hide_amortization_table">Ocultar tabla de amortización</string>
+    <string name="create_loan">Crear préstamo</string>
+    
+    <!-- Configuración -->
+    <string name="general">General</string>
+    <string name="synchronization">Sincronización</string>
+    <string name="account">Cuenta</string>
+    <string name="invoice_contract_config">Configuración de Factura/Contrato</string>
+    <string name="terms_conditions_legal_clauses">Términos, condiciones y cláusulas legales</string>
+    <string name="logo_business_data">Logo, datos del negocio</string>
+    <string name="spanish_english">Español / English</string>
+    <string name="pending_elements">elementos pendientes</string>
+    <string name="all_synced">Todo sincronizado ✓</string>
+    <string name="pending_to_sync">Pendientes de sincronizar:</string>
+    <string name="last_sync">Última sincronización:</string>
+    <string name="whatsapp_messages">Mensajes WhatsApp</string>
+    <string name="send_receipts_whatsapp">Enviar recibos por WhatsApp</string>
+    <string name="my_profile">Mi Perfil</string>
+    <string name="user">Usuario</string>
+    <string name="not_configured">No configurado</string>
+    <string name="email_address">Correo electrónico</string>
+    <string name="account_type">Tipo de cuenta</string>
+    <string name="account_status">Estado de la cuenta</string>
+    <string name="verified">Verificada ✓</string>
+    <string name="not_verified">No verificada</string>
+    <string name="unverified_account">Cuenta no verificada</string>
+    <string name="unknown_error">Error desconocido</string>
+    <string name="sending">Enviando...</string>
+    <string name="send_verification_email">Enviar email de verificación</string>
+    <string name="unknown">Desconocida</string>
+    <string name="member_since">Miembro desde</string>
+    <string name="profile_updated_successfully">Perfil actualizado correctamente</string>
+    <string name="error_sending_email">Error al enviar email</string>
+    <string name="error_updating_profile">Error al actualizar perfil</string>
+    <string name="language_selection_description">Selecciona tu idioma preferido para la aplicación. Los cambios se aplicarán al reiniciar la app.</string>
+    <string name="information">Información</string>
+    <string name="language_saved_automatically">• El idioma se guarda automáticamente</string>
+    <string name="changes_apply_restart">• Los cambios se aplican al reiniciar la app</string>
+    <string name="change_language_anytime">• Puedes cambiar el idioma en cualquier momento</string>
+    <string name="language_changed_restart">El idioma se ha cambiado. Para ver los cambios, reinicia la aplicación.</string>
+    <string name="restart_app">Reiniciar App</string>
+    <string name="language_debug">Debug de Idioma</string>
+    <string name="current_language">Idioma actual:</string>
+    <string name="test_string">String de prueba:</string>
+    <string name="loading_test">Loading:</string>
     
     <!-- Login y autenticación -->
     <string name="login_title">Iniciar Sesión</string>
@@ -22,13 +122,14 @@
     <string name="login">Ingresar</string>
     <string name="logout">Cerrar sesión</string>
     <string name="forgot_password">¿Olvidaste tu contraseña?</string>
+    <string name="remember_me">Recordarme</string>
+    <string name="use_fingerprint">Usar huella dactilar para iniciar sesión</string>
     <string name="login_error">Email o contraseña incorrectos</string>
     <string name="biometric_title">Autenticación biométrica</string>
     <string name="biometric_subtitle">Usa tu huella dactilar para ingresar</string>
     
     <!-- Clientes -->
     <string name="clients">Clientes</string>
-    <string name="add_client">Agregar cliente</string>
     <string name="edit_client">Editar cliente</string>
     <string name="delete_client">Eliminar cliente</string>
     <string name="client_name">Nombre completo</string>
@@ -37,6 +138,8 @@
     <string name="client_address">Dirección</string>
     <string name="search_client">Buscar cliente...</string>
     <string name="no_clients">No hay clientes registrados</string>
+    <string name="no_clients_cobrador">Aún no tienes clientes asignados.\nContacta a tu administrador para que te asigne préstamos.</string>
+    <string name="no_clients_admin">Comienza agregando tu primer cliente para gestionar préstamos.</string>
     <string name="client_saved">Cliente guardado exitosamente</string>
     <string name="client_deleted">Cliente eliminado</string>
     
@@ -131,13 +234,100 @@
     <!-- Sincronización -->
     <string name="sync_in_progress">Sincronizando...</string>
     <string name="sync_complete">Sincronización completa</string>
-    <string name="sync_error">Error de sincronización</string>
-    <string name="last_sync">Última sincronización</string>
     
     <!-- Calculadora -->
     <string name="calculator">Calculadora de préstamos</string>
     <string name="calculate">Calcular</string>
     <string name="amortization_table">Tabla de amortización</string>
+    <string name="loan_simulator">Simulador de préstamos</string>
+    <string name="loan_simulator_description">Calcula cuotas y tabla de amortización antes de crear el préstamo</string>
+    <string name="enter_data_to_calculate">Ingresa todos los datos para ver el cálculo</string>
+    <string name="loan_data">Datos del préstamo</string>
+    <string name="payment_frequency">Frecuencia de pago</string>
+    <string name="amortization_system">Sistema de amortización</string>
+    <string name="number_of_installments">Número de cuotas</string>
+    <string name="calculation_result">Resultado del cálculo</string>
+    
+    <!-- Dashboard -->
+    <string name="business_summary">Resumen de tu negocio</string>
+    <string name="test_data">Prueba de datos</string>
+    <string name="notifications">Notificaciones</string>
+    <string name="general_summary">Resumen general</string>
+    <string name="loaned_capital">Capital prestado</string>
+    <string name="generated_interest">Intereses generados</string>
+    <string name="current_month">Mes actual</string>
+    <string name="overdue_portfolio">Cartera vencida</string>
+    <string name="quick_access">Accesos rápidos</string>
+    
+    <!-- Préstamos -->
+    <string name="loan_details">Detalles del préstamo</string>
+    <string name="loan_status">Estado del préstamo</string>
+    <string name="assigned_collector">Cobrador asignado</string>
+    <string name="financial_summary">Resumen financiero</string>
+    <string name="original_capital">Capital original</string>
+    <string name="pending_capital">Capital pendiente</string>
+    <string name="extended_amount">Monto extendido</string>
+    <string name="total_amount">Monto total</string>
+    <string name="view_history">Ver historial</string>
+    <string name="paid_capital">Capital pagado</string>
+    
+    <!-- Pagos -->
+    <string name="register_payment">Registrar pago</string>
+    <string name="loan_information">Información del préstamo</string>
+    <string name="payment_details">Detalles del pago</string>
+    <string name="payment_type">Tipo de pago</string>
+    <string name="automatic_distribution">Distribución automática</string>
+    <string name="capital_not_reduced">El capital no se reduce</string>
+    <string name="pay_interest_first">Debes pagar el interés primero</string>
+    <string name="reduce_loan_term">Reduce el plazo del préstamo</string>
+    <string name="custom">Personalizado</string>
+    <string name="you_decide_distribution">Tú decides la distribución</string>
+    <string name="manual_distribution">Distribución manual</string>
+    
+    <!-- Configuración -->
+    <string name="base_interest_rate">Tasa de interés base</string>
+    <string name="receipt_customization">Personalización de recibos</string>
+    <string name="language">Idioma</string>
+    <string name="sync_status">Estado de sincronización</string>
+    <string name="sync_now">Sincronizar ahora</string>
+    <string name="manage_collectors">Gestionar cobradores</string>
+    
+    <!-- Préstamos - Detalles -->
+    <string name="interest_paid">Intereses pagados</string>
+    <string name="penalties_paid">Moras pagadas</string>
+    <string name="loan_progress">Progreso del préstamo</string>
+    <string name="start_date">Fecha de inicio</string>
+    <string name="installment">Cuota</string>
+    <string name="capital">Capital</string>
+    <string name="interest">Interés</string>
+    <string name="balance">Balance</string>
+    <string name="schedule_summary">Resumen del cronograma</string>
+    <string name="extend">Extender</string>
+    <string name="history">Historial</string>
+    
+    <!-- Pagos - Detalles -->
+    <string name="amount_to_interest">Monto a interés</string>
+    <string name="amount_to_capital">Monto a capital</string>
+    <string name="charge_penalty">Cobrar mora</string>
+    <string name="penalty_will_be_applied">Se aplicará mora al pago</string>
+    <string name="no_penalty">Sin mora</string>
+    <string name="received_by">Recibido por</string>
+    <string name="no_name">Sin nombre</string>
+    <string name="change">Cambiar</string>
+    <string name="assign_collector">Asignar cobrador</string>
+    <string name="additional_notes">Notas adicionales</string>
+    <string name="select_collector">Seleccionar cobrador</string>
+    <string name="no_collectors_available">No hay cobradores disponibles</string>
+    
+    <!-- Configuración - Detalles -->
+    <string name="add_or_remove_users">Agregar o eliminar usuarios</string>
+    <string name="payment_reminders">Recordatorios de pago</string>
+    <string name="edit_personal_info">Editar información personal</string>
+    <string name="percentage">Porcentaje</string>
+    
+    <!-- Clientes -->
+    <string name="references">Referencias</string>
+    <string name="update_client">Actualizar cliente</string>
     
     <!-- Reportes -->
     <string name="reports">Reportes</string>
@@ -149,4 +339,53 @@
     <string name="role_admin">Administrador</string>
     <string name="role_collector">Cobrador</string>
     <string name="role_viewer">Visualizador</string>
+    
+    <!-- Configuración de idioma -->
+    <string name="language_spanish">Español</string>
+    <string name="language_english">English</string>
+    <string name="language_change_success">Idioma cambiado exitosamente</string>
+    <string name="language_change_restart">Por favor reinicia la app para aplicar los cambios</string>
+    
+    <!-- Extensiones -->
+    <string name="extensions">Extensiones</string>
+    <string name="add_extension">Agregar extensión</string>
+    <string name="extension_history">Historial de extensiones</string>
+    <string name="extension_amount">Monto de extensión</string>
+    <string name="extension_reason">Razón de extensión</string>
+    <string name="extension_date">Fecha de extensión</string>
+    <string name="extension_saved">Extensión guardada exitosamente</string>
+    <string name="extension_deleted">Extensión eliminada</string>
+    <string name="no_extensions">No hay extensiones registradas</string>
+    
+    <!-- Factura/Contrato -->
+    <string name="invoice_settings">Configuración de factura/contrato</string>
+    <string name="company_rnc">RNC de la empresa</string>
+    <string name="company_email">Email de la empresa</string>
+    <string name="company_website">Sitio web de la empresa</string>
+    <string name="contract_title">Título del contrato</string>
+    <string name="contract_header">Encabezado del contrato</string>
+    <string name="terms_conditions">Términos y condiciones</string>
+    <string name="penalty_clauses">Cláusulas de penalización</string>
+    <string name="collateral_clauses">Cláusulas de garantía</string>
+    <string name="legal_clauses">Cláusulas legales</string>
+    <string name="contract_footer">Pie del contrato</string>
+    <string name="additional_message">Mensaje adicional</string>
+    <string name="show_amortization_table">Mostrar tabla de amortización</string>
+    <string name="show_payment_breakdown">Mostrar desglose de pago</string>
+    <string name="include_signature_space">Incluir espacio para firmas</string>
+    <string name="contract_copies">Copias del contrato</string>
+    
+    <!-- Elementos comunes de UI -->
+    <string name="basic_information">Información básica</string>
+    <string name="preview">Vista previa</string>
+    <string name="message_in_receipts">MENSAJE EN RECIBOS</string>
+    <string name="this_message_will_appear">Este mensaje aparecerá al final de cada recibo</string>
+    <string name="custom_message">Mensaje personalizado</string>
+    <string name="hello_collector">¡Hola, %1$s!</string>
+    <string name="active_loans_count">Tienes %1$d préstamos activos</string>
+    <string name="edit_profile_title">Editar Perfil</string>
+    <string name="full_name">Nombre completo</string>
+    <string name="phone">Teléfono</string>
+    <string name="address">Dirección</string>
+    <string name="required_field">Campo obligatorio</string>
 </resources>

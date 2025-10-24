@@ -12,10 +12,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.bsprestagil.R
 import com.example.bsprestagil.components.InfoCard
 import com.example.bsprestagil.components.TopAppBarComponent
 import com.example.bsprestagil.data.models.EstadoPrestamo
@@ -70,7 +72,7 @@ fun LoanDetailScreen(
     Scaffold(
         topBar = {
             TopAppBarComponent(
-                title = "Detalles del préstamo",
+                title = stringResource(R.string.loan_details),
                 onNavigateBack = { navController.navigateUp() },
                 actions = {
                     IconButton(
@@ -140,10 +142,10 @@ fun LoanDetailScreen(
                 }
                 
                 val estadoTexto = when (estado) {
-                    EstadoPrestamo.ACTIVO -> "ACTIVO"
-                    EstadoPrestamo.ATRASADO -> "ATRASADO"
-                    EstadoPrestamo.COMPLETADO -> "COMPLETADO"
-                    EstadoPrestamo.CANCELADO -> "CANCELADO"
+                    EstadoPrestamo.ACTIVO -> stringResource(R.string.active)
+                    EstadoPrestamo.ATRASADO -> stringResource(R.string.overdue)
+                    EstadoPrestamo.COMPLETADO -> stringResource(R.string.completed)
+                    EstadoPrestamo.CANCELADO -> stringResource(R.string.cancelled)
                 }
                 
                 Card(
@@ -161,7 +163,7 @@ fun LoanDetailScreen(
                     ) {
                         Column {
                             Text(
-                                text = "Estado del préstamo",
+                                text = stringResource(R.string.loan_status),
                                 fontSize = 14.sp,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                             )
@@ -213,7 +215,7 @@ fun LoanDetailScreen(
                         Spacer(modifier = Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Cliente",
+                                text = stringResource(R.string.clients),
                                 fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                             )
@@ -253,7 +255,7 @@ fun LoanDetailScreen(
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        text = "Cobrador asignado",
+                                        text = stringResource(R.string.assigned_collector),
                                         fontSize = 12.sp,
                                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                                     )
@@ -277,7 +279,7 @@ fun LoanDetailScreen(
             // Resumen financiero
             item {
                 Text(
-                    text = "Resumen financiero",
+                    text = stringResource(R.string.financial_summary),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -289,12 +291,12 @@ fun LoanDetailScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     InfoCard(
-                        title = "Capital original",
+                        title = stringResource(R.string.original_capital),
                         value = "$${String.format("%,.2f", montoOriginal)}",
                         modifier = Modifier.weight(1f)
                     )
                     InfoCard(
-                        title = "Capital pendiente",
+                        title = stringResource(R.string.pending_capital),
                         value = "$${String.format("%,.2f", capitalPendiente)}",
                         color = if (capitalPendiente > 0) MaterialTheme.colorScheme.error else SuccessColor,
                         modifier = Modifier.weight(1f)
@@ -311,13 +313,13 @@ fun LoanDetailScreen(
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             InfoCard(
-                                title = "Monto extendido",
+                                title = stringResource(R.string.extended_amount),
                                 value = "$${String.format("%,.2f", p.montoExtendido)}",
                                 color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.weight(1f)
                             )
                             InfoCard(
-                                title = "Monto total",
+                                title = stringResource(R.string.total_amount),
                                 value = "$${String.format("%,.2f", p.montoTotal)}",
                                 color = MaterialTheme.colorScheme.secondary,
                                 modifier = Modifier.weight(1f)
@@ -367,7 +369,7 @@ fun LoanDetailScreen(
                                 ) {
                                     Icon(
                                         Icons.Default.History,
-                                        contentDescription = "Ver historial",
+                                        contentDescription = stringResource(R.string.view_history),
                                         modifier = Modifier.size(18.dp),
                                         tint = MaterialTheme.colorScheme.primary
                                     )
@@ -395,7 +397,7 @@ fun LoanDetailScreen(
                         modifier = Modifier.weight(1f)
                     )
                     InfoCard(
-                        title = "Capital pagado",
+                        title = stringResource(R.string.paid_capital),
                         value = "$${String.format("%,.2f", totalCapitalPagado)}",
                         color = SuccessColor,
                         modifier = Modifier.weight(1f)
@@ -409,14 +411,14 @@ fun LoanDetailScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     InfoCard(
-                        title = "Intereses pagados",
+                        title = stringResource(R.string.interest_paid),
                         value = "$${String.format("%,.2f", totalInteresesPagados)}",
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.weight(1f)
                     )
                     if (totalMorasPagadas > 0) {
                         InfoCard(
-                            title = "Moras pagadas",
+                            title = stringResource(R.string.penalties_paid),
                             value = "$${String.format("%,.2f", totalMorasPagadas)}",
                             color = com.example.bsprestagil.ui.theme.WarningColor,
                             modifier = Modifier.weight(1f)
@@ -428,7 +430,7 @@ fun LoanDetailScreen(
             // Progreso de pagos
             item {
                 Text(
-                    text = "Progreso del préstamo",
+                    text = stringResource(R.string.loan_progress),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(top = 8.dp)
@@ -453,7 +455,7 @@ fun LoanDetailScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "Capital pagado",
+                                text = stringResource(R.string.paid_capital),
                                 fontSize = 14.sp,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                             )
@@ -496,7 +498,7 @@ fun LoanDetailScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "Fecha de inicio",
+                                text = stringResource(R.string.start_date),
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                             )
                             Text(
@@ -524,12 +526,12 @@ fun LoanDetailScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             val periodoTexto = when(frecuenciaPago) {
-                                com.example.bsprestagil.data.models.FrecuenciaPago.DIARIO -> "Diaria"
-                                com.example.bsprestagil.data.models.FrecuenciaPago.QUINCENAL -> "Quincenal"
-                                com.example.bsprestagil.data.models.FrecuenciaPago.MENSUAL -> "Mensual"
+                                com.example.bsprestagil.data.models.FrecuenciaPago.DIARIO -> stringResource(R.string.daily)
+                                com.example.bsprestagil.data.models.FrecuenciaPago.QUINCENAL -> stringResource(R.string.biweekly)
+                                com.example.bsprestagil.data.models.FrecuenciaPago.MENSUAL -> stringResource(R.string.monthly)
                             }
                             Text(
-                                text = "Frecuencia",
+                                text = stringResource(R.string.payment_frequency),
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                             )
                             Text(
@@ -572,25 +574,25 @@ fun LoanDetailScreen(
                             modifier = Modifier.weight(0.5f)
                         )
                         Text(
-                            text = "Cuota",
+                            text = stringResource(R.string.installment),
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.weight(1f)
                         )
                         Text(
-                            text = "Capital",
+                            text = stringResource(R.string.capital),
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.weight(1f)
                         )
                         Text(
-                            text = "Interés",
+                            text = stringResource(R.string.interest),
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.weight(1f)
                         )
                         Text(
-                            text = "Balance",
+                            text = stringResource(R.string.balance),
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.weight(1f)
@@ -743,7 +745,7 @@ fun LoanDetailScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = "Resumen del cronograma",
+                            text = stringResource(R.string.schedule_summary),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -816,7 +818,7 @@ fun LoanDetailScreen(
                     Icon(Icons.Default.Payment, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Registrar pago",
+                        text = stringResource(R.string.register_payment),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -842,7 +844,7 @@ fun LoanDetailScreen(
                             Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(20.dp))
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = "Extender",
+                                text = stringResource(R.string.extend),
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Medium
                             )
@@ -860,7 +862,7 @@ fun LoanDetailScreen(
                             Icon(Icons.Default.History, contentDescription = null, modifier = Modifier.size(20.dp))
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = "Historial",
+                                text = stringResource(R.string.history),
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Medium
                             )

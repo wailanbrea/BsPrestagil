@@ -75,6 +75,7 @@ sealed class Screen(val route: String) {
     // Configuración
     object PersonalizacionRecibo : Screen("personalizacion_recibo")
     object ConfiguracionFactura : Screen("configuracion_factura")
+    object LanguageSettings : Screen("language_settings")
     
     // Extensiones de préstamo
     object ExtensionPrestamo : Screen("extension_prestamo/{prestamoId}") {

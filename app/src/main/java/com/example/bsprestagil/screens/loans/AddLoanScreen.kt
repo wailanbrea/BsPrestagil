@@ -11,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -18,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.bsprestagil.R
 import com.example.bsprestagil.components.TopAppBarComponent
 import com.example.bsprestagil.data.models.FrecuenciaPago
 import com.example.bsprestagil.navigation.Screen
@@ -114,7 +116,7 @@ fun AddLoanScreen(
     Scaffold(
         topBar = {
             TopAppBarComponent(
-                title = "Nuevo préstamo",
+                title = "${stringResource(R.string.new_item)} ${stringResource(R.string.loans)}",
                 onNavigateBack = { navController.navigateUp() }
             )
         }
@@ -129,7 +131,7 @@ fun AddLoanScreen(
         ) {
             // Cliente
             Text(
-                text = "Información del cliente",
+                text = stringResource(R.string.client_information),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
@@ -156,7 +158,7 @@ fun AddLoanScreen(
                             Spacer(modifier = Modifier.width(12.dp))
                             Column {
                                 Text(
-                                    text = "Cliente seleccionado",
+                                    text = stringResource(R.string.selected_client),
                                     fontSize = 12.sp,
                                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                                 )
@@ -170,7 +172,7 @@ fun AddLoanScreen(
                         if (clientId == null) {
                             Icon(
                                 imageVector = Icons.Default.Edit,
-                                contentDescription = "Cambiar",
+                                contentDescription = stringResource(R.string.change),
                                 tint = MaterialTheme.colorScheme.primary
                             )
                         }
@@ -183,7 +185,7 @@ fun AddLoanScreen(
                 ) {
                     Icon(Icons.Default.PersonAdd, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Seleccionar cliente")
+                    Text(stringResource(R.string.select_client))
                 }
             }
             
@@ -240,7 +242,7 @@ fun AddLoanScreen(
                             }
                             Icon(
                                 imageVector = Icons.Default.Edit,
-                                contentDescription = "Cambiar",
+                                contentDescription = stringResource(R.string.change),
                                 tint = MaterialTheme.colorScheme.primary
                             )
                         }

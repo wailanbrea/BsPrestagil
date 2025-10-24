@@ -29,6 +29,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import android.util.Log
+import androidx.compose.ui.res.stringResource
+import com.example.bsprestagil.R
 
 @Composable
 fun LoginScreen(
@@ -215,14 +217,14 @@ fun LoginScreen(
                             if (!it) enableBiometric = false
                         }
                     )
-                    Text("Recordarme")
+                    Text(stringResource(R.string.remember_me))
                 }
                 
                 // Olvidaste tu contraseña
                 TextButton(
                     onClick = { /* TODO: Implementar recuperación de contraseña */ }
                 ) {
-                    Text("¿Olvidaste tu contraseña?")
+                    Text(stringResource(R.string.forgot_password))
                 }
             }
             
@@ -243,7 +245,7 @@ fun LoginScreen(
                         tint = MaterialTheme.colorScheme.primary
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Usar huella dactilar para iniciar sesión")
+                    Text(stringResource(R.string.use_fingerprint))
                 }
             }
             
