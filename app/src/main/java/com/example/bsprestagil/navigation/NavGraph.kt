@@ -36,6 +36,7 @@ import com.example.bsprestagil.screens.payments.PaymentsScreen
 import com.example.bsprestagil.screens.payments.RegisterPaymentScreen
 import com.example.bsprestagil.screens.reports.ReportsScreen
 import com.example.bsprestagil.screens.settings.SettingsScreen
+import com.example.bsprestagil.screens.paywall.PaywallScreen
 import com.example.bsprestagil.screens.test.TestSyncScreen
 
 @Composable
@@ -77,6 +78,19 @@ fun NavGraph(
         composable(Screen.CambiarPassword.route) {
             com.example.bsprestagil.screens.auth.CambiarPasswordScreen(
                 navController = navController
+            )
+        }
+        
+        composable(Screen.Paywall.route, arguments = listOf(navArgument("adminId") { type = NavType.StringType })) { backStackEntry ->
+            val adminId = backStackEntry.arguments?.getString("adminId") ?: return@composable
+            PaywallScreen(
+                navController = navController,
+                adminId = adminId,
+                onSubscriptionActive = {
+                    navController.navigate(Screen.Dashboard.route) {
+                        popUpTo(Screen.Paywall.createRoute(adminId)) { inclusive = true }
+                    }
+                }
             )
         }
         

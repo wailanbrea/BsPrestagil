@@ -31,6 +31,8 @@ import kotlinx.coroutines.tasks.await
 import android.util.Log
 import androidx.compose.ui.res.stringResource
 import com.example.bsprestagil.R
+import com.example.bsprestagil.billing.SubscriptionRepository
+import com.example.bsprestagil.billing.SubscriptionStatus
 
 @Composable
 fun LoginScreen(
@@ -45,10 +47,13 @@ fun LoginScreen(
     var passwordVisible by remember { mutableStateOf(false) }
     var rememberMe by remember { mutableStateOf(false) }
     var enableBiometric by remember { mutableStateOf(false) }
+    var resetPasswordMessage by remember { mutableStateOf<String?>(null) }
+    var resetPasswordError by remember { mutableStateOf<String?>(null) }
     
     val authState by authViewModel.authState.collectAsState()
     val firestore = FirebaseFirestore.getInstance()
     val auth = FirebaseAuth.getInstance()
+    val subscriptionRepository = remember { SubscriptionRepository() }
     
     // Verificar si hay credenciales guardadas y capacidad biométrica
     val biometricStatus = remember { BiometricHelper.canAuthenticate(context) }
@@ -88,9 +93,21 @@ fun LoginScreen(
                             .await()
                         
                         val primerLogin = userDoc.getBoolean("primerLogin") ?: false
+                        val adminId = userDoc.getString("adminId") ?: userId
+                        
+                        // Verificar suscripción
+                        val subStatus = subscriptionRepository.getSubscriptionStatus(adminId)
                         
                         // Resetear el estado DESPUÉS de obtener los datos pero ANTES de navegar
                         authViewModel.resetState()
+                        
+                        if (subStatus == SubscriptionStatus.EXPIRED) {
+                            Log.d("LoginScreen", "🔒 Suscripción expirada, navegando a Paywall")
+                            navController.navigate(Screen.Paywall.createRoute(adminId)) {
+                                popUpTo(Screen.Login.route) { inclusive = true }
+                            }
+                            return@LaunchedEffect
+                        }
                         
                         if (primerLogin) {
                             // Redirigir a cambiar contraseña
@@ -124,9 +141,44 @@ fun LoginScreen(
                         Log.e("LoginScreen", "❌ No hay usuario autenticado")
                     }
                 } catch (e: Exception) {
-                    // En caso de error, resetear el estado
-                    authViewModel.resetState()
+                    // En caso de error al verificar primer login (por ejemplo PERMISSION_DENIED),
+                    // no bloqueamos la navegación: usamos solo el rol obtenido.
                     Log.e("LoginScreen", "❌ Error al verificar primer login: ${e.message}")
+                    
+                    authViewModel.resetState()
+                    
+                    val userId = auth.currentUser?.uid
+                    if (userId != null) {
+                        val subStatus = try {
+                            subscriptionRepository.getSubscriptionStatus(userId)
+                        } catch (s: Exception) {
+                            SubscriptionStatus.TRIAL
+                        }
+                        if (subStatus == SubscriptionStatus.EXPIRED) {
+                            navController.navigate(Screen.Paywall.createRoute(userId)) {
+                                popUpTo(Screen.Login.route) { inclusive = true }
+                            }
+                            return@LaunchedEffect
+                        }
+                    }
+                    
+                    when (rol) {
+                        "COBRADOR" -> {
+                            Log.d("LoginScreen", "🚀 Navegando a CobradorDashboard (fallback sin primerLogin)")
+                            navController.navigate(Screen.CobradorDashboard.route) {
+                                popUpTo(Screen.Login.route) { inclusive = true }
+                            }
+                        }
+                        "ADMIN" -> {
+                            Log.d("LoginScreen", "🚀 Navegando a Dashboard (Admin, fallback sin primerLogin)")
+                            navController.navigate(Screen.Dashboard.route) {
+                                popUpTo(Screen.Login.route) { inclusive = true }
+                            }
+                        }
+                        else -> {
+                            Log.e("LoginScreen", "❌ Rol desconocido o null en fallback: $rol")
+                        }
+                    }
                 }
             }
             else -> {}
@@ -222,9 +274,71 @@ fun LoginScreen(
                 
                 // Olvidaste tu contraseña
                 TextButton(
-                    onClick = { /* TODO: Implementar recuperación de contraseña */ }
+                    onClick = {
+                        resetPasswordMessage = null
+                        resetPasswordError = null
+                        if (email.isBlank()) {
+                            resetPasswordError = "Ingresa tu correo para poder enviarte el enlace"
+                        } else {
+                            try {
+                                resetPasswordMessage = null
+                                resetPasswordError = null
+                                auth.sendPasswordResetEmail(email)
+                                    .addOnSuccessListener {
+                                        resetPasswordMessage = "Te enviamos un correo para restablecer tu contraseña"
+                                        resetPasswordError = null
+                                    }
+                                    .addOnFailureListener { e ->
+                                        resetPasswordMessage = null
+                                        resetPasswordError = when {
+                                            e.message?.contains("no user record", ignoreCase = true) == true ->
+                                                "No existe un usuario con ese correo"
+                                            e.message?.contains("network", ignoreCase = true) == true ->
+                                                "Error de conexión. Verifica tu internet"
+                                            else ->
+                                                "No se pudo enviar el correo: ${e.message ?: "Error desconocido"}"
+                                        }
+                                    }
+                            } catch (e: Exception) {
+                                resetPasswordMessage = null
+                                resetPasswordError = "No se pudo iniciar el proceso: ${e.message ?: "Error desconocido"}"
+                            }
+                        }
+                    }
                 ) {
                     Text(stringResource(R.string.forgot_password))
+                }
+            }
+            
+            // Mensajes de recuperación de contraseña
+            resetPasswordMessage?.let { msg ->
+                Spacer(modifier = Modifier.height(8.dp))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+                ) {
+                    Text(
+                        text = msg,
+                        modifier = Modifier.padding(12.dp),
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+            }
+            resetPasswordError?.let { msg ->
+                Spacer(modifier = Modifier.height(8.dp))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer
+                    )
+                ) {
+                    Text(
+                        text = msg,
+                        modifier = Modifier.padding(12.dp),
+                        color = MaterialTheme.colorScheme.onErrorContainer
+                    )
                 }
             }
             

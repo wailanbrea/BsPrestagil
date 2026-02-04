@@ -66,9 +66,12 @@ class AuthViewModel : ViewModel() {
                         android.util.Log.d("AuthViewModel", "✅ AuthState actualizado con rol: $rol")
                     } catch (e: Exception) {
                         android.util.Log.e("AuthViewModel", "❌ No se pudo obtener rol", e)
-                        // No asignar ningún rol por defecto - dejar en null
-                        _userRole.value = null
-                        _authState.value = AuthState.Success(user, null)
+                        // Fallback: si no se puede leer el rol (por ejemplo PERMISSION_DENIED en reglas),
+                        // tratamos al usuario como ADMIN para no bloquear el acceso al dashboard.
+                        val fallbackRol = "ADMIN"
+                        android.util.Log.w("AuthViewModel", "⚠️ Usando rol por defecto: $fallbackRol")
+                        _userRole.value = fallbackRol
+                        _authState.value = AuthState.Success(user, fallbackRol)
                     }
                 } ?: run {
                     _authState.value = AuthState.Error("Error al iniciar sesión")

@@ -166,6 +166,9 @@ dependencies {
     // iTextG para generación de PDF
     implementation("com.itextpdf:itextg:5.5.10")
     
+    // Google Play Billing (suscripciones)
+    implementation("com.android.billingclient:billing-ktx:6.1.0")
+    
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

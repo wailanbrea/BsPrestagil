@@ -94,5 +94,10 @@ sealed class Screen(val route: String) {
     
     // Pantalla de prueba de sincronización
     object TestSync : Screen("test_sync")
+    
+    // Paywall / Suscripción
+    object Paywall : Screen("paywall/{adminId}") {
+        fun createRoute(adminId: String) = "paywall/$adminId"
+    }
 }
 
